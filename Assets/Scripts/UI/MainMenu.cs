@@ -22,7 +22,7 @@ public class MainMenu : MonoBehaviour
 
     GameObject menuPanel, optionsPanel, creditsPanel;
     Text pressStart;
-    Button startButton, continueButton, fullscreenButton, volumeButton, musicButton, difficultyButton;
+    Button startButton, continueButton, fullscreenButton, volumeButton, musicButton, difficultyButton, goreButton;
     RawImage bgImage;
     float volume = 1f;
 
@@ -143,7 +143,8 @@ public class MainMenu : MonoBehaviour
         musicButton = UIKit.NewButton(t, "", new Vector2(0, -80), size, CycleMusic, 24);
         fullscreenButton = UIKit.NewButton(t, "", new Vector2(0, -140), size, ToggleFullscreen, 24);
         difficultyButton = UIKit.NewButton(t, "", new Vector2(0, -200), size, () => { Difficulty.Cycle(); RefreshOptionLabels(); }, 24);
-        UIKit.NewButton(t, "Back", new Vector2(0, -260), size, ShowMenu, 24);
+        goreButton = UIKit.NewButton(t, "", new Vector2(0, -260), size, () => { Gore.Enabled = !Gore.Enabled; RefreshOptionLabels(); }, 24);
+        UIKit.NewButton(t, "Back", new Vector2(0, -320), size, ShowMenu, 24);
         RefreshOptionLabels();
     }
 
@@ -247,6 +248,7 @@ public class MainMenu : MonoBehaviour
         UIKit.SetButtonLabel(volumeButton, $"Master Volume: {Mathf.RoundToInt(volume * 100f)}%");
         UIKit.SetButtonLabel(musicButton, $"Music Volume: {Mathf.RoundToInt(Audio.MusicVolume * 100f)}%");
         UIKit.SetButtonLabel(difficultyButton, "Difficulty: " + Difficulty.Level);
+        UIKit.SetButtonLabel(goreButton, "Gore (17+): " + (Gore.Enabled ? "On" : "Off"));
         UIKit.SetButtonLabel(fullscreenButton, "Fullscreen: " + (Screen.fullScreen ? "On" : "Off"));
     }
 }

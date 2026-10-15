@@ -16,6 +16,11 @@ public class GameBootstrap : MonoBehaviour
         // Decided BEFORE enemies run Start(), so defeated enemies do not respawn.
         continuing = GameSession.ContinueRequested && SaveSystem.Load();
         GameSession.ContinueRequested = false;
+        if (!continuing) GameProgress.Reset();
+
+        // The level (ground, rivers, props, pyramid, enemies) is built from Resources/Level/level.json.
+        // It needs the save data loaded first, so defeated enemies do not respawn.
+        gameObject.AddComponent<LevelBuilder>();
     }
 
     void Start()
