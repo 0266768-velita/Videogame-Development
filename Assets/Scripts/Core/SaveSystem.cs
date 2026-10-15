@@ -12,6 +12,12 @@ public class SaveData
     public float px, py;
     public bool hasPosition;
     public List<string> defeated = new List<string>();
+    // progression (v5)
+    public float maxHealth = 0f;       // 0 = not saved yet (use the prefab default)
+    public float maxStamina = 0f;
+    public bool hasKey, keyDropped, bossDefeated;
+    public float keyX, keyY;
+    public int enemiesDefeated;
 }
 
 /// <summary>
@@ -20,18 +26,21 @@ public class SaveData
 /// </summary>
 public static class SaveSystem
 {
-    const string Key = "mictlan_save_v1";
+    const string Key = "mictlan_save_v2";
     static SaveData current;
 
     public static bool HasSave => PlayerPrefs.HasKey(Key);
 
-    public static void NewGame() { current = new SaveData(); }
+    public static void NewGame() { current = new SaveData(); GameProgress.Reset(); }
 
     public static bool Load()
     {
         if (!PlayerPrefs.HasKey(Key)) return false;
         current = JsonUtility.FromJson<SaveData>(PlayerPrefs.GetString(Key));
         if (current == null) current = new SaveData();
+        GameProgress.HasKey = current.hasKey; GameProgress.KeyDropped = current.keyDropped;
+        GameProgress.KeyPosition = new Vector2(current.keyX, current.keyY);
+        GameProgress.BossDefeated = current.bossDefeated; GameProgress.EnemiesDefeated = current.enemiesDefeated;
         return true;
     }
 
@@ -43,6 +52,11 @@ public static class SaveSystem
         current.fury = stats.furyUnlocked;
         current.seismic = stats.seismicUnlocked;
         current.px = position.x; current.py = position.y; current.hasPosition = true;
+        current.maxHealth = stats.Health != null ? stats.Health.maxHealth : 0f;
+        current.maxStamina = stats.maxStamina;
+        current.hasKey = GameProgress.HasKey; current.keyDropped = GameProgress.KeyDropped;
+        current.keyX = GameProgress.KeyPosition.x; current.keyY = GameProgress.KeyPosition.y;
+        current.bossDefeated = GameProgress.BossDefeated; current.enemiesDefeated = GameProgress.EnemiesDefeated;
         PlayerPrefs.SetString(Key, JsonUtility.ToJson(current));
         PlayerPrefs.Save();
     }
@@ -55,6 +69,8 @@ public static class SaveSystem
         stats.potions = current.potions;
         stats.furyUnlocked = current.fury;
         stats.seismicUnlocked = current.seismic;
+        if (current.maxHealth > 0f) { stats.Health.SetMax(current.maxHealth); stats.Health.HealFull(); }
+        if (current.maxStamina > 0f) { stats.maxStamina = current.maxStamina; stats.stamina = stats.maxStamina; }
     }
 
     public static bool TryGetPosition(out Vector2 pos)

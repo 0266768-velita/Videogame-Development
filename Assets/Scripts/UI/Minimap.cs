@@ -225,7 +225,7 @@ public class Minimap : MonoBehaviour
             if (e == null || e.CurrentState == EnemyController.State.Defeated) continue;
             if (!markers.ContainsKey(e))
             {
-                float size = e.data != null && e.data.archetype == EnemyArchetype.Giant ? 12f : 9f;
+                float size = e.data == null ? 9f : (e.data.isBoss ? 16f : (e.data.archetype == EnemyArchetype.Giant ? 12f : 9f));
                 markers[e] = NewMarker("Enemy", new Color(0.9f, 0.18f, 0.18f), size);
             }
         }

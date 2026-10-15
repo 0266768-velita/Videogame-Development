@@ -11,8 +11,8 @@ public enum MacuahuitlForm { Base, Empowered, Ascended }
 public class PlayerCombatStats : MonoBehaviour
 {
     [Header("Stamina (the \"peanut bar\")")]
-    public float maxStamina = 60f;
-    public float stamina = 60f;
+    public float maxStamina = 45f;      // grows as enemies are defeated (see EnemyData.bonusMaxStamina)
+    public float stamina = 45f;
     [Tooltip("Fraction of max stamina recovered at the start of each turn (1 = full refill).")]
     [Range(0f, 1f)] public float staminaRegenFraction = 0.6f;
 
@@ -100,6 +100,13 @@ public class PlayerCombatStats : MonoBehaviour
     }
 
     public void SetCheckpoint(Vector3 pos) => checkpoint = pos;
+
+    /// <summary>Permanent growth (called after a victory with the sum of the defeated enemies' bonuses).</summary>
+    public void Grow(float healthBonus, float staminaBonus)
+    {
+        if (healthBonus > 0f) Health.SetMax(Health.maxHealth + healthBonus);
+        if (staminaBonus > 0f) { maxStamina += staminaBonus; stamina = maxStamina; }
+    }
     public void UnlockSeismic() => seismicUnlocked = true;   // call after surviving the Valley of Tlazolteotl
     public void UnlockFury() => furyUnlocked = true;
 

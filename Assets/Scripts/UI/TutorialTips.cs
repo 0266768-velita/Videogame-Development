@@ -16,7 +16,8 @@ public class TutorialTips : MonoBehaviour
     static readonly string[] AllIds =
     {
         "move", "sprint", "map", "enemies", "pause",
-        "combat_basics", "enemy_turn", "interrupt", "victory", "fury", "seismic"
+        "combat_basics", "enemy_turn", "interrupt", "victory", "fury", "seismic",
+        "jump_hint", "fell", "new_seismic", "new_fury", "boss_intro", "locked_skills", "growth"
     };
 
     static TutorialTips instance;
