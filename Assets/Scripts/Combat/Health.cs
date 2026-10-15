@@ -20,6 +20,9 @@ public class Health : MonoBehaviour
         if (current < 0f) current = maxHealth;
     }
 
+    /// <summary>Changes the maximum without touching the current value (level-up bonuses).</summary>
+    public void SetMax(float max) { maxHealth = max; current = Mathf.Min(current < 0f ? max : current, max); }
+
     public void Initialize(float max)
     {
         maxHealth = max;

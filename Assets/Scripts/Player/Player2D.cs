@@ -22,10 +22,10 @@ public class Player2D : MonoBehaviour
     [Tooltip("Used when you reverse direction, so turning around does not feel heavy.")]
     public float turnAcceleration = 60f;
 
-    [Header("Hop (visual only, you can still move and collide normally)")]
+    [Header("Jump (crosses rivers and pits: water/pit colliders are ignored while you are in the air)")]
     public bool canJump = true;
-    public float jumpHeight = 0.9f;        // tiles
-    public float jumpDuration = 0.45f;     // seconds in the air
+    public float jumpHeight = 1.0f;        // tiles
+    public float jumpDuration = 0.55f;     // seconds in the air (sprint + jump = about 3.3 tiles: enough for a 2-tile river)
     [Tooltip("Press jump slightly before landing and it still counts.")]
     public float jumpBuffer = 0.12f;
 
@@ -52,6 +52,14 @@ public class Player2D : MonoBehaviour
     float bobPhase;
     const float LandSquashTime = 0.12f;
 
+    // hazards (water / pits)
+    Collider2D body;
+    bool ignoringHazards;
+    Vector2 lastSafe;
+    float safeTimer;
+    bool falling;
+    public bool IsFalling => falling;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -60,6 +68,8 @@ public class Player2D : MonoBehaviour
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         fx = GetComponent<ActorFeedback>();
+        body = GetComponent<Collider2D>();
+        lastSafe = rb.position;
         fh = GetComponent<FakeHeight>();
         if (fh == null) fh = gameObject.AddComponent<FakeHeight>();
 
@@ -102,8 +112,9 @@ public class Player2D : MonoBehaviour
             if (fx != null) fx.Face(Facing.x);
         }
 
-        if (exploring && canJump && jumpAction.WasPressedThisFrame()) lastJumpPress = Time.time;
-        UpdateJump(exploring);
+        if (exploring && canJump && !falling && jumpAction.WasPressedThisFrame()) lastJumpPress = Time.time;
+        UpdateJump(exploring && !falling);
+        UpdateHazards(exploring);
         UpdateBob();
 
         if (fx != null)
@@ -127,6 +138,7 @@ public class Player2D : MonoBehaviour
                 landTimer = 0f;
                 if (fx != null) fx.Trigger("Jump");
                 Audio.Play("jump", 0.6f, 0.05f);
+                SetHazardCollision(true);
             }
         }
 
@@ -146,6 +158,7 @@ public class Player2D : MonoBehaviour
                 fh.Height = 0f;
                 landTimer = LandSquashTime;
                 Audio.Play("land", 0.5f, 0.05f);
+                OnLanded();
             }
         }
         else if (landTimer > 0f)
@@ -191,10 +204,76 @@ public class Player2D : MonoBehaviour
         rb.linearVelocity = Vector2.MoveTowards(v, target, rate * Time.fixedDeltaTime);
     }
 
+    // ------------------------------------------------------------------ water / pits
+    /// <summary>While jumping, water and pit colliders do not block Tlahuelli (that is how he crosses them).</summary>
+    void SetHazardCollision(bool ignore)
+    {
+        if (body == null || ignoringHazards == ignore) return;
+        ignoringHazards = ignore;
+        foreach (var c in Hazards.Blockers)
+            if (c != null) Physics2D.IgnoreCollision(body, c, ignore);
+    }
+
+    void UpdateHazards(bool exploring)
+    {
+        if (!exploring || jumping || falling) return;
+
+        // Remember the last solid place we stood on (a respawn spot after falling)
+        safeTimer -= Time.deltaTime;
+        if (safeTimer <= 0f)
+        {
+            safeTimer = 0.2f;
+            if (Hazards.IsSafe(rb.position, 0.9f)) lastSafe = rb.position;
+        }
+
+        // First time near a river/pit: explain how to cross it
+        if (!TutorialTips.Seen("jump_hint") && Hazards.KindAt(rb.position + Facing * 1.6f) != TerrainKind.Ground)
+            TutorialTips.Instance.Toast("jump_hint", "Water and pits block your way. RUN (hold SHIFT) and JUMP (SPACE) to cross them. Land in the water or a pit and you fall.", 9f);
+    }
+
+    void OnLanded()
+    {
+        var kind = Hazards.KindAt(rb.position);
+        if (kind == TerrainKind.Ground) { SetHazardCollision(false); return; }
+        StartCoroutine(FallRoutine(kind));
+    }
+
+    System.Collections.IEnumerator FallRoutine(TerrainKind kind)
+    {
+        falling = true;
+        GameState.SetMode(GameMode.Cutscene);
+        rb.linearVelocity = Vector2.zero;
+        Audio.Play(kind == TerrainKind.Water ? "splash" : "fall");
+
+        // shrink into the water / hole
+        for (float t = 0f; t < 0.4f; t += Time.deltaTime)
+        {
+            float k = 1f - t / 0.4f;
+            fh.Squash = new Vector2(k, k);
+            yield return null;
+        }
+        yield return ScreenFade.Out(0.25f);
+
+        var health = GetComponent<Health>();
+        if (health != null) health.TakeDamage(Mathf.Min(health.maxHealth * 0.10f, Mathf.Max(0f, health.Current - 1f)));
+
+        SetHazardCollision(false);
+        Teleport(lastSafe);
+        fh.ResetVisual();
+        var cam = FindFirstObjectByType<CameraFollow2D>();
+        if (cam != null) cam.SnapToTarget();
+        yield return ScreenFade.In(0.25f);
+
+        GameState.SetMode(GameMode.Exploration);
+        falling = false;
+        TutorialTips.Instance.Toast("fell", "You fell! Start your jump closer to the edge and run (SHIFT) to cross wider gaps. Falling costs a little health.", 7f);
+    }
+
     public void EnterBattle()
     {
         input = Vector2.zero;
         jumping = false;
+        SetHazardCollision(false);
         landTimer = 0f;
         rb.linearVelocity = Vector2.zero;
         if (fh != null) fh.ResetVisual();
@@ -209,6 +288,7 @@ public class Player2D : MonoBehaviour
     /// <summary>Moves the player instantly (battle placement, respawn, loading a save).</summary>
     public void Teleport(Vector2 position)
     {
+        if (rb == null) rb = GetComponent<Rigidbody2D>();
         transform.position = new Vector3(position.x, position.y, transform.position.z);
         rb.position = position;
         rb.linearVelocity = Vector2.zero;

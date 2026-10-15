@@ -15,14 +15,14 @@ public class MainMenu : MonoBehaviour
     public Texture2D gameLogo;        // Mictlan title logo
     public Texture2D background;      // background (for example the Tlaloc rainforest)
     public AudioClip music;
-    public string versionText = "v0.2";
+    const string VersionText = "v.03";   // constant on purpose: an old scene must not override it
 
     enum Stage { Title, Menu, Options, Credits }
     Stage stage = Stage.Title;
 
     GameObject menuPanel, optionsPanel, creditsPanel;
     Text pressStart;
-    Button startButton, continueButton, fullscreenButton, volumeButton, musicButton, difficultyButton;
+    Button startButton, continueButton, fullscreenButton, volumeButton, musicButton, difficultyButton, goreButton;
     RawImage bgImage;
     float volume = 1f;
 
@@ -102,7 +102,7 @@ public class MainMenu : MonoBehaviour
 
         var studio = UIKit.NewText("Studio", content, "Micta Forge", 20, TextAnchor.LowerLeft, new Color(1, 1, 1, 0.6f));
         UIKit.Anchor(studio.rectTransform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(20, 14), new Vector2(400, 30));
-        var ver = UIKit.NewText("Version", content, versionText, 20, TextAnchor.LowerRight, new Color(1, 1, 1, 0.6f));
+        var ver = UIKit.NewText("Version", content, VersionText, 20, TextAnchor.LowerRight, new Color(1, 1, 1, 0.6f));
         UIKit.Anchor(ver.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-20, 14), new Vector2(200, 30));
 
         // Stage 1
@@ -143,7 +143,8 @@ public class MainMenu : MonoBehaviour
         musicButton = UIKit.NewButton(t, "", new Vector2(0, -80), size, CycleMusic, 24);
         fullscreenButton = UIKit.NewButton(t, "", new Vector2(0, -140), size, ToggleFullscreen, 24);
         difficultyButton = UIKit.NewButton(t, "", new Vector2(0, -200), size, () => { Difficulty.Cycle(); RefreshOptionLabels(); }, 24);
-        UIKit.NewButton(t, "Back", new Vector2(0, -260), size, ShowMenu, 24);
+        goreButton = UIKit.NewButton(t, "", new Vector2(0, -260), size, () => { Gore.Enabled = !Gore.Enabled; RefreshOptionLabels(); }, 24);
+        UIKit.NewButton(t, "Back", new Vector2(0, -320), size, ShowMenu, 24);
         RefreshOptionLabels();
     }
 
@@ -247,6 +248,7 @@ public class MainMenu : MonoBehaviour
         UIKit.SetButtonLabel(volumeButton, $"Master Volume: {Mathf.RoundToInt(volume * 100f)}%");
         UIKit.SetButtonLabel(musicButton, $"Music Volume: {Mathf.RoundToInt(Audio.MusicVolume * 100f)}%");
         UIKit.SetButtonLabel(difficultyButton, "Difficulty: " + Difficulty.Level);
+        UIKit.SetButtonLabel(goreButton, "Gore (17+): " + (Gore.Enabled ? "On" : "Off"));
         UIKit.SetButtonLabel(fullscreenButton, "Fullscreen: " + (Screen.fullScreen ? "On" : "Off"));
     }
 }

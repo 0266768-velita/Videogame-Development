@@ -25,6 +25,14 @@ public class EnemyController : MonoBehaviour
     public State CurrentState => state;
     public bool IsAvailableForBattle => state != State.InBattle && state != State.Defeated;
     public string UniqueId { get; private set; }
+    public bool Phase2Announced { get; set; }
+    public bool InPhase2 => data != null && data.isBoss && Health.Normalized <= data.phase2HealthFraction;
+
+    /// <summary>Every enemy currently alive in the level (used for the "all enemies defeated" key drop).</summary>
+    public static readonly List<EnemyController> Active = new List<EnemyController>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() { Active.Clear(); }
 
     Rigidbody2D rb;
     Transform player;
@@ -73,6 +81,7 @@ public class EnemyController : MonoBehaviour
     {
         if (!enabled) return;
         if (SaveSystem.IsDefeated(UniqueId)) { Destroy(gameObject); return; }
+        Active.Add(this);
         EnterPatrol();
     }
 
@@ -235,6 +244,7 @@ public class EnemyController : MonoBehaviour
         if (c == null) return false;
         if (c.attachedRigidbody == rb) return false;                         // myself
         if (player != null && c.transform.root == player.root) return false; // the player is not an obstacle
+        if (c.isTrigger) return false;
         return true;
     }
 
@@ -249,7 +259,7 @@ public class EnemyController : MonoBehaviour
 
         hitBuffer.Clear();
         Physics2D.Linecast(rb.position, player.position, filter, hitBuffer);
-        foreach (var h in hitBuffer) if (IsObstacle(h.collider)) return false;
+        foreach (var h in hitBuffer) if (IsObstacle(h.collider) && h.collider.GetComponent<HazardCollider>() == null) return false;   // water and pits do not block sight
         return true;
     }
 
@@ -265,8 +275,9 @@ public class EnemyController : MonoBehaviour
     /// <summary>Picks a weighted random attack, avoiding a repeat of the previous one.</summary>
     public EnemyAttackData PickAttack()
     {
-        var list = data.attacks;
+        var list = (InPhase2 && data.phase2Attacks != null && data.phase2Attacks.Length > 0) ? data.phase2Attacks : data.attacks;
         if (list == null || list.Length == 0) return new EnemyAttackData();
+        if (lastAttackIndex >= list.Length) lastAttackIndex = -1;
 
         float total = 0f;
         for (int i = 0; i < list.Length; i++)
@@ -289,9 +300,16 @@ public class EnemyController : MonoBehaviour
         state = State.Defeated;
         foreach (var c in GetComponentsInChildren<Collider2D>()) c.enabled = false;
         rb.simulated = false;
+        Active.Remove(this);
         SaveSystem.MarkDefeated(UniqueId);
+        GameProgress.EnemiesDefeated++;
         onDefeated?.Invoke();
-        StartCoroutine(Fx.DeathRoutine(0.4f, 1.0f, true));
+        if (Gore.Enabled)
+        {
+            Gore.Dismember(this);
+            Destroy(gameObject, 1.5f);
+        }
+        else StartCoroutine(Fx.DeathRoutine(0.4f, 1.0f, true));
     }
 
     /// <summary>If the player loses, the enemy goes back to its spot with full health.</summary>
@@ -303,6 +321,8 @@ public class EnemyController : MonoBehaviour
         rb.position = home;
         EnterPatrol();
     }
+
+    void OnDestroy() { Active.Remove(this); }
 
     void OnDrawGizmosSelected()
     {

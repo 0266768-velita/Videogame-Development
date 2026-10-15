@@ -16,7 +16,8 @@ public class TutorialTips : MonoBehaviour
     static readonly string[] AllIds =
     {
         "move", "sprint", "map", "enemies", "pause",
-        "combat_basics", "enemy_turn", "interrupt", "victory", "fury", "seismic"
+        "combat_basics", "enemy_turn", "interrupt", "victory", "fury", "seismic",
+        "jump_hint", "fell", "new_seismic", "new_fury", "boss_intro", "locked_skills", "growth"
     };
 
     static TutorialTips instance;
@@ -68,39 +69,37 @@ public class TutorialTips : MonoBehaviour
         content = UIKit.CreateScreen("TutorialCanvas", 70, transform);
 
         // --- Toast (bottom center) ---
-        var toast = UIKit.NewImage("Toast", content, new Color(0.06f, 0.03f, 0.03f, 0.92f));
+        var toast = UIKit.NewImage("Toast", content, Color.white);
+        AztecUI.StylePanel(toast, 980, 104);
         toastRoot = toast.gameObject;
-        UIKit.Anchor(toast.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 28), new Vector2(980, 96));
-        var edge = UIKit.NewImage("Edge", toast.transform, UIKit.Accent);
-        UIKit.Anchor(edge.rectTransform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(0, 0.5f), Vector2.zero, new Vector2(6, 0));
+        UIKit.Anchor(toast.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 28), new Vector2(980, 104));
         var tag = UIKit.NewText("Tag", toast.transform, "TIP", 18, TextAnchor.UpperLeft, UIKit.Accent);
         tag.fontStyle = FontStyle.Bold;
-        UIKit.Anchor(tag.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(20, -8), new Vector2(80, 24));
+        UIKit.Anchor(tag.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(26, -14), new Vector2(80, 24));
         toastText = UIKit.NewText("Text", toast.transform, "", 24, TextAnchor.MiddleLeft, Color.white);
         toastText.horizontalOverflow = HorizontalWrapMode.Wrap;
         UIKit.Stretch(toastText.rectTransform);
-        toastText.rectTransform.offsetMin = new Vector2(20, 6);
-        toastText.rectTransform.offsetMax = new Vector2(-16, -24);
+        toastText.rectTransform.offsetMin = new Vector2(26, 14);
+        toastText.rectTransform.offsetMax = new Vector2(-26, -32);
         toastRoot.SetActive(false);
 
         // --- Modal (center card) ---
         var modal = UIKit.NewImage("Modal", content, new Color(0, 0, 0, 0.72f));
         modalRoot = modal.gameObject;
         UIKit.Stretch(modal.rectTransform);
-        var card = UIKit.NewImage("Card", modal.transform, new Color(0.08f, 0.04f, 0.04f, 0.98f));
+        var card = UIKit.NewImage("Card", modal.transform, Color.white);
         UIKit.Center(card.rectTransform, new Vector2(0, 10), new Vector2(940, 440));
-        var top = UIKit.NewImage("TopBar", card.transform, UIKit.Accent);
-        UIKit.Anchor(top.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), Vector2.zero, new Vector2(0, 8));
+        AztecUI.StylePanel(card, 940, 440);
 
         modalTitle = UIKit.NewText("Title", card.transform, "", 42, TextAnchor.UpperCenter, new Color(0.95f, 0.25f, 0.25f));
         modalTitle.fontStyle = FontStyle.Bold;
-        UIKit.Anchor(modalTitle.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0, -26), new Vector2(0, 60));
+        UIKit.Anchor(modalTitle.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0, -36), new Vector2(-60, 60));
 
         modalBody = UIKit.NewText("Body", card.transform, "", 27, TextAnchor.UpperLeft, Color.white);
         modalBody.horizontalOverflow = HorizontalWrapMode.Wrap;
         UIKit.Stretch(modalBody.rectTransform);
-        modalBody.rectTransform.offsetMin = new Vector2(46, 70);
-        modalBody.rectTransform.offsetMax = new Vector2(-46, -100);
+        modalBody.rectTransform.offsetMin = new Vector2(56, 70);
+        modalBody.rectTransform.offsetMax = new Vector2(-56, -110);
 
         modalFooter = UIKit.NewText("Footer", card.transform, "Press any key to continue", 22, TextAnchor.LowerCenter, new Color(1, 1, 1, 0.7f));
         UIKit.Anchor(modalFooter.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), new Vector2(0, 18), new Vector2(0, 34));

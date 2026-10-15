@@ -56,6 +56,12 @@ SFX['error']     = lambda: tone(square,110,0.15,0.002,0.05)*0.6
 SFX['enemy_die'] = lambda: tone(saw,sweep(400,40,0.7),0.7,0.002,0.5)*0.7+lp(noise(0.7),0.2)*env(int(SR*0.7),0.002,0.6)
 SFX['victory']   = lambda: seq([72,76,79,84,0,79,84],square,0.14,r=0.1)*0.7
 SFX['defeat']    = lambda: seq([69,66,62,57],saw,0.3,r=0.25)*0.6
+SFX['splash']    = lambda: mix(lp(noise(0.5),0.35)*env(int(SR*0.5),0.01,0.45)*1.4, tone(sine,sweep(500,200,0.2),0.2,0.001,0.15)*0.4)
+SFX['fall']      = lambda: mix(tone(saw,sweep(500,60,0.7),0.7,0.002,0.5)*0.6, lp(noise(0.3),0.2)*env(int(SR*0.3),0.001,0.3)*0.4)
+SFX['gib']       = lambda: mix(lp(noise(0.5),0.15)*env(int(SR*0.5),0.001,0.45,3)*1.8, tone(sine,sweep(160,40,0.4),0.4,0.001,0.35)*1.0, lp(noise(0.25),0.5)*env(int(SR*0.25),0.05,0.2)*0.6)
+SFX['key']       = lambda: seq([79,84,88,91,96],tri,0.09,r=0.2)*0.9
+SFX['door']      = lambda: mix(tone(sine,sweep(70,45,0.9),0.9,0.02,0.6)*1.2, lp(noise(0.9),0.06)*env(int(SR*0.9),0.05,0.8)*1.2)
+SFX['roar']      = lambda: mix(tone(saw,sweep(110,55,1.3),1.3,0.05,0.6)*0.8, tone(saw,sweep(112,56,1.3),1.3,0.05,0.6)*0.6, lp(noise(1.3),0.12)*env(int(SR*1.3),0.1,0.9)*0.9)
 SFX['logo']      = lambda: seq([60,67,72,79],sine,0.18,r=0.3)*0.9
 
 def mix(*parts):
@@ -106,6 +112,7 @@ MUSIC = {
  'music_menu':    lambda: music(72,16,[[57,60,64],[53,57,60],[55,59,62],[52,56,59]],2,lead_menu,drums='soft',seed=3),
  'music_explore': lambda: music(84,16,[[62,65,69],[58,62,65],[60,64,67],[57,60,64]],2,lead_explore,arp=True,seed=5),
  'music_battle':  lambda: music(138,16,[[57,60,64],[57,60,64],[53,57,60],[55,59,62]],2,lead_battle,arp=True,drums='full',lead_wave=square,seed=9),
+ 'music_boss':    lambda: music(160,16,[[57,60,63],[57,60,63],[53,56,60],[56,59,62]],2,lead_battle,arp=True,drums='full',lead_wave=saw,seed=13),
  'music_gameover':lambda: music(52,6,[[57,60,64],[53,56,60],[52,55,59]],2,lead_over,seed=11,bass_wave=sine),
 }
 

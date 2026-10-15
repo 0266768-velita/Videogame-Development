@@ -105,9 +105,11 @@ public class Minimap : MonoBehaviour
         group.interactable = false;
         group.blocksRaycasts = false;
 
-        var frame = UIKit.NewImage("Frame", content, new Color(0.55f, 0.07f, 0.09f, 0.95f));
+        const float pad = 14f;   // thickness of the Aztec frame around the map
+        var frame = UIKit.NewImage("Frame", content, Color.white);
         UIKit.Anchor(frame.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1),
-            new Vector2(-margin.x, -margin.y - 18f), new Vector2(mapWidth + 8f, mapHeight + 8f));
+            new Vector2(-margin.x, -margin.y - 18f), new Vector2(mapWidth + pad * 2f, mapHeight + pad * 2f));
+        AztecUI.StylePanel(frame, mapWidth + pad * 2f, mapHeight + pad * 2f);
 
         mapRect = UIKit.NewRect("Map", frame.transform);
         UIKit.Anchor(mapRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(mapWidth, mapHeight));
@@ -225,7 +227,7 @@ public class Minimap : MonoBehaviour
             if (e == null || e.CurrentState == EnemyController.State.Defeated) continue;
             if (!markers.ContainsKey(e))
             {
-                float size = e.data != null && e.data.archetype == EnemyArchetype.Giant ? 12f : 9f;
+                float size = e.data == null ? 9f : (e.data.isBoss ? 16f : (e.data.archetype == EnemyArchetype.Giant ? 12f : 9f));
                 markers[e] = NewMarker("Enemy", new Color(0.9f, 0.18f, 0.18f), size);
             }
         }

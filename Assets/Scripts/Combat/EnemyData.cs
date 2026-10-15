@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum EnemyArchetype { Giant, Witch, Other }
+public enum EnemyArchetype { Giant, Witch, Hound, Boss, Other }
 
 /// <summary>How the player can counter an attack.</summary>
 public enum CounterType
@@ -50,6 +50,35 @@ public class EnemyData : ScriptableObject
     public bool startsBattleFirst = false;
     [Tooltip("GDD section 12: Mictlan Fury unlocks when health gets critical against the Quinametzin.")]
     public bool grantsFuryAtCriticalHealth = false;
+
+    [Header("Progression (rewards for defeating this enemy)")]
+    [Tooltip("Permanent increase of Tlahuelli's max health when this enemy dies.")]
+    public float bonusMaxHealth = 0f;
+    [Tooltip("Permanent increase of Tlahuelli's max stamina when this enemy dies.")]
+    public float bonusMaxStamina = 0f;
+    [Tooltip("Defeating this enemy unlocks Seismic Jump.")]
+    public bool unlocksSeismic = false;
+    [Tooltip("Defeating this enemy unlocks Mictlan Fury (it can also unlock earlier through the Last Stand).")]
+    public bool unlocksFury = false;
+
+    [Header("Boss")]
+    public bool isBoss = false;
+    [Range(0.1f, 0.9f)] public float phase2HealthFraction = 0.5f;
+    [Tooltip("Attacks used once the boss is below phase2HealthFraction. Empty = same attacks.")]
+    public EnemyAttackData[] phase2Attacks;
+    [Min(1)] public int phase2AttacksPerTurn = 2;
+
+    [Header("Look (sprite sheet in Resources/Sprites)")]
+    public string spriteSheet = "";
+    public int frameWidth = 24;
+    public int frameHeight = 24;
+    [Tooltip("Distance from the pivot (collider center) down to the feet, in tiles.")]
+    public float feetOffset = 0.4f;
+    [Tooltip("Cut the sprite into cols x rows pieces when it dies (gore).")]
+    public int gorePieceCols = 2;
+    public int gorePieceRows = 2;
+    [Tooltip("Scales the amount of blood and gibs.")]
+    public float goreAmount = 1f;
 
     [Header("Body (tiles)")]
     [Tooltip("Approximate sprite radius; sets how far from the target lunges stop.")]

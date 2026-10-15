@@ -110,21 +110,14 @@ public static class UIKit
         Center(img.rectTransform, pos, size);
 
         var btn = img.gameObject.AddComponent<Button>();
-        btn.targetGraphic = img;
-        var colors = btn.colors;
-        colors.normalColor = new Color(0.16f, 0.06f, 0.06f, 0.92f);
-        colors.highlightedColor = new Color(0.55f, 0.12f, 0.12f, 1f);
-        colors.selectedColor = Accent;
-        colors.pressedColor = new Color(0.9f, 0.3f, 0.3f, 1f);
-        colors.disabledColor = new Color(0.2f, 0.2f, 0.2f, 0.6f);
-        colors.fadeDuration = 0.05f;
-        btn.colors = colors;
+        AztecUI.StyleButton(btn, img, size.x, size.y);
         img.gameObject.AddComponent<ButtonSounds>();
         btn.onClick.AddListener(() => Audio.Play(label == "Back" || label == "Resume" ? "ui_back" : "ui_select"));
         if (onClick != null) btn.onClick.AddListener(onClick);
 
         var text = NewText("Label", img.transform, label, fontSize, TextAnchor.MiddleCenter, Color.white);
         Stretch(text.rectTransform);
+        text.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.85f);
         return btn;
     }
 
@@ -136,11 +129,18 @@ public static class UIKit
 
     public static void EnsureEventSystem()
     {
-        if (Object.FindFirstObjectByType<EventSystem>() != null) return;
-        var es = new GameObject("EventSystem");
-        es.AddComponent<EventSystem>();
-        var module = es.AddComponent<InputSystemUIInputModule>();
-        module.AssignDefaultActions();
+        var es = Object.FindFirstObjectByType<EventSystem>();
+        if (es == null)
+        {
+            var go = new GameObject("EventSystem");
+            es = go.AddComponent<EventSystem>();
+            var module = go.AddComponent<InputSystemUIInputModule>();
+            module.AssignDefaultActions();
+        }
+        // Our own navigation replaces the module's slow "move" action (it waited ~0.5 s before repeating).
+        var ui = es.GetComponent<InputSystemUIInputModule>();
+        if (ui != null && ui.move != null) ui.move = null;
+        if (es.GetComponent<MenuNavigator>() == null) es.gameObject.AddComponent<MenuNavigator>();
     }
 
     static float suppressSelectSoundUntil;
@@ -204,5 +204,86 @@ public class ButtonSounds : MonoBehaviour, IPointerEnterHandler, ISelectHandler
     {
         if (UIKit.SelectSoundSuppressed) return;
         if (button != null && button.interactable) Audio.Play("ui_move", 0.5f);
+    }
+}
+
+/// <summary>
+/// Fast menu navigation: arrows / WASD / D-pad / left stick. The first press moves immediately (taps are never
+/// swallowed) and holding repeats quickly. Wraps from the last button to the first on a fresh press.
+/// </summary>
+public class MenuNavigator : MonoBehaviour
+{
+    const float FirstRepeatDelay = 0.26f;
+    const float RepeatRate = 0.075f;
+
+    Vector2Int lastDir;
+    float nextTime;
+
+    void Update()
+    {
+        var es = EventSystem.current;
+        if (es == null) return;
+        var sel = es.currentSelectedGameObject;
+        if (sel == null || !sel.activeInHierarchy) return;
+        var s = sel.GetComponent<Selectable>();
+        if (s == null || !s.IsInteractable()) return;
+
+        Vector2Int dir = ReadDirection();
+        if (dir == Vector2Int.zero) { lastDir = Vector2Int.zero; return; }
+
+        bool fresh = dir != lastDir;
+        if (!fresh && Time.unscaledTime < nextTime) return;
+        lastDir = dir;
+        nextTime = Time.unscaledTime + (fresh ? FirstRepeatDelay : RepeatRate);
+
+        Selectable next = Find(s, dir);
+        if (next == null && fresh)
+        {
+            // wrap around: walk to the far end in the opposite direction
+            Selectable w = s;
+            for (int i = 0; i < 32; i++)
+            {
+                var n2 = Find(w, -dir);
+                if (n2 == null || n2 == w) break;
+                w = n2;
+            }
+            if (w != s) next = w;
+        }
+        if (next != null) es.SetSelectedGameObject(next.gameObject);
+    }
+
+    static Selectable Find(Selectable s, Vector2Int d)
+    {
+        if (d.y > 0) return s.FindSelectableOnUp();
+        if (d.y < 0) return s.FindSelectableOnDown();
+        if (d.x < 0) return s.FindSelectableOnLeft();
+        return s.FindSelectableOnRight();
+    }
+
+    static Vector2Int ReadDirection()
+    {
+        int x = 0, y = 0;
+        var k = Keyboard.current;
+        if (k != null)
+        {
+            if (k.upArrowKey.isPressed || k.wKey.isPressed) y += 1;
+            if (k.downArrowKey.isPressed || k.sKey.isPressed) y -= 1;
+            if (k.leftArrowKey.isPressed || k.aKey.isPressed) x -= 1;
+            if (k.rightArrowKey.isPressed || k.dKey.isPressed) x += 1;
+        }
+        var g = Gamepad.current;
+        if (g != null)
+        {
+            if (g.dpad.up.isPressed) y += 1;
+            if (g.dpad.down.isPressed) y -= 1;
+            if (g.dpad.left.isPressed) x -= 1;
+            if (g.dpad.right.isPressed) x += 1;
+            Vector2 st = g.leftStick.ReadValue();
+            if (st.y > 0.6f) y += 1; else if (st.y < -0.6f) y -= 1;
+            if (st.x > 0.6f) x += 1; else if (st.x < -0.6f) x -= 1;
+        }
+        x = Mathf.Clamp(x, -1, 1); y = Mathf.Clamp(y, -1, 1);
+        if (y != 0) return new Vector2Int(0, y);   // menus are vertical: vertical wins
+        return new Vector2Int(x, 0);
     }
 }
