@@ -204,48 +204,45 @@ public class BattleHUD : MonoBehaviour
 
     void BuildPlayerPanel()
     {
-        var panel = UIKit.NewImage("PlayerPanel", content, UIKit.PanelColor);
-        UIKit.Anchor(panel.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-20, 20), new Vector2(380, 140));
+        var panel = UIKit.NewImage("PlayerPanel", content, Color.white);
+        UIKit.Anchor(panel.rectTransform, new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-20, 20), new Vector2(404, 160));
+        AztecUI.StylePanel(panel, 404, 160);
 
         var title = UIKit.NewText("Name", panel.transform, "TLAHUELLÍ", 18, TextAnchor.UpperLeft, Color.white);
-        UIKit.Anchor(title.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(12, -4), new Vector2(-24, 24));
+        UIKit.Anchor(title.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(24, -14), new Vector2(-48, 24));
         furyText = UIKit.NewText("Fury", panel.transform, "", 18, TextAnchor.UpperRight, new Color(0.9f, 0.5f, 1f));
-        UIKit.Anchor(furyText.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-12, -4), new Vector2(-24, 24));
+        UIKit.Anchor(furyText.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-24, -14), new Vector2(-48, 24));
 
-        MakeBar(panel.transform, new Vector2(10, -30), new Vector2(360, 30), UIKit.Accent, out hpFill, out hpText);
-        MakeBar(panel.transform, new Vector2(10, -66), new Vector2(360, 26), StaminaGold, out stFill, out stText);
-        MakeBar(panel.transform, new Vector2(10, -98), new Vector2(360, 26), ChargePurple, out chFill, out chText);
+        MakeBar(panel.transform, new Vector2(20, -40), new Vector2(364, 30), UIKit.Accent, out hpFill, out hpText);
+        MakeBar(panel.transform, new Vector2(20, -76), new Vector2(364, 26), StaminaGold, out stFill, out stText);
+        MakeBar(panel.transform, new Vector2(20, -108), new Vector2(364, 26), ChargePurple, out chFill, out chText);
     }
 
     void BuildMenu()
     {
-        var panel = UIKit.NewImage("Menu", content, UIKit.PanelColor);
-        UIKit.Anchor(panel.rectTransform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(20, 20), new Vector2(350, 5 * 46 + 12));
+        var panel = UIKit.NewImage("Menu", content, Color.white);
+        UIKit.Anchor(panel.rectTransform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(20, 20), new Vector2(394, 5 * 48 + 40));
+        AztecUI.StylePanel(panel, 394, 5 * 48 + 40);
 
         PlayerAction[] actions = { PlayerAction.Attack, PlayerAction.Fury, PlayerAction.Seismic, PlayerAction.Potion, PlayerAction.EndTurn };
         for (int i = 0; i < actions.Length; i++)
         {
             var act = actions[i];
-            var img = UIKit.NewImage("Btn_" + act, panel.transform, new Color(0.30f, 0.08f, 0.08f, 0.95f));
+            var img = UIKit.NewImage("Btn_" + act, panel.transform, Color.white);
             img.raycastTarget = true;
-            UIKit.Anchor(img.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(10, -8 - i * 46), new Vector2(330, 40));
+            UIKit.Anchor(img.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(20, -20 - i * 48), new Vector2(354, 42));
 
             var btn = img.gameObject.AddComponent<Button>();
-            btn.targetGraphic = img;
+            AztecUI.StyleButton(btn, img, 354, 42);
             img.gameObject.AddComponent<ButtonSounds>();
             btn.navigation = new Navigation { mode = Navigation.Mode.None };
-            var colors = btn.colors;
-            colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(1f, 0.55f, 0.55f);
-            colors.pressedColor = new Color(0.8f, 0.3f, 0.3f);
-            colors.disabledColor = new Color(0.45f, 0.45f, 0.45f, 0.7f);
-            btn.colors = colors;
             btn.onClick.AddListener(() => BattleManager.Instance.RequestAction(act));
 
             var label = UIKit.NewText("Label", img.transform, "", 17, TextAnchor.MiddleLeft, Color.white);
             UIKit.Stretch(label.rectTransform);
-            label.rectTransform.offsetMin = new Vector2(12, 0);
-            label.rectTransform.offsetMax = new Vector2(-6, 0);
+            label.rectTransform.offsetMin = new Vector2(16, 0);
+            label.rectTransform.offsetMax = new Vector2(-12, 0);
+            label.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.85f);
 
             menu.Add(new MenuEntry { action = act, button = btn, label = label });
         }

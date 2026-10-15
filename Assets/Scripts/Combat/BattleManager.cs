@@ -151,11 +151,12 @@ public class BattleManager : MonoBehaviour
         pendingFuryAwakening = false;
         BattleStarted?.Invoke();
 
-        Audio.PlayMusic("music_battle", true, 0.5f);
+        Audio.PlayMusic(enemies[0].data.isBoss ? "music_boss" : "music_battle", true, 0.5f);
         Audio.Play("alert");
 
         Vector2 center = PlaceActors();
         hud.Show(this);
+        battleCam.battleViewHeight = enemies[0].data.isBoss ? 13f : 10f;   // the boss is huge
         battleCam.EnterBattle(center);
         hud.ShowBanner("Battle!", 1.2f);
         yield return new WaitForSeconds(1.3f);
@@ -164,7 +165,8 @@ public class BattleManager : MonoBehaviour
             "Battles are turn-based. On your turn you spend STAMINA (the gold bar).\n\n" +
             "[1 / A] Attack      [4 / D-pad Up] Potion      [Q / RB] End turn\n" +
             "[Left / Right arrows] change target\n\n" +
-            "Stamina only partly refills each turn, so spend it wisely.");
+            "Stamina only partly refills each turn, so spend it wisely.\n\n" +
+            "Fury and Seismic Jump are still LOCKED: defeat stronger enemies to unlock them.");
 
         bool victory = false;
         bool firstRound = true;
@@ -213,7 +215,7 @@ public class BattleManager : MonoBehaviour
     Vector2 PlaceActors()
     {
         Vector2 center = enemies[0].transform.position;
-        float half = battleDistance * 0.5f;
+        float half = battleDistance * 0.5f + Mathf.Max(0f, enemies[0].data.bodyRadius - 1.5f);   // big enemies need more room
 
         player.Teleport(center + Vector2.left * half);
         playerFx.Face(1f);
@@ -407,26 +409,42 @@ public class BattleManager : MonoBehaviour
         hud.SetTurnLabel(e.data.displayName + " attacks");
         yield return new WaitForSeconds(0.5f);
 
-        var atk = e.PickAttack();
-
-        yield return TutorialTips.Instance.Modal("enemy_turn", "ENEMY TURN: DODGE!",
-            "The enemy attacks! It flashes RED while it prepares.\n\n" +
-            "When the yellow  DODGE!  prompt appears, press  D  (B on a gamepad).\n" +
-            "Don't press too early: your dodge locks for a moment.\n\n" +
-            "Dodging late in the window is a PERFECT dodge: +10 stamina.");
-        if (atk.counter == CounterType.Interrupt)
-            yield return TutorialTips.Instance.Modal("interrupt", "INTERRUPT THE SPELL",
-                "Some spells can't be dodged.\n\n" +
-                "When you see  INTERRUPT!  press  Attack  ( 1  or  A )  in time to break the spell.");
-
-        hud.ShowBanner(atk.attackName, 1.0f);
-        int hits = Mathf.Max(1, atk.hits);
-
-        for (int i = 0; i < hits && !PlayerHealth.IsDead; i++)
+        // Boss phase 2: the fight changes (new attacks, several attacks per turn)
+        if (e.data.isBoss && e.InPhase2 && !e.Phase2Announced)
         {
-            yield return EnemyHit(e, atk);
-            if (pendingFuryAwakening) yield return FuryAwakeningRoutine();
-            if (i < hits - 1) yield return new WaitForSeconds(atk.timeBetweenHits);
+            e.Phase2Announced = true;
+            Audio.Play("roar");
+            hud.ShowBanner(e.data.displayName + " is ENRAGED!", 2f);
+            if (battleCam != null) battleCam.Shake(0.45f, 0.7f);
+            Gore.Splatter(e.transform.position, Vector2.left, 10, 1.3f);
+            yield return new WaitForSeconds(2.1f);
+        }
+        int attacksThisTurn = (e.data.isBoss && e.InPhase2) ? Mathf.Max(1, e.data.phase2AttacksPerTurn) : 1;
+
+        for (int a = 0; a < attacksThisTurn && !PlayerHealth.IsDead; a++)
+        {
+            var atk = e.PickAttack();
+
+            yield return TutorialTips.Instance.Modal("enemy_turn", "ENEMY TURN: DODGE!",
+                "The enemy attacks! It flashes RED while it prepares.\n\n" +
+                "When the yellow  DODGE!  prompt appears, press  D  (B on a gamepad).\n" +
+                "Don't press too early: your dodge locks for a moment.\n\n" +
+                "Dodging late in the window is a PERFECT dodge: +10 stamina.");
+            if (atk.counter == CounterType.Interrupt)
+                yield return TutorialTips.Instance.Modal("interrupt", "INTERRUPT THE SPELL",
+                    "Some spells can't be dodged.\n\n" +
+                    "When you see  INTERRUPT!  press  Attack  ( 1  or  A )  in time to break the spell.");
+
+            hud.ShowBanner(atk.attackName, 1.0f);
+            int hits = Mathf.Max(1, atk.hits);
+
+            for (int i = 0; i < hits && !PlayerHealth.IsDead; i++)
+            {
+                yield return EnemyHit(e, atk);
+                if (pendingFuryAwakening) yield return FuryAwakeningRoutine();
+                if (i < hits - 1) yield return new WaitForSeconds(atk.timeBetweenHits);
+            }
+            if (a < attacksThisTurn - 1) yield return new WaitForSeconds(0.45f);
         }
         yield return new WaitForSeconds(0.5f);
         hud.SetTurnLabel("");
@@ -496,6 +514,7 @@ public class BattleManager : MonoBehaviour
 
         PlayerHealth.TakeDamage(dmg);
         Audio.Play("hurt", 1f, 0.06f);
+        if (dmg > 0f) Gore.Splatter(player.Position + Vector2.up * 0.4f, new Vector2(-1f, 0.3f), Mathf.Clamp(Mathf.RoundToInt(dmg / 3f), 3, 16), 1f);
         hud.Popup(player.Position + Vector2.up * 1.5f, "-" + Mathf.RoundToInt(dmg), new Color(1f, 0.3f, 0.3f));
         StartCoroutine(playerFx.HitReaction());
         if (battleCam != null) battleCam.Shake(0.15f, 0.15f);
@@ -527,6 +546,7 @@ public class BattleManager : MonoBehaviour
         if (e == null || e.Health.IsDead) return;
         e.Health.TakeDamage(dmg);
         Audio.Play(e.Health.IsDead ? "enemy_die" : "enemy_hit", 1f, 0.08f);
+        if (!e.Health.IsDead) Gore.Splatter(e.transform.position + Vector3.up * 0.4f, new Vector2(1f, 0.35f), Mathf.Clamp(Mathf.RoundToInt(dmg / 3f), 4, 20), 1f);
         hud.Popup(e.transform.position + Vector3.up * e.data.popupHeight, Mathf.RoundToInt(dmg).ToString(), Color.white);
         e.Fx.Trigger("Hit");
         StartCoroutine(e.Fx.HitReaction());
@@ -575,17 +595,65 @@ public class BattleManager : MonoBehaviour
     {
         Audio.StopMusic(0.3f);
         Audio.Play("victory");
+
+        // Rewards: permanent growth, new skills, potion, Macuahuitl charge
+        float hpBonus = 0f, stBonus = 0f;
+        bool newSeismic = false, newFury = false, bossDown = false;
+        foreach (var d in defeatedData)
+        {
+            hpBonus += d.bonusMaxHealth; stBonus += d.bonusMaxStamina;
+            if (d.unlocksSeismic && !Stats.seismicUnlocked) newSeismic = true;
+            if (d.unlocksFury && !Stats.furyUnlocked) newFury = true;
+            if (d.isBoss) bossDown = true;
+        }
+        Stats.Grow(hpBonus, stBonus);
         Stats.GrantVictoryPotions();
         Stats.AddCharge(pendingSouls);
-        hud.ShowBanner($"Victory!  +{Mathf.RoundToInt(pendingSouls)} souls  (Macuahuitl {Mathf.RoundToInt(Stats.ChargeNormalized * 100f)}%)", 2.2f);
+
+        string growth = (hpBonus > 0f || stBonus > 0f)
+            ? $"\nMax HP +{Mathf.RoundToInt(hpBonus)}   Max Stamina +{Mathf.RoundToInt(stBonus)}" : "";
+        hud.ShowBanner($"Victory!  +{Mathf.RoundToInt(pendingSouls)} souls  (Macuahuitl {Mathf.RoundToInt(Stats.ChargeNormalized * 100f)}%){growth}", 2.6f);
         Stats.FullRestore();   // GDD section 14: health refills after winning
         BattleWon?.Invoke(new List<EnemyData>(defeatedData));
-        yield return new WaitForSeconds(2.3f);
+        yield return new WaitForSeconds(2.7f);
+
+        if (newSeismic)
+        {
+            Stats.UnlockSeismic();
+            Audio.Play("fury");
+            yield return TutorialTips.Instance.Modal("new_seismic", "NEW SKILL: SEISMIC JUMP",
+                "The Witch's curse taught you to feel the earth.\n\n" +
+                "Use  Seismic Jump  ( 3  or  Y )  in battle (costs 40 stamina):\n" +
+                "Tlahuelli leaps and slams the ground, hitting EVERY enemy.");
+        }
+        if (newFury)
+        {
+            Stats.UnlockFury();
+            Audio.Play("fury");
+            yield return TutorialTips.Instance.Modal("new_fury", "NEW SKILL: MICTLAN FURY",
+                "The giant's power flows into you.\n\n" +
+                "Use  Mictlan Fury  ( 2  or  X )  in battle: it heals you, refills your stamina\n" +
+                "and boosts your damage for 3 turns. Once per battle.");
+        }
+        if (hpBonus > 0f || stBonus > 0f)
+            TutorialTips.Instance.Toast("growth", "Every enemy you defeat makes Tlahuelli stronger: more health, more stamina and a more powerful Macuahuitl.", 8f);
+
+        if (bossDown) GameProgress.BossDefeated = true;
 
         // Return to where the fight started, and save (autosave + new respawn point)
         player.Teleport(preBattlePos);
         Stats.SetCheckpoint(preBattlePos);
-        SaveSystem.Save(Stats, preBattlePos);
+        GameProgress.TryDropKey(preBattlePos);
+        if (bossDown) SaveSystem.Delete();   // the game is finished: no Continue afterwards, only New Game
+        else SaveSystem.Save(Stats, preBattlePos);
+
+        if (bossDown)
+        {
+            var end = GetComponent<EndingScreen>();
+            if (end == null) end = gameObject.AddComponent<EndingScreen>();
+            hud.Hide();
+            yield return end.Run();   // never returns: it ends in the main menu
+        }
     }
 
     IEnumerator DefeatRoutine()

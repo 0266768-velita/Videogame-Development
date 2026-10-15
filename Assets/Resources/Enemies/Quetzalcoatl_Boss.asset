@@ -1,0 +1,128 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d6f4497eda356d45bd2ea195e916788, type: 3}
+  m_Name: Quetzalcoatl_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
+  displayName: Quetzalcoatl
+  archetype: 3
+  maxHealth: 480
+  attackPower: 34
+  soulsOnDefeat: 40
+  startsBattleFirst: 0
+  grantsFuryAtCriticalHealth: 0
+  bonusMaxHealth: 0
+  bonusMaxStamina: 0
+  unlocksSeismic: 0
+  unlocksFury: 0
+  isBoss: 1
+  phase2HealthFraction: 0.5
+  phase2Attacks:
+  - attackName: Serpent Dive
+    damageMultiplier: 1
+    hits: 2
+    windUpTime: 0.9
+    counterWindow: 0.35
+    timeBetweenHits: 0.6
+    counter: 0
+    animatorTrigger: 
+    weight: 1
+    lungeAtTarget: 1
+  - attackName: Quetzal Fury
+    damageMultiplier: 0.5
+    hits: 5
+    windUpTime: 0.8
+    counterWindow: 0.28
+    timeBetweenHits: 0.35
+    counter: 0
+    animatorTrigger: 
+    weight: 1
+    lungeAtTarget: 0
+  - attackName: Wind Cutter
+    damageMultiplier: 0.8
+    hits: 2
+    windUpTime: 0.9
+    counterWindow: 0.35
+    timeBetweenHits: 0.6
+    counter: 0
+    animatorTrigger: 
+    weight: 1
+    lungeAtTarget: 0
+  - attackName: Solar Chant
+    damageMultiplier: 1.8
+    hits: 1
+    windUpTime: 1.8
+    counterWindow: 0.55
+    timeBetweenHits: 0.6
+    counter: 1
+    animatorTrigger: 
+    weight: 0.7
+    lungeAtTarget: 0
+  phase2AttacksPerTurn: 2
+  spriteSheet: quetzal
+  frameWidth: 98
+  frameHeight: 82
+  feetOffset: 1.8
+  gorePieceCols: 3
+  gorePieceRows: 2
+  goreAmount: 3
+  bodyRadius: 3.4
+  popupHeight: 5.4
+  patrolRadius: 0
+  patrolSpeed: 0
+  chaseSpeed: 2
+  detectionRadius: 9
+  fieldOfView: 360
+  hearingRadius: 9
+  loseSightRadius: 25
+  loseTargetAfterSeconds: 99
+  engageDistance: 5.5
+  attacks:
+  - attackName: Wind Cutter
+    damageMultiplier: 0.8
+    hits: 2
+    windUpTime: 1.1
+    counterWindow: 0.4
+    timeBetweenHits: 0.7
+    counter: 0
+    animatorTrigger: 
+    weight: 1
+    lungeAtTarget: 0
+  - attackName: Feather Storm
+    damageMultiplier: 0.45
+    hits: 4
+    windUpTime: 0.9
+    counterWindow: 0.3
+    timeBetweenHits: 0.4
+    counter: 0
+    animatorTrigger: 
+    weight: 1
+    lungeAtTarget: 0
+  - attackName: Tail Sweep
+    damageMultiplier: 1.3
+    hits: 1
+    windUpTime: 1.2
+    counterWindow: 0.4
+    timeBetweenHits: 0.6
+    counter: 0
+    animatorTrigger: 
+    weight: 1
+    lungeAtTarget: 1
+  - attackName: Solar Chant
+    damageMultiplier: 1.8
+    hits: 1
+    windUpTime: 2
+    counterWindow: 0.6
+    timeBetweenHits: 0.6
+    counter: 1
+    animatorTrigger: 
+    weight: 0.7
+    lungeAtTarget: 0
