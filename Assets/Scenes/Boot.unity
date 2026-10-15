@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &374002030
+--- !u!1 &183992207
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,10 +127,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 374002034}
-  - component: {fileID: 374002033}
-  - component: {fileID: 374002032}
-  - component: {fileID: 374002031}
+  - component: {fileID: 183992211}
+  - component: {fileID: 183992210}
+  - component: {fileID: 183992209}
+  - component: {fileID: 183992208}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -138,13 +138,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &374002031
+--- !u!114 &183992208
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 374002030}
+  m_GameObject: {fileID: 183992207}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: da3c6298038b86d4496078f6b30142d5, type: 3}
@@ -153,21 +153,21 @@ MonoBehaviour:
   targetAspect: 1.7777778
   viewHeightInTiles: 12
   applyOrthographic: 1
---- !u!81 &374002032
+--- !u!81 &183992209
 AudioListener:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 374002030}
+  m_GameObject: {fileID: 183992207}
   m_Enabled: 1
---- !u!20 &374002033
+--- !u!20 &183992210
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 374002030}
+  m_GameObject: {fileID: 183992207}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -212,13 +212,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &374002034
+--- !u!4 &183992211
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 374002030}
+  m_GameObject: {fileID: 183992207}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
@@ -227,7 +227,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1305222557
+--- !u!1 &881777939
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -235,8 +235,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1305222559}
-  - component: {fileID: 1305222558}
+  - component: {fileID: 881777941}
+  - component: {fileID: 881777940}
   m_Layer: 0
   m_Name: BootSplash
   m_TagString: Untagged
@@ -244,13 +244,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1305222558
+--- !u!114 &881777940
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1305222557}
+  m_GameObject: {fileID: 881777939}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aa257e02a375cff43bc27f8d7cd27635, type: 3}
@@ -265,13 +265,13 @@ MonoBehaviour:
   legalText: "Mictl\xE1n is an original work inspired by Mexica mythology.\nCharacters,
     events and brands shown here are fictional."
   legalSeconds: 3.5
---- !u!4 &1305222559
+--- !u!4 &881777941
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1305222557}
+  m_GameObject: {fileID: 881777939}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -284,5 +284,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 374002034}
-  - {fileID: 1305222559}
+  - {fileID: 183992211}
+  - {fileID: 881777941}
