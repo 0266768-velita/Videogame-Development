@@ -1,6 +1,6 @@
 # Calendario de desarrollo — TD_Game (juego final)
 
-**Periodo:** 3 al 20 de noviembre de 2026 · **Actualizado:** 5 de noviembre
+**Periodo:** 3 al 20 de noviembre de 2026 · **Actualizado:** 12 de noviembre
 **Objetivo:** entregar el **20 de noviembre** el **juego final** (no un prototipo):
 - un **mapa principal bien elaborado** con **al menos 10 minutos de juego**, **3 zonas o más** y la **zona del jefe final**;
 - **combate por turnos** al estilo de Mictlán v5;
@@ -153,9 +153,9 @@ Todo validado en Unity; el detalle está en `DEVELOPMENT_LOG.md`, sesiones 1 a 4
 ### Viernes 6 de noviembre — Jugador en 8 direcciones · núcleo de juego
 **Estado:** Pendiente · **Depende de:** P0 para los datos de juego
 - 🛠 **Unity**
-  - [ ] Diagonales y `PlayerDirection` (dirección actual y última dirección válida).
-  - [ ] Adaptar `GameState` (modos Exploration, Combat, Paused, Cutscene) y `Health`.
-  - [ ] Crear el ScriptableObject `PlayerStats` (vida, estamina, daño, costes): son los valores del juego anterior como punto de partida.
+  - [x] Diagonales y `PlayerDirection` (dirección actual y última dirección válida).
+  - [x] Adaptar `GameState` (modos Exploration, Combat, Paused, Cutscene) y `Health`.
+  - [x] Crear el ScriptableObject `PlayerStats` (vida, estamina, daño, costes): son los valores del juego anterior como punto de partida.
 - 🎨 **Arte**
   - [ ] Tileset de la zona 1; boceto del personaje.
 - 📐 **Diseño**
@@ -185,9 +185,9 @@ Todo validado en Unity; el detalle está en `DEVELOPMENT_LOG.md`, sesiones 1 a 4
 ### Lunes 9 de noviembre — Núcleo del combate
 **Estado:** Pendiente · **Depende de:** H1
 - 🛠 **Unity**
-  - [ ] Mapa de acciones `Combat` en `PlayerControls.inputactions`: atacar, habilidad 1, habilidad 2, poción, terminar turno, cambiar objetivo, esquivar e interrumpir.
-  - [ ] Inicio del combate al contacto: el jugador y los enemigos se colocan en arena sobre el mismo mapa, la cámara de combate hace zoom y se unen los enemigos cercanos.
-  - [ ] Turno del jugador: estamina, atacar, poción, terminar turno y cambio de objetivo.
+  - [x] Mapa de acciones `Combat` en `PlayerControls.inputactions`: atacar, habilidad 1, habilidad 2, poción, terminar turno, cambiar objetivo, esquivar e interrumpir.
+  - [x] Inicio del combate al contacto: el jugador y los enemigos se colocan en arena sobre el mismo mapa, la cámara de combate hace zoom y se unen los enemigos cercanos.
+  - [x] Turno del jugador: estamina, atacar, poción, terminar turno y cambio de objetivo.
   - [ ] Flujo Aseprite → Unity (P1): importar el tileset de la zona 1 y crear su paleta.
 - 🎨 **Arte**
   - [ ] Enemigo 1 (exploración y combate).
@@ -195,8 +195,8 @@ Todo validado en Unity; el detalle está en `DEVELOPMENT_LOG.md`, sesiones 1 a 4
 ### Martes 10 de noviembre — Turno enemigo y fin del combate
 **Estado:** Pendiente
 - 🛠 **Unity**
-  - [ ] Turno enemigo: telegrafía en rojo, ventana de **esquivar** o **interrumpir**, PERFECT (+estamina) y bloqueo anti-spam.
-  - [ ] Daño, **victoria** (recompensas y regreso a la exploración) y **derrota** (Game Over básico y reintento desde el checkpoint).
+  - [x] Turno enemigo: telegrafía en rojo, ventana de **esquivar** o **interrumpir**, PERFECT (+estamina) y bloqueo anti-spam.
+  - [x] Daño, **victoria** (recompensas y regreso a la exploración) y **derrota** (Game Over básico y reintento desde el checkpoint).
   - [ ] Habilidades únicas del **enemigo 1** según el diseño.
 - 🎨 **Arte**
   - [ ] Enemigo 2; personaje v1 (entrega).
@@ -204,13 +204,13 @@ Todo validado en Unity; el detalle está en `DEVELOPMENT_LOG.md`, sesiones 1 a 4
 ### Miércoles 11 de noviembre — Habilidades y progresión
 **Estado:** Pendiente
 - 🛠 **Unity**
-  - [ ] Habilidades del juego anterior:
+  - [x] Habilidades del juego anterior:
     - **Mictlan Fury**: cura, estamina llena y más daño durante 3 turnos.
     - **Seismic Jump**: golpea a todos los enemigos.
     - Carga del **Macuahuitl** con las almas de los enemigos.
     - **Pociones**.
-  - [ ] Habilidades nuevas del diseño (P0).
-  - [ ] Progresión: desbloqueos, crecimiento de vida y estamina por victoria, *Last Stand*.
+  - [ ] Habilidades nuevas del diseño (P0). **Bloqueado por P0**; el sistema ya las admite (subclase de `CombatAbility` + asset).
+  - [x] Progresión: desbloqueos, crecimiento de vida y estamina por victoria, *Last Stand*.
   - [ ] Habilidades únicas del **enemigo 2**.
   - [ ] Animaciones del jugador con el Animator y `PlayerAnimation` (exploración y combate).
 - 🎨 **Arte**
@@ -336,3 +336,4 @@ Todo validado en Unity; el detalle está en `DEVELOPMENT_LOG.md`, sesiones 1 a 4
 | 5 nov | Se compactan tareas del plan anterior: animaciones el 11, prefabs el 12, profundidad el 14 e interacciones el 17 | Hacer sitio a los sistemas nuevos |
 | 5 nov | **Nuevo:** plan de adaptación de los sistemas del juego anterior | Decisión: copiar y adaptar lo que cumpla `CLAUDE.md` |
 | 5 nov | Ningún objetivo anterior eliminado; todos están integrados en el plan nuevo | — |
+| 12 nov | Tareas de Toño (2.5–2.7, 3.1–3.3, 3.6–3.7, 3.10, 3.12) completadas y validadas en `TestLevel` con 3 enemigos de prueba y un HUD de depuración provisional; 3.11 sigue bloqueada por P0 | Sesión 7 del registro |

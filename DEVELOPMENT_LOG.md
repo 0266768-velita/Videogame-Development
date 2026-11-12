@@ -5,6 +5,64 @@ Planificación: `DEVELOPMENT_CALENDAR.md` · Reglas y decisiones técnicas: `CLA
 
 ---
 
+## 2026-11-12 — Sesión 7: jugador en 8 direcciones y combate por turnos (tareas de Toño)
+
+**Tipo:** implementación en Unity, validada en Play Mode por MCP
+
+### Qué se implementó (calendario 2.5–2.7, 3.1–3.3, 3.6, 3.7, 3.10–3.12)
+- **8 direcciones:** `allowDiagonals` activado en `Player`; `PlayerDirection` guarda la dirección actual, la última válida y la dirección `Direction8`.
+- **Núcleo:** `GameState` (modos Exploration, Combat, Paused y Cutscene) y `Health`, adaptados del juego anterior. `PlayerMovement` solo mueve en Exploration.
+- **Datos:**
+  - `PlayerStats` (ScriptableObject) con los valores del juego anterior.
+  - `EnemyData` y `EnemyAttack`: ataques con contraataque (Dodge, Interrupt o Unavoidable) y **efecto único** (DrainStamina, HealSelf o Weaken).
+- **Input:** mapa `Combat` en `PlayerControls.inputactions`:
+  - Attack 1/A, Skill1 2/X, Skill2 3/Y y Potion 4/D-pad arriba;
+  - EndTurn Q/RB y TargetPrev/Next con flechas o D-pad;
+  - Dodge con Espacio, D o B, e Interrupt con 1/A.
+- **Combate** (`Scripts/Combat/`), dividido en scripts cortos en lugar del `BattleManager` de 679 líneas:
+  - `CombatManager`: flujo, unión de enemigos cercanos y eventos `CombatStarted`, `CombatWon` y `CombatLost`.
+  - `CombatArena`: colocación sobre el mismo mapa y zoom de cámara de 4.21875 a 2.8125 (escala entera ×3).
+  - `PlayerTurn`, `EnemyTurn` (telegrafía en rojo, ventana de contraataque, PERFECT +estamina y bloqueo anti-spam) y `CombatRewards` (victoria, derrota y reintento desde el checkpoint).
+  - `CombatContext`: daño, objetivo y Last Stand.
+  - `CombatFeed`: eventos hacia la UI.
+  - `CombatMotion`: embestidas, saltos y destellos provisionales hasta tener animaciones.
+- **Habilidades como ScriptableObjects** (`CombatAbility` y sus subclases): Attack, Mictlan Fury, Seismic Jump y Potion. Una habilidad nueva = una subclase y su asset, sin tocar el resto del código.
+- **Progresión:** `PlayerProgression` guarda desbloqueos, vida y estamina extra, victorias y checkpoint. La carga del Macuahuitl aumenta el daño. El Last Stand desbloquea Fury.
+- `CombatEnemy`: vida, datos e inicio del combate al contacto. La IA de exploración puede llamar `CombatManager.Instance.TryStartCombat(this)`.
+- `CameraFollow.Follow(Transform)`: cambio de objetivo con suavizado.
+- `CombatDebugHUD` **provisional** (OnGUI) para probar el combate hasta que exista el HUD de Canvas.
+
+### Assets y escena
+- `Assets/TD_Game/ScriptableObjects/`:
+  - `Characters/PlayerStats_Tlahuelli`;
+  - `Abilities/Ability_{Attack, MictlanFury, SeismicJump, Potion}`;
+  - `Enemies/EnemyData_Test{Hound, Brute, Witch}`.
+- `TestLevel`:
+  - `Player` con `PlayerDirection`, `Health`, `PlayerProgression` y `PlayerCombatant`;
+  - objeto `Combat` con los componentes del combate;
+  - 3 enemigos de prueba. La Hound está sola en la sala izquierda; la Brute y la Witch están juntas en la sala derecha.
+
+### Validación (Play Mode por MCP)
+- Contacto → combate, zoom y la Hound ataca primero → ataques → victoria con +1 poción, +8 almas, +3 de estamina máxima y regreso a exploración.
+- Brute y Witch se unen en un mismo combate. **Last Stand:** el jugador sobrevive con 1 HP y se desbloquea y activa Fury.
+- **Seismic Jump** golpea a los dos enemigos.
+- **Derrota:** el jugador vuelve al checkpoint con vida completa y los enemigos regresan a su sitio con vida completa.
+- **Victoria con recompensas:** vida máxima 110, estamina máxima 50, 35 almas y nuevo checkpoint.
+- Consola de TD_Game sin errores ni advertencias.
+- **Sin probar con teclado real:** el *timing* de esquivar e interrumpir (pulsar Espacio o 1 cuando aparece DODGE! o INTERRUPT!).
+
+### Problemas
+- Unity se abrió mientras se creaban los scripts y dejó 13 sin registrar en la compilación. Se resolvió borrando sus `.meta` (nada los referenciaba) y reiniciando Unity.
+- Con Unity en segundo plano, el tiempo de juego avanza a saltos. Las pruebas por MCP esperan por estado y no por tiempo.
+
+### Pendiente
+- **3.11:** las habilidades nuevas dependen del diseño (P0, `TD_Game_DISENO.md` no existe). El sistema ya las admite.
+- Los 3 enemigos de prueba son provisionales: los reales y su IA dependen del diseño y de la tarea de IA enemiga.
+- HUD de combate en Canvas (12 nov). Al hacerlo, quitar `CombatDebugHUD`.
+- Animaciones (`PlayerAnimation` y Animator) cuando llegue el arte.
+
+---
+
 ## 2026-11-05 — Sesión 6: cambio de alcance a juego final
 
 **Tipo:** planificación (sin cambios en Unity)

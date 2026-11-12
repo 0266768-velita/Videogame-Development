@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75d9402e48c7a594ca678c53dd1f1150, type: 3}
+  m_Name: EnemyData_TestHound
+  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.EnemyData
+  displayName: Test Hound
+  maxHealth: 40
+  attackPower: 8
+  startsBattleFirst: 1
+  bodyRadius: 0.35
+  attacks:
+  - attackName: Bite Flurry
+    damageMultiplier: 0.7
+    hits: 3
+    windUpTime: 0.8
+    counterWindow: 0.35
+    timeBetweenHits: 0.6
+    counter: 0
+    lungeAtTarget: 1
+    weight: 1
+    effect: 0
+    effectAmount: 0
+    effectIgnoresCounter: 0
+  - attackName: Feral Feast
+    damageMultiplier: 0.6
+    hits: 1
+    windUpTime: 1
+    counterWindow: 0.4
+    timeBetweenHits: 0.6
+    counter: 0
+    lungeAtTarget: 1
+    weight: 1
+    effect: 2
+    effectAmount: 0.25
+    effectIgnoresCounter: 0
+  soulsOnDefeat: 8
+  bonusMaxHealth: 0
+  bonusMaxStamina: 3
+  unlocksOnDefeat: []
+  lastStandAbility: {fileID: 0}

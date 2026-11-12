@@ -268,6 +268,8 @@ El repositorio contiene un juego **top-down 2D anterior** (documentado en `ARQUI
 | 2026-11-05 | **Mapa principal:** escena `Assets/TD_Game/Scenes/Levels/MainMap.unity`. `TestLevel` queda como escena de pruebas técnicas. Fechas en `DEVELOPMENT_CALENDAR.md`. |
 | 2026-11-05 | **Juego final, no prototipo** (ver §1). Entrega el 20 nov. |
 | 2026-11-05 | **Reutilización:** se mantienen los sistemas actuales de TD_Game. Los sistemas del juego anterior (combate, IA, menús, UI, guardado, audio…) se **copian y adaptan** dentro de `Assets/TD_Game/` con namespace `TD_Game` **solo si cumplen este documento**, o tras adaptarlos para que cumplan: responsabilidades separadas, scripts cortos, valores en campos serializados o ScriptableObjects, input mediante el asset de Input Actions y referencias serializadas en lugar de `Resources.Load`. **Los archivos originales del juego anterior no se modifican.** El plan por sistema está en `DEVELOPMENT_CALENDAR.md`. |
+| 2026-11-12 | **Combate dividido en componentes** (manager, arena, turnos, recompensas, contexto) en lugar de un `BattleManager` grande. Las **habilidades son ScriptableObjects** (`CombatAbility`) y las habilidades únicas de los enemigos son **datos** (`EnemyAttack.effect`). |
+| 2026-11-12 | `GameState`, `GameMode`, `Health` y `EnemyData` reutilizan el nombre del juego anterior dentro del namespace `TD_Game` (así lo indicaba el plan de adaptación). En el código nuevo se usan siempre desde `namespace TD_Game`. |
 
 ### Convención de importación del arte de TD_Game
 
@@ -305,9 +307,36 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
   - `Rigidbody2D` Dynamic (gravedad 0, rotación congelada, interpolación, colisión continua).
   - `CapsuleCollider2D` en los pies.
   - `PlayerInputReader`: `InputActionReference` a `Player/Move`.
-  - `PlayerMovement`: `moveSpeed` 4 y `allowDiagonals` desactivado.
+  - `PlayerMovement`: `moveSpeed` 4 y `allowDiagonals` **activado** (8 direcciones). Solo mueve en `GameMode.Exploration`.
+  - `PlayerDirection`: dirección actual, última válida (`LastValid`) y `Facing` (`Direction8`).
+  - `Health`, `PlayerProgression` (desbloqueos, crecimiento, victorias, checkpoint) y `PlayerCombatant` (estamina, pociones, carga del Macuahuitl y buffs; usa `PlayerStats_Tlahuelli`).
   - Hijo `Visual` con `SpriteRenderer`: `Art/Characters/Placeholder/CharacterOutline_40x56.png` con pivote en los pies y *Sort Point = Pivot*.
 - **Scripts del jugador** (`Scripts/Player/`):
   - `PlayerInputReader`: solo lee el input y expone `Move`.
   - `PlayerMovement`: mueve el `Rigidbody2D` en `FixedUpdate` y expone `MoveDirection`, `Velocity` y `MoveSpeed`.
+- **Estado global:** `TD_Game.GameState` (`Managers/GameState.cs`) con `GameMode` Exploration, Combat, Paused y Cutscene. Como lleva namespace, no choca con el `GameState` del juego anterior.
+- **Combate por turnos** (`Scripts/Combat/`). Todo vive en el objeto `Combat` de `TestLevel`:
+  - `CombatManager`: flujo, unión de enemigos en un radio de 4 tiles (máximo 3) y eventos estáticos `CombatStarted`, `CombatWon` y `CombatLost`.
+  - `CombatArena`: el jugador va a la izquierda y los enemigos a la derecha sobre el mismo mapa; la cámara hace zoom a 2.8125 (×3).
+  - `PlayerTurn`: 4 ranuras de habilidad (attack, skill1, skill2, potion).
+  - `EnemyTurn`: telegrafía, ventana de esquivar o interrumpir, PERFECT y anti-spam.
+  - `CombatRewards`: victoria y derrota.
+  - `CombatInput`: lee el mapa `Combat`.
+  - `CombatContext`: daño, objetivo y Last Stand.
+  - `CombatFeed`: eventos estáticos para la UI; la lógica de combate **nunca** habla con la UI directamente.
+  - `CombatMotion`: movimientos provisionales hasta tener el Animator.
+- **Input de combate:** mapa `Combat` en `PlayerControls.inputactions`:
+  - Attack 1/A, Skill1 2/X, Skill2 3/Y y Potion 4/D-pad arriba;
+  - EndTurn Q/RB y TargetPrev/Next con flechas o D-pad;
+  - Dodge con Espacio, D o B, e Interrupt con 1/A.
+- **Habilidades:** ScriptableObjects que heredan de `CombatAbility` (`Scripts/Combat/Abilities/`), con assets en `ScriptableObjects/Abilities/`:
+  - Attack y Potion están desbloqueadas desde el inicio;
+  - Mictlan Fury (una vez por combate) y Seismic Jump se desbloquean.
+  - **Para añadir una habilidad:** crear una subclase con `Execute`, crear su asset y asignarlo a una ranura de `PlayerTurn`.
+- **Enemigos:**
+  - `EnemyData` y `EnemyAttack` (`Scripts/Combat/Data/`) definen ataques, contraataque, efecto único (DrainStamina, HealSelf, Weaken), recompensas (almas, vida o estamina máxima, `unlocksOnDefeat`) y `lastStandAbility`.
+  - `CombatEnemy` (`Scripts/Enemies/`) inicia el combate al contacto (colisión o trigger). La IA de exploración debe llamar `CombatManager.Instance.TryStartCombat(enemy)` y respetar `GameState.IsExploring`.
+- **Enemigos de prueba en `TestLevel`:** `Enemy_TestHound` (sala izquierda, ataca primero), y `Enemy_TestBrute` + `Enemy_TestWitch` (sala derecha; pelean juntos, la Brute da Fury y la Witch da Seismic). Son provisionales hasta que exista el diseño (P0).
+- **`CombatDebugHUD`** (`Scripts/UI/`) es **provisional** (OnGUI). Se elimina cuando exista el HUD de combate en Canvas.
+- **Limitación conocida:** con Unity en segundo plano, el tiempo de Play Mode avanza a saltos. En las pruebas por MCP, esperar por estado y no por tiempo.
 - **Limitación conocida:** la captura de pantalla de MCP (`manage_camera screenshot`) saca a Unity de Play Mode. Para validar en Play Mode, leer los valores con `execute_code` en lugar de capturar.

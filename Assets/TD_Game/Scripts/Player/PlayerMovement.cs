@@ -44,7 +44,8 @@ namespace TD_Game
 
         void FixedUpdate()
         {
-            MoveDirection = ToMoveDirection(input.Move);
+            // The player only walks during exploration (combat, pause and cutscenes keep it still).
+            MoveDirection = GameState.IsExploring ? ToMoveDirection(input.Move) : Vector2.zero;
             body.linearVelocity = MoveDirection * moveSpeed;
         }
 

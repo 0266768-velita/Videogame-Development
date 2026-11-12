@@ -58,6 +58,9 @@ namespace TD_Game
             transform.position = snapToPixelGrid ? SnapToPixels(smoothedPosition) : smoothedPosition;
         }
 
+        /// <summary>Changes the target and glides to it with the usual smoothing (combat focus).</summary>
+        public void Follow(Transform newTarget) => target = newTarget;
+
         /// <summary>Jumps straight to the target (scene start, teleports, respawns).</summary>
         public void SnapToTarget()
         {
