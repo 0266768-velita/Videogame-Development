@@ -5,7 +5,8 @@ using UnityEngine;
 namespace TD_Game
 {
     /// <summary>
-    /// End of battle. Victory: growth, unlocks, potion, Macuahuitl charge, full health and new checkpoint.
+    /// End of battle. Victory: growth, unlocks, a potion and a new checkpoint. Souls, health and Tonalli come from the
+    /// orbs the enemies drop, which the player must walk over after the battle.
     /// Defeat: basic Game Over and retry from the checkpoint (the full Game Over screen comes later).
     /// </summary>
     public class CombatRewards : MonoBehaviour
@@ -32,15 +33,16 @@ namespace TD_Game
 
             progression.Grow(healthBonus, staminaBonus);
             progression.RegisterVictory();
-            player.AddCharge(context.Souls);
             player.AddPotions(player.Stats.potionsOnVictory);
-            player.FullRestore();   // health refills after winning, as in Mictlán v5
+            // Health is NOT refilled: the green jade orbs heal. Growth adds its bonus on top.
+            player.RefreshMaxHealth();
+            player.Health.Heal(healthBonus);
 
             string growth = healthBonus > 0f || staminaBonus > 0f
                 ? $"\nMax HP +{Mathf.RoundToInt(healthBonus)}   Max Stamina +{Mathf.RoundToInt(staminaBonus)}"
                 : "";
             CombatFeed.ShowBanner(
-                $"Victory!  +{Mathf.RoundToInt(context.Souls)} souls  (Macuahuitl {Mathf.RoundToInt(player.ChargeNormalized * 100f)}%){growth}",
+                $"Victory!  Collect the orbs{growth}",
                 victoryBannerTime);
             yield return new WaitForSeconds(victoryBannerTime);
 

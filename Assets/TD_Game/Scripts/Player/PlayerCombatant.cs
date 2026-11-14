@@ -33,6 +33,15 @@ namespace TD_Game
         public bool IsWeakened => weakenMultiplier < 1f;
         public bool IsCritical => Health.Normalized <= stats.criticalHealthFraction;
 
+        /// <summary>Tonalli: concentration that persists between battles and powers Tonalli Burst.</summary>
+        public float Concentration { get; private set; }
+        public float MaxConcentration => stats.maxConcentration;
+        public bool IsConcentrationFull => Concentration >= stats.maxConcentration;
+
+        /// <summary>Consecutive attacks landed this turn.</summary>
+        public int ComboCount { get; private set; }
+        public float ComboMultiplier => 1f + ComboCount * stats.comboBonusPerHit;
+
         public float DamageMultiplier =>
             (1f + ChargeNormalized * stats.chargeDamageBonus)
             * (BuffTurnsLeft > 0 ? buffMultiplier : 1f)
@@ -64,6 +73,7 @@ namespace TD_Game
             usedThisBattle.Clear();
             BuffTurnsLeft = 0;
             weakenMultiplier = 1f;
+            ComboCount = 0;
             Stamina = MaxStamina;
             // Kinematic during combat so scripted lunges and dodges are not pushed by the physics.
             if (Body != null) { Body.linearVelocity = Vector2.zero; Body.bodyType = RigidbodyType2D.Kinematic; }
@@ -76,7 +86,19 @@ namespace TD_Game
             if (Body != null) Body.bodyType = RigidbodyType2D.Dynamic;
         }
 
-        public void BeginTurn() => AddStamina(MaxStamina * stats.staminaRegenFraction);
+        public void BeginTurn()
+        {
+            ComboCount = 0;
+            AddStamina(MaxStamina * stats.staminaRegenFraction);
+        }
+
+        /// <summary>Counts a landed attack for the combo bonus.</summary>
+        public void RegisterComboHit() => ComboCount++;
+
+        public void AddConcentration(float amount) =>
+            Concentration = Mathf.Clamp(Concentration + amount, 0f, stats.maxConcentration);
+
+        public void ClearConcentration() => Concentration = 0f;
 
         public void EndTurn()
         {

@@ -29,6 +29,7 @@ namespace TD_Game
         Vector3 smoothedPosition;
         Bounds worldBounds;
         bool hasBounds;
+        float shakeAmplitude, shakeUntil, shakeDuration;
 
         public Transform Target
         {
@@ -55,7 +56,25 @@ namespace TD_Game
                 ? Vector3.SmoothDamp(smoothedPosition, desired, ref velocity, smoothTime)
                 : desired;
             smoothedPosition = Clamp(smoothedPosition);
-            transform.position = snapToPixelGrid ? SnapToPixels(smoothedPosition) : smoothedPosition;
+            Vector3 shaken = smoothedPosition + ShakeOffset();
+            transform.position = snapToPixelGrid ? SnapToPixels(shaken) : shaken;
+        }
+
+        /// <summary>Shakes the camera (amplitude in tiles). A stronger shake replaces a weaker one.</summary>
+        public void Shake(float amplitude, float duration)
+        {
+            if (Time.unscaledTime < shakeUntil && amplitude < CurrentShake()) return;
+            shakeAmplitude = amplitude;
+            shakeDuration = Mathf.Max(0.01f, duration);
+            shakeUntil = Time.unscaledTime + shakeDuration;
+        }
+
+        float CurrentShake() => shakeAmplitude * Mathf.Clamp01((shakeUntil - Time.unscaledTime) / shakeDuration);
+
+        Vector3 ShakeOffset()
+        {
+            if (Time.unscaledTime >= shakeUntil) return Vector3.zero;
+            return (Vector3)(Random.insideUnitCircle * CurrentShake());
         }
 
         /// <summary>Changes the target and glides to it with the usual smoothing (combat focus).</summary>

@@ -16,11 +16,24 @@ namespace TD_Game
         [Tooltip("Off = 4 directions (the dominant axis wins). On = 8 directions.")]
         [SerializeField] bool allowDiagonals = false;
 
+        [Header("Sprint (hold the Sprint button)")]
+        [Tooltip("Walking speed is multiplied by this while sprinting.")]
+        [SerializeField, Min(1f)] float sprintMultiplier = 1.75f;
+        [Tooltip("How fast the speed changes between walking and sprinting (tiles/s per second), so it does not snap.")]
+        [SerializeField, Min(0.1f)] float speedChangeRate = 20f;
+
         Rigidbody2D body;
         PlayerInputReader input;
+        float currentSpeed;
 
         /// <summary>Direction used in the last physics step (length 0..1).</summary>
         public Vector2 MoveDirection { get; private set; }
+
+        /// <summary>True while the player is moving with the sprint button held (animations, dust...).</summary>
+        public bool IsSprinting { get; private set; }
+
+        /// <summary>Speed actually used in the last physics step (walk or sprint).</summary>
+        public float CurrentSpeed => currentSpeed;
 
         /// <summary>Current velocity in units per second.</summary>
         public Vector2 Velocity => body.linearVelocity;
@@ -40,18 +53,25 @@ namespace TD_Game
             body.gravityScale = 0f;
             body.freezeRotation = true;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
+            currentSpeed = moveSpeed;
         }
 
         void FixedUpdate()
         {
             // The player only walks during exploration (combat, pause and cutscenes keep it still).
             MoveDirection = GameState.IsExploring ? ToMoveDirection(input.Move) : Vector2.zero;
-            body.linearVelocity = MoveDirection * moveSpeed;
+
+            IsSprinting = input.SprintHeld && MoveDirection != Vector2.zero;
+            float targetSpeed = moveSpeed * (IsSprinting ? sprintMultiplier : 1f);
+            currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, speedChangeRate * Time.fixedDeltaTime);
+
+            body.linearVelocity = MoveDirection * currentSpeed;
         }
 
         void OnDisable()
         {
             MoveDirection = Vector2.zero;
+            IsSprinting = false;
             if (body != null) body.linearVelocity = Vector2.zero;
         }
 

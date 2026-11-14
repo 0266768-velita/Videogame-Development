@@ -18,4 +18,4 @@ MonoBehaviour:
   unlockedByDefault: 1
   oncePerBattle: 0
   healFraction: 0.35
-  healColor: {r: 0.4, g: 1, b: 0.5, a: 1}
+  healColor: {r: 0.12, g: 0.37, b: 0.25, a: 1}

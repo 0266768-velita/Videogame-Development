@@ -30,6 +30,21 @@ namespace TD_Game
         [Tooltip("Extra damage at 100% charge (1 = +100%).")]
         [Min(0f)] public float chargeDamageBonus = 1f;
 
+        [Header("Tonalli (concentration: filled by blue orbs, PERFECT counters and critical hits)")]
+        [Min(1f)] public float maxConcentration = 100f;
+        [Min(0f)] public float concentrationPerPerfect = 15f;
+        [Min(0f)] public float concentrationPerCritical = 8f;
+
+        [Header("Action commands and combos")]
+        [Tooltip("Damage multiplier of a critical hit (Attack pressed again right before the impact).")]
+        [Min(1f)] public float criticalMultiplier = 1.6f;
+        [Tooltip("Extra damage per consecutive attack in the same turn (0.15 = +15% per hit).")]
+        [Min(0f)] public float comboBonusPerHit = 0.15f;
+        [Tooltip("Damage of the automatic counter after a PERFECT dodge, as a fraction of an attack.")]
+        [Min(0f)] public float counterAttackMultiplier = 0.6f;
+        [Tooltip("Damage of the stomp when landing on an enemy (ambush), as a fraction of an attack.")]
+        [Min(0f)] public float ambushMultiplier = 1.2f;
+
         [Header("Potions")]
         [Min(0)] public int startingPotions = 3;
         [Min(0)] public int maxPotions = 5;

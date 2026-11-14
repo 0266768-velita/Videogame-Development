@@ -8,7 +8,7 @@ namespace TD_Game
     public class PotionAbility : CombatAbility
     {
         [Range(0.05f, 1f)] public float healFraction = 0.35f;
-        public Color healColor = new Color(0.4f, 1f, 0.5f);
+        public Color healColor = MexicaPalette.Jade;
 
         public override string GetBlockReason(CombatContext context) =>
             context.Player.Potions <= 0 ? "No potions left" : base.GetBlockReason(context);

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51ffad98d3ca40945a7ee1c691d90fc3, type: 3}
+  m_Name: Ability_TonalliBurst
+  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.TonalliBurstAbility
+  displayName: Tonalli Burst
+  description: Release the stored Tonalli on every enemy. Needs the blue bar full.
+  staminaCost: 0
+  unlockedByDefault: 1
+  oncePerBattle: 0
+  damageMultiplier: 2.5
+  riseHeight: 1.5
+  riseTime: 0.7
+  burstColor: {r: 0.13, g: 0.41, b: 0.42, a: 1}

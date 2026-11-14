@@ -1,6 +1,6 @@
 # Calendario de desarrollo — TD_Game (juego final)
 
-**Periodo:** 3 al 20 de noviembre de 2026 · **Actualizado:** 12 de noviembre
+**Periodo:** 3 al 20 de noviembre de 2026 · **Actualizado:** 13 de noviembre
 **Objetivo:** entregar el **20 de noviembre** el **juego final** (no un prototipo):
 - un **mapa principal bien elaborado** con **al menos 10 minutos de juego**, **3 zonas o más** y la **zona del jefe final**;
 - **combate por turnos** al estilo de Mictlán v5;
@@ -78,7 +78,7 @@
 | P1 | Cómo entra el arte de Aseprite en Unity | Paquete oficial **Aseprite Importer** (`com.unity.2d.aseprite`) | 9 nov |
 | P2 | Direcciones del arte (personaje y enemigos) | 4 direcciones (abajo, arriba, lado + volteo) | 6 nov |
 | P3 | Pixel Perfect Camera (`com.unity.2d.pixel-perfect`) | Instalar | 8 nov |
-| P4 | Cómo se construye la UI | **Canvas de uGUI** en escenas y prefabs, editable en el editor, reutilizando la **lógica** del juego anterior pero no su UI generada por código | 9 nov |
+| ~~P4~~ ✅ | Cómo se construye la UI (resuelta el 13 nov: Canvas generado con una herramienta de editor y editable en la escena) | **Canvas de uGUI** en escenas y prefabs, editable en el editor, reutilizando la **lógica** del juego anterior pero no su UI generada por código | 9 nov |
 
 ---
 
@@ -219,7 +219,7 @@ Todo validado en Unity; el detalle está en `DEVELOPMENT_LOG.md`, sesiones 1 a 4
 ### Jueves 12 de noviembre — UI de combate · **H2**
 **Estado:** Pendiente
 - 🛠 **Unity**
-  - [ ] HUD de combate en Canvas (P4): barras de vida, estamina y carga, menú de acciones, vida de los enemigos, aviso DODGE! / INTERRUPT!, números de daño y banners.
+  - [x] HUD de combate en Canvas (P4): barras de vida, estamina y carga, menú de acciones, vida de los enemigos, aviso DODGE! / INTERRUPT!, números de daño y banners.
   - [ ] Habilidades únicas del **enemigo 3**.
   - [ ] Prefab `Player` y prefabs de los 3 enemigos.
 - 🎨 **Arte**
@@ -337,3 +337,5 @@ Todo validado en Unity; el detalle está en `DEVELOPMENT_LOG.md`, sesiones 1 a 4
 | 5 nov | **Nuevo:** plan de adaptación de los sistemas del juego anterior | Decisión: copiar y adaptar lo que cumpla `CLAUDE.md` |
 | 5 nov | Ningún objetivo anterior eliminado; todos están integrados en el plan nuevo | — |
 | 12 nov | Tareas de Toño (2.5–2.7, 3.1–3.3, 3.6–3.7, 3.10, 3.12) completadas y validadas en `TestLevel` con 3 enemigos de prueba y un HUD de depuración provisional; 3.11 sigue bloqueada por P0 | Sesión 7 del registro |
+| 13 nov | **Nuevo:** salto en exploración con emboscada, orbes de alma, jade y tonalli (God of War clásico), Tonalli y Tonalli Burst, críticos con timing, combos, contraataque PERFECT, impacto (temblor y hit stop) y HUD de combate en Canvas | Petición del equipo (Toño); sesión 8 del registro |
+| 13 nov | **Nuevo:** sprint en exploración; `TD_Game_ARQUITECTURA.md` y `TD_Game_GUIA.md` actualizados | Petición del equipo (Toño); sesión 9 del registro |

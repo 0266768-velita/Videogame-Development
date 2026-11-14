@@ -5,28 +5,31 @@ using UnityEngine;
 namespace TD_Game
 {
     /// <summary>
-    /// Everything about the battle in progress: who fights, the current target, what was defeated
-    /// and how damage is applied. Turns and abilities receive it instead of finding things themselves.
+    /// Everything about the battle in progress: who fights, the current target, the input, what was
+    /// defeated and how damage is applied (with its feedback). Turns and abilities receive it
+    /// instead of finding things themselves.
     /// </summary>
     public class CombatContext
     {
-        static readonly Color DamageColor = new Color(1f, 0.35f, 0.3f);
-        static readonly Color HitFlash = new Color(1f, 0.5f, 0.5f);
+        static readonly Color DamageColor = MexicaPalette.Damage;
+        static readonly Color CriticalColor = MexicaPalette.Critical;
+        static readonly Color HitFlash = MexicaPalette.HitFlash;
 
         readonly MonoBehaviour runner;
         CombatAbility pendingLastStand;
 
         public PlayerCombatant Player { get; }
         public IReadOnlyList<CombatEnemy> Enemies { get; }
+        public CombatInput Input { get; }
         public List<EnemyData> Defeated { get; } = new List<EnemyData>();
-        public float Souls { get; private set; }
         public int TargetIndex { get; private set; }
         public bool HasPendingLastStand => pendingLastStand != null;
 
-        public CombatContext(PlayerCombatant player, List<CombatEnemy> enemies, MonoBehaviour runner)
+        public CombatContext(PlayerCombatant player, List<CombatEnemy> enemies, CombatInput input, MonoBehaviour runner)
         {
             Player = player;
             Enemies = enemies;
+            Input = input;
             this.runner = runner;
         }
 
@@ -44,6 +47,8 @@ namespace TD_Game
         public Coroutine Run(IEnumerator routine) => runner.StartCoroutine(routine);
 
         public float StopDistance(CombatEnemy enemy) => enemy.Data.bodyRadius + Player.Stats.bodyRadius + 0.2f;
+
+        public SpriteRenderer PlayerSprite => Player.GetComponentInChildren<SpriteRenderer>();
 
         // ---------------- Targeting ----------------
 
@@ -76,17 +81,24 @@ namespace TD_Game
 
         // ---------------- Damage ----------------
 
-        public void DamageEnemy(CombatEnemy enemy, float amount)
+        /// <summary>Damages an enemy. critical = bigger number, stronger shake and a short hit stop.</summary>
+        public void DamageEnemy(CombatEnemy enemy, float amount, bool critical = false, string label = null)
         {
             if (enemy == null || enemy.Health.IsDead) return;
             enemy.Health.TakeDamage(amount);
-            CombatFeed.ShowPopup(enemy.transform.position + Vector3.up, Mathf.RoundToInt(amount).ToString(), Color.white);
+
+            string text = Mathf.RoundToInt(amount).ToString();
+            if (!string.IsNullOrEmpty(label)) text = label + " " + text;
+            CombatFeed.ShowPopup(enemy.transform.position + Vector3.up, critical ? text + "!" : text,
+                critical ? CriticalColor : MexicaPalette.Bone);
             Run(CombatMotion.Flash(enemy.Sprite, HitFlash, 0.12f));
+            CombatFeed.RequestShake(critical ? 0.14f : 0.05f, critical ? 0.22f : 0.12f);
+            if (critical) CombatFeed.RequestHitStop(0.08f);
 
             if (enemy.Health.IsDead)
             {
-                Souls += enemy.Data.soulsOnDefeat;
                 Defeated.Add(enemy.Data);
+                CombatFeed.RequestHitStop(0.12f);
                 enemy.OnDefeated();
             }
         }
@@ -105,6 +117,7 @@ namespace TD_Game
             Player.Health.TakeDamage(amount);
             CombatFeed.ShowPopup(Player.transform.position + Vector3.up, "-" + Mathf.RoundToInt(amount), DamageColor);
             Run(CombatMotion.Flash(PlayerSprite, HitFlash, 0.15f));
+            CombatFeed.RequestShake(0.1f, 0.18f);
         }
 
         public IEnumerator ResolveLastStand()
@@ -119,7 +132,5 @@ namespace TD_Game
             yield return ability.ExecuteFree(this);
             Player.MarkUsed(ability);
         }
-
-        public SpriteRenderer PlayerSprite => Player.GetComponentInChildren<SpriteRenderer>();
     }
 }

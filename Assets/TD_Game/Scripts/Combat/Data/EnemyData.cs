@@ -22,9 +22,15 @@ namespace TD_Game
         [Min(0.1f)] public float bodyRadius = 0.45f;
         public EnemyAttack[] attacks = { new EnemyAttack() };
 
-        [Header("Rewards")]
-        [Tooltip("Macuahuitl charge given when this enemy dies.")]
+        [Header("Orbs dropped on death (collected by walking over them after the battle)")]
+        [Tooltip("Total Macuahuitl charge in gold soul orbs.")]
         [Min(0f)] public float soulsOnDefeat = 12f;
+        [Tooltip("Total health in green jade orbs.")]
+        [Min(0f)] public float healthOnDefeat = 10f;
+        [Tooltip("Total Tonalli (concentration) in blue orbs.")]
+        [Min(0f)] public float concentrationOnDefeat = 20f;
+
+        [Header("Rewards")]
         [Tooltip("Permanent increase of the player's max health.")]
         [Min(0f)] public float bonusMaxHealth = 0f;
         [Tooltip("Permanent increase of the player's max stamina.")]

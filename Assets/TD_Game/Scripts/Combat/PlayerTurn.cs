@@ -11,22 +11,29 @@ namespace TD_Game
     {
         [SerializeField] CombatInput input;
 
-        [Header("Action slots")]
+        [Header("Action slots (order = keys 1-5 and the action menu)")]
         [SerializeField] CombatAbility attack;
         [SerializeField] CombatAbility skill1;
         [SerializeField] CombatAbility skill2;
         [SerializeField] CombatAbility potion;
+        [SerializeField] CombatAbility ultimate;
 
         [SerializeField, Min(0f)] float outOfStaminaPause = 0.7f;
 
         CombatAbility requested;
         bool endRequested;
+        CombatAbility[] slots;
 
+        /// <summary>The five slots in menu order: attack, skill 1, skill 2, potion, ultimate.</summary>
+        public CombatAbility[] Slots => slots ??= new[] { attack, skill1, skill2, potion, ultimate };
         public CombatAbility Attack => attack;
         public CombatAbility Skill1 => skill1;
         public CombatAbility Skill2 => skill2;
         public CombatAbility Potion => potion;
+        public CombatAbility Ultimate => ultimate;
         public bool AcceptingInput { get; private set; }
+        /// <summary>The ability being performed right now (null when waiting for input).</summary>
+        public CombatAbility Performing { get; private set; }
 
         /// <summary>For UI buttons: asks for an ability as if its key had been pressed.</summary>
         public void Request(CombatAbility ability)
@@ -46,7 +53,7 @@ namespace TD_Game
             context.SelectFirstAlive();
             requested = null;
             endRequested = false;
-            CombatFeed.SetTurnLabel("Your turn");
+            CombatFeed.SetTurnLabel("YOUR TURN");
 
             while (!context.PlayerDead && !context.AllEnemiesDead)
             {
@@ -62,7 +69,12 @@ namespace TD_Game
 
                     string reason = ability.GetBlockReason(context);
                     if (reason != null) CombatFeed.ShowBanner(reason, 0.8f);
-                    else yield return ability.Use(context);
+                    else
+                    {
+                        Performing = ability;
+                        yield return ability.Use(context);
+                        Performing = null;
+                    }
 
                     if (context.PlayerDead || context.AllEnemiesDead) break;
                     if (!CanDoAnything(context))
@@ -91,12 +103,14 @@ namespace TD_Game
             else if (input.Skill1.WasPressedThisFrame()) requested = skill1;
             else if (input.Skill2.WasPressedThisFrame()) requested = skill2;
             else if (input.Potion.WasPressedThisFrame()) requested = potion;
+            else if (input.Ultimate.WasPressedThisFrame()) requested = ultimate;
         }
 
-        bool CanDoAnything(CombatContext context) =>
-            Usable(attack, context) || Usable(skill1, context) || Usable(skill2, context) || Usable(potion, context);
-
-        static bool Usable(CombatAbility ability, CombatContext context) =>
-            ability != null && ability.GetBlockReason(context) == null;
+        bool CanDoAnything(CombatContext context)
+        {
+            foreach (var ability in Slots)
+                if (ability != null && ability.GetBlockReason(context) == null) return true;
+            return false;
+        }
     }
 }

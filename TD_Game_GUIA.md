@@ -1,6 +1,6 @@
 # TD_Game — Guía: qué hay y cómo modificarlo
 
-> Estado al **3 de noviembre de 2026**. Cómo está organizado por dentro: [TD_Game_ARQUITECTURA.md](TD_Game_ARQUITECTURA.md).
+> Estado al **13 de noviembre de 2026**. Cómo está organizado por dentro: [TD_Game_ARQUITECTURA.md](TD_Game_ARQUITECTURA.md).
 > Todo se modifica **dentro de Unity** (Inspector, Tile Palette, Input Actions Editor). No hace falta ninguna herramienta externa.
 
 ## Índice
@@ -14,6 +14,7 @@
 8. [El orden de dibujo (quién tapa a quién)](#8-el-orden-de-dibujo-quién-tapa-a-quién)
 9. [Crear cosas nuevas sin romper nada](#9-crear-cosas-nuevas-sin-romper-nada)
 10. [Problemas frecuentes](#10-problemas-frecuentes)
+11. [Combate, orbes y HUD](#11-combate-orbes-y-hud)
 
 ---
 
@@ -22,13 +23,16 @@
 1. En la ventana **Project**, abre `Assets/TD_Game/Scenes/Testing/TestLevel.unity` con doble clic.
 2. Pulsa **Play**.
 3. **Haz clic dentro de la ventana Game**: si no tiene el foco, Unity no recibe el teclado.
-4. Muévete con **WASD**, las **flechas**, el **stick izquierdo** o el **D-pad**.
+4. Muévete con **WASD**, las **flechas**, el **stick izquierdo** o el **D-pad**. **Shift izquierdo / RT** para correr y **Espacio / A** para saltar.
 
 Qué deberías ver:
-- El rectángulo naranja (el jugador) se mueve a 4 tiles por segundo, **solo en 4 direcciones**: las diagonales se activan el 11 nov.
+- El jugador se mueve en **8 direcciones** a 4 tiles por segundo, y a 7 corriendo.
+- Al saltar, el sprite sube y la sombra se queda en el suelo. En el aire pasas por encima de los enemigos.
 - La cámara lo sigue con suavidad y **no muestra nada fuera del mapa**.
 - Al pasar junto a un pilar, el jugador queda delante o detrás según su posición.
-- **Todavía atraviesa muros, agua y pilares**: las colisiones son del 12 nov.
+- Arriba a la izquierda está el panel con vida, estamina y Tonalli.
+- Si tocas un enemigo empieza el combate (ver [§11](#11-combate-orbes-y-hud)). Si **caes encima** de uno tras un salto, es una **emboscada**.
+- **Todavía atraviesa muros, agua y pilares**: las colisiones están pendientes.
 
 > Los cambios que hagas en el Inspector **durante Play Mode se pierden** al salir. Para probar valores, cámbialos en Play Mode y, cuando te gusten, apúntalos y ponlos fuera de Play Mode.
 
@@ -44,14 +48,21 @@ Selecciona **`Player`** en la jerarquía de `TestLevel`.
 |---|---|---|
 | **Rigidbody2D** | Cuerpo físico que se mueve | No hace falta tocarlo. Los ajustes clave (gravedad 0, rotación congelada) los fuerza `PlayerMovement` al iniciar |
 | **CapsuleCollider2D** | "Huella" del jugador en el suelo; con ella chocará contra muros desde el 12 nov | **Size** y **Offset**: hazla más ancha o estrecha para pasar por huecos. Está en los pies a propósito, para que la cabeza pueda solaparse con objetos que quedan "detrás" |
-| **PlayerInputReader** | Lee los controles | **Move Action**: qué acción de input usa (`Player/Move`) |
-| **PlayerMovement** | Mueve al jugador | **Move Speed** (tiles por segundo; 1 tile = 64 px) y **Allow Diagonals** (desactivado = 4 direcciones; activado = 8) |
+| **PlayerInputReader** | Lee los controles | **Move / Jump / Sprint Action**: qué acciones de input usa |
+| **PlayerMovement** | Mueve al jugador | **Move Speed** (tiles por segundo; 1 tile = 64 px), **Allow Diagonals** (activado = 8 direcciones), **Sprint Multiplier** (1.75) y **Speed Change Rate** (qué tan rápido acelera al correr) |
+| **PlayerDirection** | Recuerda hacia dónde mira | **Initial Facing** y **Dead Zone** |
+| **PlayerJump** | Salto visual y emboscada | **Jump Height**, **Air Time**, **Cooldown** y **Ambush Window** |
+| **Health** | Vida | Se inicializa con `PlayerStats`; no hace falta tocarla |
+| **PlayerProgression** | Habilidades desbloqueadas, crecimiento y checkpoint | **Unlocked Abilities**: arrastra aquí una habilidad para tenerla desbloqueada al probar |
+| **PlayerCombatant** | Estamina, pociones, Tonalli y Macuahuitl | **Stats**: el asset `PlayerStats_Tlahuelli` |
 | Hijo **Visual** → **SpriteRenderer** | Lo que se ve | **Sprite** (la imagen), **Color** (tinte), **Order in Layer** |
+| Hijo **Shadow** → **SpriteRenderer** | Sombra del salto | **Color** (opacidad) y escala |
 
 ### Recetas
 
-- **Más rápido o más lento:** `Player` → `PlayerMovement` → **Move Speed**. Por ejemplo, 6 para correr y 2,5 para caminar despacio.
-- **Activar las 8 direcciones ya mismo:** marca **Allow Diagonals**. La diagonal no será más rápida, porque el código normaliza el vector.
+- **Más rápido o más lento:** `Player` → `PlayerMovement` → **Move Speed**. Para el sprint, **Sprint Multiplier** (2 = el doble).
+- **Saltar más alto o más largo:** `PlayerJump` → **Jump Height** y **Air Time**.
+- **Volver a 4 direcciones:** desmarca **Allow Diagonals**. En 8 direcciones la diagonal no es más rápida, porque el código normaliza el vector.
 - **Cambiar de sitio dónde empieza el jugador:** mueve el objeto `Player` en la escena. Pon los pies en el centro de una celda para que quede alineado; por ejemplo, x = -11,5 e y = -0,5.
 - **Cambiar el color del placeholder:** `Player/Visual` → `SpriteRenderer` → **Color**.
 - **Ver el script:** doble clic en el nombre del componente. Están en `Assets/TD_Game/Scripts/Player/`.
@@ -70,6 +81,18 @@ Archivo: `Assets/TD_Game/Settings/Input/PlayerControls.inputactions`. Ábrelo co
 | Mapa | Acción | Tipo | Teclas / botones |
 |---|---|---|---|
 | `Player` | `Move` | Value · Vector2 | WASD (compuesto), flechas (compuesto), stick izquierdo, D-pad |
+| `Player` | `Jump` | Button | Espacio · A |
+| `Player` | `Sprint` | Button (mantener) | Shift izquierdo · RT |
+| `Combat` | `Attack` | Button | 1 · A (y otra vez en **NOW!** para crítico) |
+| `Combat` | `Skill1` / `Skill2` | Button | 2 · X / 3 · Y (Mictlan Fury / Seismic Jump) |
+| `Combat` | `Potion` | Button | 4 · D-pad arriba |
+| `Combat` | `Ultimate` | Button | 5 · LB (Tonalli Burst) |
+| `Combat` | `EndTurn` | Button | Q · RB |
+| `Combat` | `TargetPrev` / `TargetNext` | Button | ← → · D-pad izquierda/derecha |
+| `Combat` | `Dodge` | Button | Espacio, D · B |
+| `Combat` | `Interrupt` | Button | 1 · A |
+
+El mapa `Combat` solo está activo durante las peleas, así que puede repetir teclas del mapa `Player`.
 
 Esquemas de control: `Keyboard` y `Gamepad`.
 
@@ -253,9 +276,62 @@ Lo hacen posible tres ajustes:
 |---|---|---|
 | El jugador no se mueve | La ventana Game no tiene el foco | Haz clic dentro de la ventana Game |
 | Error *"Move action is not assigned"* | `PlayerInputReader` no tiene la acción | `Player` → **Move Action** → elige `Player/Move` |
-| El jugador atraviesa muros | Aún no hay colisiones | Llegan el 12 nov |
+| El jugador atraviesa muros | Aún no hay colisiones | Pendiente (tarea de colisiones del calendario) |
+| No puedo atacar, curarme ni usar habilidades en combate | Falta estamina, la habilidad está bloqueada o no es tu turno | Mira la tarjeta: atenuada = falta estamina; LOCKED = bloqueada. En el turno enemigo todas se oscurecen |
+| Los orbes no se recogen | Todavía estás en combate | Se recogen al volver a la exploración, pasando encima |
+| Error *"Action 'Ultimate' not found"* (u otra acción) | El asset de input no tiene la acción | Haz **Pull** en GitHub Desktop: `PlayerControls.inputactions` debe tener los mapas `Player` y `Combat` completos |
+| El HUD no aparece o falta algo | Se borró `CombatHUD` o se rompió una referencia | Borra `CombatHUD` y usa **TD_Game > Build Combat HUD** |
 | El pixel art se ve borroso | Importación incorrecta | Filter **Point**, Compression **None**, PPU **64** |
 | Hay líneas entre tiles | Sprites con filtro o tamaño distinto de 64 px | Revisa la importación; los tiles deben medir exactamente 64×64 px |
 | La cámara enseña fuera del mapa | **Bounds Tilemap** vacío | Asigna `Grid/Ground` |
 | Cambié valores y se perdieron | Estaban hechos en Play Mode | Haz los cambios fuera de Play Mode |
 | Claude no puede conectar con Unity | El servidor MCP se detuvo | En Unity, *Window > MCP for Unity > **Start Server***; después, en Claude, `/mcp` → **UnityMCP** → **Reconnect** |
+
+---
+
+## 11. Combate, orbes y HUD
+
+### Cómo se juega una pelea
+1. Toca a un enemigo para empezar. Si caes encima tras un salto, es una **emboscada**: STOMP y atacas primero.
+2. **Tu turno:** gastas **estamina** (barra dorada) en acciones, 1–5; cuando termines, pulsa **Q**.
+   - **Attack (1):** el personaje se carga. Si pulsas **1 otra vez cuando aparece NOW!**, haces un **crítico**.
+   - Los ataques seguidos en el mismo turno hacen **combo**: +15 % por golpe.
+   - ← → cambian de objetivo (la flecha ▼ marca a cuál atacas).
+3. **Turno enemigo:** el enemigo parpadea en rojo. Cuando aparece **DODGE!**, pulsa **Espacio**; con **INTERRUPT!**, pulsa **1**.
+   - Si lo haces al final de la ventana es un **PERFECT**: recuperas estamina, ganas Tonalli y contraatacas solo.
+   - Si pulsas antes de tiempo, el botón se bloquea un momento, así que machacar la tecla no sirve.
+4. **Tonalli** (barra azul): cuando está llena, **5 = Tonalli Burst**, un golpe enorme a todos.
+5. **Al ganar:** los enemigos sueltan **orbes**. Ve **caminando (o saltando) encima** para recogerlos:
+   - **dorados:** carga del Macuahuitl, que aumenta tu daño;
+   - **verdes (jade):** vida. Ganar **no** te cura;
+   - **azules:** Tonalli.
+6. **Al perder:** vuelves al último checkpoint con la vida llena y los enemigos se reinician.
+
+### Dónde se ajusta cada cosa (sin tocar código)
+
+| Quiero cambiar… | Dónde |
+|---|---|
+| Vida, estamina, daño base, multiplicador de crítico, combo, contraataque, emboscada, Tonalli, pociones | `ScriptableObjects/Characters/PlayerStats_Tlahuelli` |
+| Coste, nombre y descripción de una habilidad, y si empieza desbloqueada | `ScriptableObjects/Abilities/Ability_*` |
+| Ventana del crítico (NOW!) | `Ability_Attack` → **Wind Up Time** y **Critical Window** |
+| Vida, ataques, ventanas de esquiva, efectos únicos y orbes de un enemigo | `ScriptableObjects/Enemies/EnemyData_*` |
+| Qué habilidad desbloquea un enemigo | `EnemyData` → **Unlocks On Defeat** y **Last Stand Ability** |
+| Valor de cada orbe y sus colores | objeto `Combat` → `OrbSpawner` |
+| Imán y flotación de los orbes | `Prefabs/Interactables/Orb.prefab` → `SoulOrb` |
+| Distancia de la arena, zoom de combate | objeto `Combat` → `CombatArena` |
+| Ventana PERFECT y anti-spam de la esquiva | objeto `Combat` → `EnemyTurn` |
+| Qué habilidad va en cada tecla 1–5 | objeto `Combat` → `PlayerTurn` → *Action slots* |
+| Paleta de colores de todo el juego (cambia un color y se cambia en todas partes al reconstruir el HUD) | `Scripts/UI/MexicaPalette.cs` |
+| Colores, tamaños y textos del HUD | objeto `CombatHUD` en la jerarquía (colores de cada fila: `CommandMenu/Action*` → `ActionButton`; orden de turnos: `TurnOrder`) |
+
+### Recetas
+- **Probar con todas las habilidades:** `Player` → `PlayerProgression` → **Unlocked Abilities**: añade `Ability_MictlanFury` y `Ability_SeismicJump`.
+- **Nuevo enemigo:**
+  1. Duplica un enemigo de prueba en la escena.
+  2. Crea un asset con clic derecho → *Create > TD_Game > Enemy Data*.
+  3. Asígnalo en su `CombatEnemy` → **Data**.
+- **Nueva habilidad:**
+  1. Crea una clase que herede de `CombatAbility` (como `FuryAbility.cs`) e implementa `Execute`.
+  2. Crea su asset con *Create > TD_Game > Abilities*.
+  3. Ponlo en una ranura de `PlayerTurn`.
+- **Efecto único de un ataque enemigo:** en `EnemyData` → *Attacks* → **Effect** (DrainStamina, HealSelf o Weaken) y **Effect Amount**.

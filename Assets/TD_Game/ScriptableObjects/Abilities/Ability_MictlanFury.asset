@@ -20,4 +20,4 @@ MonoBehaviour:
   healFraction: 0.4
   damageMultiplier: 1.5
   turns: 3
-  flashColor: {r: 0.8, g: 0.3, b: 1, a: 1}
+  flashColor: {r: 0.66, g: 0.64, b: 0.58, a: 1}

@@ -20,6 +20,7 @@ namespace TD_Game
             float damage = context.Player.AttackDamage(damageMultiplier);
             yield return CombatMotion.Hop(context.Player.transform, jumpHeight, jumpTime, null);
 
+            CombatFeed.RequestShake(0.2f, 0.35f);
             Vector3 origin = context.Player.transform.position;
             float longestDelay = 0f;
             foreach (var enemy in context.Enemies)

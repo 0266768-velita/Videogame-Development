@@ -1,14 +1,14 @@
 # TD_Game — Arquitectura actual
 
-> Estado al **3 de noviembre de 2026** (tareas del calendario hasta el 10 de noviembre).
+> Estado al **13 de noviembre de 2026**.
 > Documento vivo: se actualiza cuando cambia la estructura. Para usar y modificar el proyecto, ver [TD_Game_GUIA.md](TD_Game_GUIA.md).
-> Reglas y decisiones técnicas: [CLAUDE.md](CLAUDE.md) · Plan: [DEVELOPMENT_CALENDAR.md](DEVELOPMENT_CALENDAR.md)
+> Reglas y decisiones técnicas: [CLAUDE.md](CLAUDE.md) · Plan: [DEVELOPMENT_CALENDAR.md](DEVELOPMENT_CALENDAR.md) · Cambios: [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md)
 
 ---
 
 ## 1. Visión general
 
-TD_Game es un juego **top-down 2D** en Unity 6 (6000.5.9f1, Built-in Render Pipeline), construido desde cero dentro del mismo proyecto que el juego anterior (Mictlán v5), pero **aislado** de él:
+TD_Game es un juego **top-down 2D** en Unity 6 (6000.5.9f1, Built-in Render Pipeline). Se construye desde cero dentro del mismo proyecto que el juego anterior (Mictlán v5), pero **aislado** de él:
 
 | | TD_Game (nuevo) | Mictlán v5 (anterior, solo referencia) |
 |---|---|---|
@@ -16,9 +16,11 @@ TD_Game es un juego **top-down 2D** en Unity 6 (6000.5.9f1, Built-in Render Pipe
 | Namespace C# | `TD_Game` | ninguno (global) |
 | Mundo | Tilemaps pintados en el editor | generado en código desde `level.json` |
 | Input | asset `PlayerControls.inputactions` | acciones creadas en código |
+| Combate | componentes cortos + habilidades como ScriptableObjects | un `BattleManager` de 679 líneas |
+| UI | Canvas en la escena (editable) | generada en código |
 | Escenas | `TD_Game/Scenes/Testing/TestLevel.unity` | `Boot`, `MainMenu`, `Game` |
 
-Ningún script de TD_Game usa clases del juego anterior, y al revés.
+Ningún script de TD_Game usa clases del juego anterior, y al revés. Algunas clases repiten nombre (`GameState`, `Health`, `EnemyData`), pero no chocan porque las de TD_Game viven en el namespace `TD_Game`.
 
 ---
 
@@ -26,27 +28,34 @@ Ningún script de TD_Game usa clases del juego anterior, y al revés.
 
 ```
 Assets/TD_Game/
-├── Art/
-│   ├── Characters/Placeholder/
-│   │   └── CharacterOutline_40x56.png      primitiva del jugador (pivote en los pies)
-│   └── Tilesets/
-│       ├── Placeholder/
-│       │   ├── Textures/                   primitivas: Square_64, SquareOutline_64, TallOutline_64x128
-│       │   └── Tiles/                      Ground_Grass, Ground_Dirt, Water, Wall_Stone, Deco_Pillar_Tall
-│       └── Palettes/
-│           └── TD_Placeholder.prefab       Tile Palette (Rectangle, celda 1 × 1)
+├── Art/                                    primitivas placeholder (personaje, tiles, paleta)
+├── Prefabs/Interactables/
+│   └── Orb.prefab                          orbe que sueltan los enemigos (SoulOrb)
 ├── Scenes/Testing/
 │   └── TestLevel.unity                     escena de pruebas
+├── ScriptableObjects/
+│   ├── Characters/PlayerStats_Tlahuelli    valores base del jugador
+│   ├── Abilities/                          Ability_Attack, _MictlanFury, _SeismicJump, _Potion, _TonalliBurst
+│   └── Enemies/                            EnemyData_TestHound, _TestBrute, _TestWitch (provisionales)
 ├── Scripts/
-│   ├── Camera/CameraFollow.cs
-│   └── Player/
-│       ├── PlayerInputReader.cs
-│       └── PlayerMovement.cs
+│   ├── Camera/CameraFollow.cs              seguimiento, límites, píxeles y temblor
+│   ├── Managers/GameState.cs               modo global: Exploration, Combat, Paused, Cutscene
+│   ├── Player/                             InputReader, Movement (caminar y sprint), Direction (8 dir.),
+│   │                                       Jump, Combatant, Progression
+│   ├── Combat/                             CombatManager, Arena, PlayerTurn, EnemyTurn, Rewards, Context,
+│   │   │                                   Input, Feed, Motion, ActionCommand, Health
+│   │   ├── Abilities/                      CombatAbility (base) y las 5 habilidades
+│   │   └── Data/                           PlayerStats, EnemyData, EnemyAttack
+│   ├── Enemies/CombatEnemy.cs              lo que necesita un enemigo para pelear
+│   ├── Interactions/                       SoulOrb, OrbSpawner
+│   ├── UI/                                 HUD: UIBar, PlayerStatusPanel, ActionButton, CombatActionMenu,
+│   │                                       EnemyHealthBars, CombatMessages, CombatHUD
+│   └── Editor/CombatHUDBuilder.cs          menú TD_Game > Build Combat HUD
 └── Settings/Input/
-    └── PlayerControls.inputactions
+    └── PlayerControls.inputactions         mapas Player y Combat
 ```
 
-Las carpetas se crean **cuando se necesitan** (CLAUDE.md §7). Las previstas para las próximas etapas son `Animations/`, `Prefabs/` y `Scripts/Interactions/`.
+Las carpetas se crean **cuando se necesitan** (CLAUDE.md §7). Las siguientes previstas son `Animations/` y `Prefabs/Characters/`.
 
 ---
 
@@ -59,8 +68,23 @@ TestLevel
 │   ├── Ground       Tilemap · TilemapRenderer (orden -10, Chunk)
 │   ├── Walls        Tilemap · TilemapRenderer (orden 0, Individual)
 │   └── Decoration   Tilemap · TilemapRenderer (orden 0, Individual)
-└── Player           Rigidbody2D · CapsuleCollider2D · PlayerInputReader · PlayerMovement   (tag: Player)
-    └── Visual       SpriteRenderer (orden 0, Sort Point = Pivot)
+├── Player           Rigidbody2D · CapsuleCollider2D · PlayerInputReader · PlayerMovement · PlayerDirection
+│   │                PlayerJump · Health · PlayerProgression · PlayerCombatant
+│   ├── Visual       SpriteRenderer (orden 0, Sort Point = Pivot)  ← sube al saltar
+│   └── Shadow       SpriteRenderer (orden -1)                     ← se queda en el suelo
+├── Combat           CombatInput · CombatArena · PlayerTurn · EnemyTurn · CombatRewards · CombatManager · OrbSpawner
+├── Enemy_TestHound  Rigidbody2D (Kinematic) · BoxCollider2D · Health · CombatEnemy   (sala izquierda)
+├── Enemy_TestBrute  ídem                                                              (sala derecha)
+├── Enemy_TestWitch  ídem                                                              (sala derecha)
+├── CombatHUD        Canvas (Screen Space Overlay, 960×540 de referencia) · CombatHUD
+│   ├── PlayerStatus     PlayerStatusPanel (siempre visible)
+│   ├── CombatGroup      CanvasGroup (solo en combate)
+│   │   ├── EnemyBars    EnemyHealthBars
+│   │   ├── TurnOrder    TurnOrderBar (quién actúa)
+│   │   ├── CommandMenu  CombatActionMenu · 5 filas ActionButton + End Turn (lista diagonal)
+│   │   └── EnemyTurnBar barra DEFEND (turno enemigo)
+│   └── Messages         CombatMessages (banner, turno, avisos, combo, números)
+└── EventSystem      InputSystemUIInputModule
 ```
 
 **Mapa de prueba:** 30×20 celdas (x de -15 a 14, y de -10 a 9).
@@ -70,7 +94,8 @@ TestLevel
     ┌────────────────┬──────┬──────────┐  y = 9
     │  SALA IZQUIERDA│      │  SALA    │
     │  estanque 3×2  │ ROCA │  DERECHA │
-    │  pilares       │      │  pilares │
+    │  Hound         │      │  Brute + │
+    │  pilares       │      │  Witch   │
     ├────────────────┴──────┴──────────┤  y = 0
     │ ======== PASILLO DE TIERRA ===== │  y = -1
     ├────────────────┬──────┬──────────┤
@@ -82,34 +107,88 @@ TestLevel
 
 ---
 
-## 4. Flujo de datos del jugador
+## 4. Flujo del jugador en exploración
 
 ```mermaid
 flowchart LR
-    K[Teclado / Mando] --> IA["PlayerControls.inputactions<br/>Player/Move (Vector2)"]
-    IA --> R["PlayerInputReader<br/>Update(): Move = ReadValue()"]
-    R -- "Move" --> M["PlayerMovement<br/>FixedUpdate()"]
-    M -- "4 dir o 8 dir<br/>+ normalización" --> RB["Rigidbody2D.linearVelocity<br/>= dirección × moveSpeed"]
+    K[Teclado / Mando] --> IA["PlayerControls.inputactions<br/>Player/Move · Jump · Sprint"]
+    IA --> R["PlayerInputReader<br/>Move · JumpPressed · SprintHeld"]
+    R --> M["PlayerMovement<br/>FixedUpdate()"]
+    R --> J["PlayerJump<br/>sube Visual, encoge Shadow"]
+    M -- "8 dir + normalización<br/>× sprint (1.75)" --> RB["Rigidbody2D.linearVelocity"]
+    M --> D["PlayerDirection<br/>Current · LastValid · Facing"]
     RB --> T[Transform del Player]
     T --> C["CameraFollow<br/>LateUpdate()"]
-    C -- "suavizado → límites → píxeles" --> CAM[Main Camera]
 ```
 
-| Paso | Componente | Cuándo | Qué hace |
-|---|---|---|---|
-| 1 | `PlayerInputReader` | `Update` | Lee `Player/Move` y guarda el resultado en la propiedad `Move` (cada eje entre -1 y 1). No sabe nada de física. |
-| 2 | `PlayerMovement` | `FixedUpdate` | Convierte `Move` en dirección: en modo 4 direcciones gana el eje dominante, y solo se normaliza si la longitud supera 1. Fija la velocidad del `Rigidbody2D`. Expone `MoveDirection`, `Velocity` y `MoveSpeed`. |
-| 3 | `Rigidbody2D` | física | Mueve el cuerpo. La interpolación suaviza el dibujo entre pasos físicos. |
-| 4 | `CameraFollow` | `LateUpdate` | Persigue al objetivo con `SmoothDamp`, lo limita a los bordes del Tilemap `Ground` y redondea a 1/64 de unidad (1 píxel de arte). |
+| Paso | Componente | Qué hace |
+|---|---|---|
+| 1 | `PlayerInputReader` | Lee `Move`, `Jump` (pulsación) y `Sprint` (mantener). No sabe nada de física. |
+| 2 | `PlayerMovement` | Solo en `GameMode.Exploration`. Usa 8 direcciones y normaliza la diagonal. Sprint ×1.75 con transición suave. Expone `MoveDirection`, `Velocity`, `IsSprinting` y `CurrentSpeed`. |
+| 3 | `PlayerDirection` | Dirección actual, última válida y `Facing` (`Direction8`); sirve para animaciones y para orientarse en combate. |
+| 4 | `PlayerJump` | Salto visual. En el aire ignora la colisión con enemigos; si cae sobre uno empieza una **emboscada**. |
+| 5 | `CameraFollow` | `SmoothDamp`, límites del Tilemap `Ground`, redondeo a 1/64 de unidad y temblor (`Shake`). |
 
 **Principios:**
-- **La entrada está separada de la lógica.** Se puede cambiar el origen del input (IA, repeticiones, otro esquema) sin tocar el movimiento.
-- **El movimiento no conoce la animación ni la cámara.** Los sistemas futuros leerán sus propiedades públicas (`MoveDirection`, `Velocity`) sin crear dependencias hacia atrás.
-- **Los valores ajustables son campos serializados**, editables en el Inspector; no hay números mágicos en el código.
+- La entrada está separada de la lógica.
+- El movimiento no conoce la animación ni la cámara: los demás leen sus propiedades públicas.
+- Los valores ajustables son campos serializados o ScriptableObjects, no números mágicos.
 
 ---
 
-## 5. Pipeline de arte (placeholder)
+## 5. Combate por turnos
+
+```mermaid
+flowchart TD
+    E["CombatEnemy<br/>contacto con el jugador"] -->|"TryStartCombat(enemy, ambush)"| CM[CombatManager]
+    CM --> AR["CombatArena<br/>colocar actores · zoom ×3"]
+    CM --> LOOP{"¿quedan vivos?"}
+    LOOP --> PT["PlayerTurn<br/>5 ranuras de CombatAbility"]
+    LOOP --> ET["EnemyTurn<br/>telegrafía · ActionCommand<br/>esquivar / interrumpir"]
+    PT & ET --> CTX["CombatContext<br/>daño · objetivo · Last Stand"]
+    CTX --> FEED["CombatFeed (eventos)"]
+    FEED --> HUD["HUD (Canvas)"]
+    FEED --> ARshake["CombatArena: temblor y hit stop"]
+    LOOP -->|fin| RW["CombatRewards<br/>victoria / derrota"]
+    CTX -->|muerte| CE["CombatEnemy.Defeated"] --> OS["OrbSpawner → orbes"]
+```
+
+| Pieza | Responsabilidad |
+|---|---|
+| `CombatManager` | Flujo de la batalla. Une a los enemigos a 4 tiles o menos (máximo 3). Eventos `CombatStarted`, `CombatWon` y `CombatLost`. |
+| `CombatArena` | Coloca al jugador a la izquierda y a los enemigos a la derecha sobre el mismo mapa; zoom de 4.21875 a 2.8125. Temblor y *hit stop*. |
+| `PlayerTurn` | Ranuras attack, skill1, skill2, potion y ultimate (teclas 1–5). Varias acciones por turno mientras haya estamina. |
+| `EnemyTurn` | Telegrafía en rojo; ventana de esquivar (Dodge) o interrumpir (Interrupt); PERFECT: +estamina, +Tonalli y contraataque; efecto único del ataque. |
+| `ActionCommand` | Pulsación con *timing* y bloqueo si pulsas antes de tiempo. Se usa para el crítico (NOW!) y los contraataques (DODGE!/INTERRUPT!). |
+| `CombatAbility` | Base de las habilidades (ScriptableObject): coste, desbloqueo, una vez por combate, `Execute`. |
+| `CombatContext` | Datos de la batalla en curso y aplicación del daño con su feedback. |
+| `CombatRewards` | Victoria: crecimiento, desbloqueos, poción y checkpoint. Derrota: reintento desde el checkpoint. |
+| `CombatFeed` | Eventos estáticos hacia la UI y la cámara. **La lógica nunca llama a la UI directamente.** |
+
+**Recursos del jugador** (`PlayerCombatant` y `PlayerStats`):
+
+| Recurso | Se gana con | Se gasta en |
+|---|---|---|
+| Vida | orbes de jade, pociones, Fury | daño enemigo |
+| Estamina | se recupera un 60 % al inicio de cada turno; PERFECT | cada acción |
+| Tonalli (concentración) | orbes azules, PERFECT, críticos | Tonalli Burst (barra llena) |
+| Carga del Macuahuitl | orbes dorados (almas) | — (aumenta el daño hasta +100 %) |
+
+**Progresión** (`PlayerProgression`): habilidades desbloqueadas (`unlocksOnDefeat` y Last Stand), vida y estamina máximas extra, victorias y checkpoint.
+
+---
+
+## 6. Orbes
+
+`CombatEnemy.Defeated` → `OrbSpawner` crea orbes (`Orb.prefab`) según `EnemyData.soulsOnDefeat`, `healthOnDefeat` y `concentrationOnDefeat`, con un valor fijo por orbe. Cada `SoulOrb`:
+1. sale en arco desde el enemigo;
+2. flota en el suelo;
+3. solo en **exploración**, si el jugador está cerca, se acerca a él (imán);
+4. se recoge al tocarlo (`OnTriggerEnter2D`/`Stay2D`) y lanza `OrbSpawner.Collected` para la UI.
+
+---
+
+## 7. Pipeline de arte (placeholder)
 
 ```mermaid
 flowchart LR
@@ -117,7 +196,7 @@ flowchart LR
     S --> TL["Tiles (.asset)<br/>sprite + color"]
     TL --> PAL["Tile Palette<br/>TD_Placeholder"]
     PAL --> TM["Tilemaps de la escena<br/>Ground / Walls / Decoration"]
-    S --> SR["SpriteRenderer<br/>del jugador"]
+    S --> SR["SpriteRenderer<br/>del jugador y enemigos"]
 ```
 
 - **Escala:** 64 px = 1 unidad = 1 celda.
@@ -126,42 +205,45 @@ flowchart LR
   - tiles: centro;
   - objeto alto de 64×128: (0.5, 0.25), para que su base ocupe su celda;
   - personajes: pies (bottom-center).
-- Cuando llegue el arte del equipo, se sustituye cada PNG o se reasigna el sprite de cada Tile. Las escenas no cambian.
+- Los movimientos de combate (`CombatMotion`) y el salto son provisionales hasta tener animaciones de Aseprite.
 
 ---
 
-## 6. Orden de dibujo (profundidad)
+## 8. Orden de dibujo (profundidad)
 
 | Ajuste | Valor | Dónde |
 |---|---|---|
 | Transparency Sort Mode | Custom Axis (0, 1, 0) | *Project Settings > Graphics* |
 | `Ground` | orden -10, modo Chunk | siempre detrás |
+| Sombra del jugador | orden -1 | sobre el suelo, debajo de todo lo demás |
 | `Walls`, `Decoration` | orden 0, modo **Individual** | cada tile se ordena por su altura en pantalla |
-| Jugador (`Visual`) | orden 0, **Sort Point = Pivot** (pies) | se ordena con los tiles por la Y de los pies |
-
-Resultado: entre objetos con el mismo orden, **el que tiene los pies más abajo en pantalla se dibuja delante**. Por eso el jugador pasa por delante o por detrás de los pilares según su posición. Las *Sorting Layers* y los *Sorting Groups* llegan el 16 nov.
+| Jugador y enemigos (`Visual`) | orden 0, **Sort Point = Pivot** (pies) | se ordenan con los tiles por la Y de los pies |
+| Orbes | orden 5 | siempre visibles |
+| HUD | Canvas Overlay, orden 10 | encima de todo |
 
 ---
 
-## 7. Configuración del proyecto relevante
+## 9. Configuración del proyecto relevante
 
 | Ajuste | Valor |
 |---|---|
 | Render pipeline | Built-in |
 | Active Input Handling | Input System Package (New) |
 | Física 2D | gravedad (0, 0) |
-| Paquetes añadidos | `com.unity.2d.tilemap` 1.0.0 (Tile Palette), `com.unity.2d.sprite` 1.0.0 (Sprite Editor) |
+| Modo del editor | 2D |
+| Paquetes añadidos | `com.unity.2d.tilemap`, `com.unity.2d.sprite`, `com.coplaydev.unity-mcp` (puente con Claude) |
 | Pixel Perfect Camera | no instalada (pendiente de decisión) |
 
 ---
 
-## 8. Lo que aún no existe (según calendario)
+## 10. Lo que aún no existe (según calendario)
 
-| Sistema | Fecha | Encaje previsto |
-|---|---|---|
-| 8 direcciones + `PlayerDirection` (última dirección válida) | 11 nov | `allowDiagonals` = true; `PlayerDirection` lee `PlayerMovement.MoveDirection` |
-| Colisiones del mundo | 12 nov | `TilemapCollider2D` + `CompositeCollider2D` en `Walls` (y en el agua) |
-| Animaciones | 13 nov | `PlayerAnimation` lee `PlayerDirection` y `Velocity` y alimenta un Animator con Blend Trees |
-| Prefab del jugador | 14 nov | `Prefabs/Characters/Player.prefab` |
-| Sorting Layers / Groups | 16 nov | capas `Ground`, `World`, `Overhead`, `UI` |
-| Prefabs de entorno e interacciones | 17–18 nov | `IInteractable` + acción `Interact` |
+| Sistema | Encaje previsto |
+|---|---|
+| Colisiones del mundo (hoy se atraviesan muros y agua) | `TilemapCollider2D` + `CompositeCollider2D` en `Walls` y en el agua |
+| IA de exploración de los enemigos | componente aparte que llama `CombatManager.Instance.TryStartCombat(enemy)` y respeta `GameState.IsExploring` |
+| Enemigos y jefe reales | `EnemyData` nuevos con sus ataques y efectos; el jefe necesita fases |
+| Animaciones | `PlayerAnimation` lee `PlayerDirection`, `Velocity` e `IsSprinting` y alimenta un Animator |
+| Prefabs del jugador y enemigos | `Prefabs/Characters/` |
+| Sorting Layers / Groups | capas `Ground`, `World`, `Overhead`, `UI` |
+| Menús, pausa, guardado y audio | según el calendario (16–18 nov) |

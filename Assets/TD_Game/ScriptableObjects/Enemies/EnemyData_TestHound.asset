@@ -43,6 +43,8 @@ MonoBehaviour:
     effectAmount: 0.25
     effectIgnoresCounter: 0
   soulsOnDefeat: 8
+  healthOnDefeat: 10
+  concentrationOnDefeat: 15
   bonusMaxHealth: 0
   bonusMaxStamina: 3
   unlocksOnDefeat: []

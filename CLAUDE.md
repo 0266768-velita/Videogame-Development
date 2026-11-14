@@ -270,6 +270,12 @@ El repositorio contiene un juego **top-down 2D anterior** (documentado en `ARQUI
 | 2026-11-05 | **Reutilización:** se mantienen los sistemas actuales de TD_Game. Los sistemas del juego anterior (combate, IA, menús, UI, guardado, audio…) se **copian y adaptan** dentro de `Assets/TD_Game/` con namespace `TD_Game` **solo si cumplen este documento**, o tras adaptarlos para que cumplan: responsabilidades separadas, scripts cortos, valores en campos serializados o ScriptableObjects, input mediante el asset de Input Actions y referencias serializadas en lugar de `Resources.Load`. **Los archivos originales del juego anterior no se modifican.** El plan por sistema está en `DEVELOPMENT_CALENDAR.md`. |
 | 2026-11-12 | **Combate dividido en componentes** (manager, arena, turnos, recompensas, contexto) en lugar de un `BattleManager` grande. Las **habilidades son ScriptableObjects** (`CombatAbility`) y las habilidades únicas de los enemigos son **datos** (`EnemyAttack.effect`). |
 | 2026-11-12 | `GameState`, `GameMode`, `Health` y `EnemyData` reutilizan el nombre del juego anterior dentro del namespace `TD_Game` (así lo indicaba el plan de adaptación). En el código nuevo se usan siempre desde `namespace TD_Game`. |
+| 2026-11-13 | **Orbes al estilo de los God of War clásicos:** al morir, los enemigos sueltan orbes de alma (Macuahuitl), jade (vida) y tonalli (concentración), que se recogen pasando encima **después** de la pelea. La victoria **ya no rellena la vida**: sanan los orbes de jade y las pociones. |
+| 2026-11-13 | **Tonalli** es el recurso de concentración (barra azul) y alimenta el ataque definitivo Tonalli Burst. **Salto solo en exploración**, visual (sprite y sombra), con emboscada al caer sobre un enemigo. |
+| 2026-11-13 | **HUD de combate en Canvas (P4 resuelta):** se genera con una herramienta de editor y queda en la escena para editarlo. Fuente: `LegacyRuntime` (uGUI `Text`) mientras no se importe TextMesh Pro. |
+| 2026-11-13 | **Estilo del menú de combate** inspirado en los JRPG modernos (comandos en diagonal a la derecha, placas oscuras y filo dorado, orden de turnos arriba), sin copiar arte de ningún juego. Todo texto del HUD va sobre placa opaca para que se lea sobre cualquier fondo. |
+| 2026-11-13 | **Paleta mexica seria** (`Scripts/UI/MexicaPalette.cs`), para un juego serio para adolescentes con temática mexica, como lo griego en God of War. Materiales del mundo azteca en lugar de colores saturados: obsidiana, hueso y ceniza (Mictlán), oro viejo y ocre, cinabrio y tezontle (rojo de los códices), jade (vida) y turquesa/xiuhuitl (tonalli). **Todo color nuevo de UI o combate se toma de `MexicaPalette`.** |
+| 2026-11-13 | **Más oscuro y con mitología mexica** (petición del equipo: un juego serio, no para niños). Paleta más oscura; grecas de almenas escalonadas (Templo Mayor) en paneles, avisos y sobre el menú; insignias de tecla en rombo de piedra; viñeta que oscurece la arena al empezar el combate. **Las barras se nombran con las tres fuerzas anímicas mexicas:** TEYOLIA · LIFE, IHIYOTL · BREATH y TONALLI · SPIRIT. Los textos de turno van en mayúsculas. |
 
 ### Convención de importación del arte de TD_Game
 
@@ -288,7 +294,10 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
 
 ### Recursos de TD_Game
 
-- **Input:** `Assets/TD_Game/Settings/Input/PlayerControls.inputactions`. Mapa `Player` con la acción `Move` (Vector2): WASD, flechas, stick izquierdo y D-pad; esquemas `Keyboard` y `Gamepad`.
+- **Input:** `Assets/TD_Game/Settings/Input/PlayerControls.inputactions`. Esquemas `Keyboard` y `Gamepad`. Mapa `Player`:
+  - `Move` (Vector2): WASD, flechas, stick izquierdo y D-pad;
+  - `Jump` (Button): Espacio / A;
+  - `Sprint` (Button, mantener): Shift izquierdo / RT.
 - **Primitivas:** `Assets/TD_Game/Art/Tilesets/Placeholder/Textures/`:
   - `Square_64`: relleno blanco.
   - `SquareOutline_64`: con borde.
@@ -301,42 +310,89 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
     - `Walls`: orden 0, modo Individual.
     - `Decoration`: orden 0, modo Individual.
   - `Main Camera` ortográfica: tamaño 4.21875, que da 15 × 8,4 tiles a 16:9 y escala entera ×2 a 1080p.
-- **Cámara:** `TD_Game.CameraFollow` (`Scripts/Camera/CameraFollow.cs`). Sigue al objetivo con suavizado (`smoothTime`), se limita a los bordes de un Tilemap (`boundsTilemap`) y alinea la posición a la rejilla de píxeles (PPU 64). Métodos `SnapToTarget()` y `RefreshBounds()`.
+- **Cámara:** `TD_Game.CameraFollow` (`Scripts/Camera/CameraFollow.cs`). Sigue al objetivo con suavizado (`smoothTime`), se limita a los bordes de un Tilemap (`boundsTilemap`) y alinea la posición a la rejilla de píxeles (PPU 64). Métodos `SnapToTarget()`, `RefreshBounds()`, `Follow(Transform)` (cambia de objetivo con suavizado) y `Shake(amplitud, duración)`.
 - **Escenario de `TestLevel`:** 30×20 celdas (x -15..14, y -10..9). Sala izquierda, bloque de roca con un pasillo de tierra (y -1..0) y sala derecha; estanques y 9 pilares.
 - **Jugador:** objeto `Player` en `TestLevel` (todavía sin prefab; el prefab es del 14 nov):
-  - `Rigidbody2D` Dynamic (gravedad 0, rotación congelada, interpolación, colisión continua).
+  - `Rigidbody2D` Dynamic (gravedad 0, rotación congelada, interpolación, colisión continua, *Never Sleep* para que los orbes se recojan aunque esté quieto).
   - `CapsuleCollider2D` en los pies.
-  - `PlayerInputReader`: `InputActionReference` a `Player/Move`.
-  - `PlayerMovement`: `moveSpeed` 4 y `allowDiagonals` **activado** (8 direcciones). Solo mueve en `GameMode.Exploration`.
+  - `PlayerInputReader`: `InputActionReference` a `Player/Move`, `Player/Jump` y `Player/Sprint`.
+  - `PlayerJump`: salto **visual**. El hijo `Visual` sube y el hijo `Shadow` (elipse negra, orden -1) se queda en el suelo.
+    - En el aire ignora la colisión con los enemigos (los saltas).
+    - Si caes encima de uno, empieza una **emboscada**: STOMP con daño y primer turno para el jugador.
+  - `PlayerMovement`: `moveSpeed` 4 y `allowDiagonals` **activado** (8 direcciones). Solo mueve en `GameMode.Exploration`. Sprint: `sprintMultiplier` 1.75 con transición suave; expone `IsSprinting` y `CurrentSpeed`.
   - `PlayerDirection`: dirección actual, última válida (`LastValid`) y `Facing` (`Direction8`).
-  - `Health`, `PlayerProgression` (desbloqueos, crecimiento, victorias, checkpoint) y `PlayerCombatant` (estamina, pociones, carga del Macuahuitl y buffs; usa `PlayerStats_Tlahuelli`).
+  - `Health`, `PlayerProgression` (desbloqueos, crecimiento, victorias, checkpoint) y `PlayerCombatant` (estamina, pociones, carga del Macuahuitl, **Tonalli**, combo y buffs; usa `PlayerStats_Tlahuelli`).
   - Hijo `Visual` con `SpriteRenderer`: `Art/Characters/Placeholder/CharacterOutline_40x56.png` con pivote en los pies y *Sort Point = Pivot*.
 - **Scripts del jugador** (`Scripts/Player/`):
-  - `PlayerInputReader`: solo lee el input y expone `Move`.
+  - `PlayerInputReader`: solo lee el input y expone `Move`, `JumpPressed` y `SprintHeld`.
   - `PlayerMovement`: mueve el `Rigidbody2D` en `FixedUpdate` y expone `MoveDirection`, `Velocity` y `MoveSpeed`.
 - **Estado global:** `TD_Game.GameState` (`Managers/GameState.cs`) con `GameMode` Exploration, Combat, Paused y Cutscene. Como lleva namespace, no choca con el `GameState` del juego anterior.
 - **Combate por turnos** (`Scripts/Combat/`). Todo vive en el objeto `Combat` de `TestLevel`:
-  - `CombatManager`: flujo, unión de enemigos en un radio de 4 tiles (máximo 3) y eventos estáticos `CombatStarted`, `CombatWon` y `CombatLost`.
-  - `CombatArena`: el jugador va a la izquierda y los enemigos a la derecha sobre el mismo mapa; la cámara hace zoom a 2.8125 (×3).
-  - `PlayerTurn`: 4 ranuras de habilidad (attack, skill1, skill2, potion).
-  - `EnemyTurn`: telegrafía, ventana de esquivar o interrumpir, PERFECT y anti-spam.
-  - `CombatRewards`: victoria y derrota.
+  - `CombatManager`:
+    - flujo, unión de enemigos en un radio de 4 tiles (máximo 3) y eventos estáticos `CombatStarted`, `CombatWon` y `CombatLost`;
+    - `TryStartCombat(enemy, ambush)`.
+  - `CombatArena`:
+    - el jugador va a la izquierda y los enemigos a la derecha sobre el mismo mapa; la cámara hace zoom a 2.8125 (×3);
+    - aplica el temblor de cámara y el *hit stop* (`Time.timeScale` a 0.05 un instante).
+  - `PlayerTurn`: 5 ranuras (attack, skill1, skill2, potion, ultimate) expuestas en `Slots`; `Performing` indica la acción en curso.
+  - `EnemyTurn`:
+    - telegrafía, ventana de esquivar o interrumpir y anti-spam;
+    - PERFECT: +estamina, +Tonalli y **contraataque automático**.
+  - `ActionCommand`: pulsación con *timing*, usada para los críticos y los contraataques del jugador.
+  - `CombatRewards`: victoria (crecimiento, desbloqueos, poción y checkpoint; **no** rellena la vida ni da almas: eso lo dan los orbes) y derrota.
   - `CombatInput`: lee el mapa `Combat`.
-  - `CombatContext`: daño, objetivo y Last Stand.
-  - `CombatFeed`: eventos estáticos para la UI; la lógica de combate **nunca** habla con la UI directamente.
+  - `CombatContext`: input, daño (con temblor, *hit stop* y números críticos), objetivo y Last Stand.
+  - `CombatFeed`: eventos estáticos para la UI y la cámara; la lógica de combate **nunca** habla con la UI directamente.
   - `CombatMotion`: movimientos provisionales hasta tener el Animator.
+- **Ataque y combos:**
+  - el ataque tiene una carga de 0.55 s;
+  - si pulsas Attack otra vez cuando sale **NOW!**, es **crítico** (×1.6, o ×1.84 si es perfecto) y da +Tonalli;
+  - cada ataque seguido en el mismo turno suma +15 % de daño (combo).
+- **Tonalli** (concentración, barra azul): se llena con orbes azules, PERFECT (+15) y críticos (+8). Lleno, permite **Tonalli Burst** (5 / LB): golpe ×2.5 a todos los enemigos que vacía la barra.
 - **Input de combate:** mapa `Combat` en `PlayerControls.inputactions`:
-  - Attack 1/A, Skill1 2/X, Skill2 3/Y y Potion 4/D-pad arriba;
+  - Attack 1/A, Skill1 2/X, Skill2 3/Y, Potion 4/D-pad arriba y Ultimate 5/LB;
   - EndTurn Q/RB y TargetPrev/Next con flechas o D-pad;
   - Dodge con Espacio, D o B, e Interrupt con 1/A.
 - **Habilidades:** ScriptableObjects que heredan de `CombatAbility` (`Scripts/Combat/Abilities/`), con assets en `ScriptableObjects/Abilities/`:
-  - Attack y Potion están desbloqueadas desde el inicio;
+  - Attack, Potion y Tonalli Burst están desbloqueadas desde el inicio;
   - Mictlan Fury (una vez por combate) y Seismic Jump se desbloquean.
   - **Para añadir una habilidad:** crear una subclase con `Execute`, crear su asset y asignarlo a una ranura de `PlayerTurn`.
+- **Orbes** (`Scripts/Interactions/`). `OrbSpawner` (en el objeto `Combat`) suelta orbes donde muere un enemigo, según su `EnemyData`:
+  - **Soul** (dorado): carga del Macuahuitl, `soulsOnDefeat`;
+  - **Jade** (verde): vida, `healthOnDefeat`;
+  - **Tonalli** (azul): concentración, `concentrationOnDefeat`.
+  - Prefab: `Prefabs/Interactables/Orb.prefab` (`SoulOrb`).
+  - Solo se recogen **en exploración**, pasando encima (o saltando); de cerca los atrae un imán.
+  - El evento `OrbSpawner.Collected` avisa a la UI.
 - **Enemigos:**
-  - `EnemyData` y `EnemyAttack` (`Scripts/Combat/Data/`) definen ataques, contraataque, efecto único (DrainStamina, HealSelf, Weaken), recompensas (almas, vida o estamina máxima, `unlocksOnDefeat`) y `lastStandAbility`.
-  - `CombatEnemy` (`Scripts/Enemies/`) inicia el combate al contacto (colisión o trigger). La IA de exploración debe llamar `CombatManager.Instance.TryStartCombat(enemy)` y respetar `GameState.IsExploring`.
+  - `EnemyData` y `EnemyAttack` (`Scripts/Combat/Data/`) definen ataques, contraataque, efecto único (DrainStamina, HealSelf, Weaken), orbes, recompensas (vida o estamina máxima, `unlocksOnDefeat`) y `lastStandAbility`.
+  - `CombatEnemy` (`Scripts/Enemies/`):
+    - inicia el combate al contacto (colisión o trigger) y lanza el evento estático `Defeated`;
+    - la IA de exploración debe llamar `CombatManager.Instance.TryStartCombat(enemy)` y respetar `GameState.IsExploring`.
 - **Enemigos de prueba en `TestLevel`:** `Enemy_TestHound` (sala izquierda, ataca primero), y `Enemy_TestBrute` + `Enemy_TestWitch` (sala derecha; pelean juntos, la Brute da Fury y la Witch da Seismic). Son provisionales hasta que exista el diseño (P0).
-- **`CombatDebugHUD`** (`Scripts/UI/`) es **provisional** (OnGUI). Se elimina cuando exista el HUD de combate en Canvas.
-- **Limitación conocida:** con Unity en segundo plano, el tiempo de Play Mode avanza a saltos. En las pruebas por MCP, esperar por estado y no por tiempo.
-- **Limitación conocida:** la captura de pantalla de MCP (`manage_camera screenshot`) saca a Unity de Play Mode. Para validar en Play Mode, leer los valores con `execute_code` en lugar de capturar.
+- **Paleta:** `MexicaPalette` (`Scripts/UI/`):
+  - Obsidian y ObsidianPlate: placas;
+  - Bone (texto) y Ash (inactivo);
+  - AgedGold (filos, insignias, almas) y Ochre (estamina);
+  - Cinnabar (vida), Tezontle (activo y urgente) y Blood (aviso enemigo);
+  - Jade (curación) y Turquoise (Tonalli);
+  - Deathly: Mictlan Fury.
+- **HUD** (Canvas `CombatHUD` en `TestLevel`; scripts en `Scripts/UI/`):
+  - Se crea con el menú **TD_Game > Build Combat HUD** (`Scripts/Editor/CombatHUDBuilder.cs`) y después se edita en el Inspector. Para reconstruirlo, borrar `CombatHUD` y volver a usar el menú.
+  - `PlayerStatusPanel`: siempre visible arriba a la izquierda (vida, estamina, Tonalli, pociones, Macuahuitl). Barras: TEYOLIA · LIFE, IHIYOTL · BREATH y TONALLI · SPIRIT.
+  - `CombatActionMenu` y `ActionButton`: **lista diagonal de comandos** abajo a la derecha (filas 1–5 y End Turn, también con ratón):
+    - cada fila tiene una insignia de tecla redonda y el nombre grande en cursiva, sobre placa negra opaca con línea dorada;
+    - en el turno enemigo el menú se desliza fuera y aparece la barra **DEFEND** con las teclas de defensa.
+  - `TurnOrderBar`: orden de turnos arriba; quien actúa sale en dorado (`CombatManager.CurrentEnemy`).
+  - `EnemyHealthBars`: barras que siguen a cada enemigo, con marcador ▼ sobre el objetivo.
+  - `CombatMessages`: banner, turno, aviso DODGE!/INTERRUPT!/NOW! (con la tecla), combo y números flotantes. **Todo texto va sobre una placa opaca** (el padre del `Text`), que se oculta cuando está vacía.
+  - `CombatHUD`: muestra y oculta la parte de combate.
+  - **Ornamentos** generados por el builder en `Art/UI/`:
+    - `Greca_Almenas.png`: almenas escalonadas, en mosaico, teñidas con DarkGold;
+    - `Vignette.png`: oscurece la arena; es el primer hijo de `CombatGroup`.
+    - Si borras uno de estos PNG, el builder lo vuelve a crear al reconstruir el HUD.
+- **Limitación conocida:** con Unity en segundo plano, el Play Mode se congela o avanza a saltos. En las pruebas por MCP:
+  - ejecutar `Application.runInBackground = true` con `execute_code` al entrar en Play Mode (no se guarda en el proyecto);
+  - esperar por estado y no por tiempo;
+  - no llamar `InputSystem.Update()` al simular teclas.
+- **Limitación conocida:** la captura de pantalla de MCP (`manage_camera screenshot`) saca a Unity de Play Mode. Para ver el HUD en Play Mode, usar `ScreenCapture.CaptureScreenshot` con `execute_code`.

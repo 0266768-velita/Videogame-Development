@@ -5,6 +5,177 @@ Planificación: `DEVELOPMENT_CALENDAR.md` · Reglas y decisiones técnicas: `CLA
 
 ---
 
+## 2026-11-13 — Sesión 12: más oscuro y con mitología mexica
+
+**Tipo:** estilo visual, validado con capturas en Play Mode
+
+### Petición
+Colores más oscuros y un menú con aire de mitología mexica: que se note que es un juego serio y no para niños.
+
+### Qué se cambió
+- **`MexicaPalette` más oscura:** obsidiana casi negra, hueso apagado para el texto, oro viejo y ocre más profundos, cinabrio, tezontle, jade y turquesa oscuros.
+- **Ornamentos mexicas**, generados como texturas dentro de Unity por `CombatHUDBuilder`, sin herramientas externas:
+  - **greca de almenas escalonadas** (`Art/UI/Greca_Almenas.png`, como las almenas del Templo Mayor), en el panel del jugador, sobre el menú de comandos y bajo cada aviso;
+  - **viñeta** (`Art/UI/Vignette.png`) que oscurece la arena al empezar el combate: 30 % en el centro y 90 % en las esquinas.
+- **Insignias de tecla en rombo de piedra** en lugar de círculos.
+- **Nombres nahuas:** las barras usan las tres fuerzas anímicas de la cosmovisión mexica: **TEYOLIA · LIFE** (corazón, vida), **IHIYOTL · BREATH** (aliento, estamina) y **TONALLI · SPIRIT**.
+- Turnos en mayúsculas (YOUR TURN, TEST BRUTE ATTACKS) y tintes de los placeholders más oscuros.
+
+### Validación
+- Capturas en tu turno, con el aviso DODGE! y con los orbes en el suelo.
+- Consola de TD_Game sin errores ni advertencias.
+
+---
+
+## 2026-11-13 — Sesión 11: paleta mexica seria
+
+**Tipo:** estilo visual, validado con capturas en Play Mode
+
+### Petición
+Colores más serios para el menú de combate, los orbes y el combate: un juego serio para adolescentes, con temática mexica, como lo griego en God of War.
+
+### Qué se cambió
+- **Nueva `MexicaPalette`** (`Scripts/UI/MexicaPalette.cs`). Toma materiales del mundo azteca en lugar de colores saturados:
+  - obsidiana, hueso y ceniza (Mictlán);
+  - oro viejo y ocre;
+  - cinabrio y tezontle (el rojo de los códices);
+  - jade (vida) y turquesa/xiuhuitl (tonalli).
+- **HUD:**
+  - placas de obsidiana con filo de oro viejo e insignias de tecla en oro viejo;
+  - barras de vida en cinabrio, estamina en ocre y Tonalli en turquesa;
+  - el turno activo y el aviso DODGE! van en hueso sobre tezontle;
+  - los rombos ◆ sirven de ornamento en el título y en la barra DEFEND.
+- **Orbes:** almas en oro viejo, vida en jade y Tonalli en turquesa, con un brillo lento que "respira" (`SoulOrb.glowPulse`).
+- **Combate:**
+  - telegrafía enemiga en rojo sangre;
+  - impactos en blanco hueso y críticos en oro;
+  - daño recibido en rojo apagado;
+  - Mictlan Fury en el blanco pálido de Mictlantecuhtli (antes, morado);
+  - poción en jade y Tonalli Burst en turquesa.
+- **Tintes de los placeholders:** jugador en bronce; Hound en tierra, Brute en tezontle y Witch en ceniza.
+- **Corrección:** `CombatEnemy` volvía a blanco tras reiniciarse por una derrota; ahora recupera su tinte original.
+- Assets de habilidades, `OrbSpawner` y `EnemyTurn` actualizados en la escena, y HUD reconstruido.
+
+### Pendiente
+- Los tiles placeholder del mapa (pasto verde y agua azul) siguen con colores vivos; se sustituyen con el arte del equipo.
+
+---
+
+## 2026-11-13 — Sesión 10: menú de combate legible (estilo JRPG moderno)
+
+**Tipo:** UI, validada en Play Mode con capturas
+
+### Problema
+En el turno enemigo el menú se atenuaba (alpha 0.55) sobre fondos café: los textos no se distinguían.
+
+### Qué se cambió
+- **Menú de comandos** (`ActionButton` y `CombatActionMenu` reescritos):
+  - lista diagonal abajo a la derecha; cada fila tiene una insignia de tecla redonda, el nombre en mayúsculas cursivas, el coste y una línea dorada, sobre placa negra **opaca**;
+  - estados legibles: disponible, falta estamina (coste en rojo), LOCKED (gris claro) y en curso (placa dorada);
+  - con el ratón, la fila se desliza al pasar por encima;
+  - Tonalli Burst muestra `60/100` y late en azul cuando está lleno.
+- **Turno enemigo:** el menú se desliza fuera de la pantalla y aparece la barra **DEFEND**: `SPACE / B dodge · 1 / A interrupt spells · late press = PERFECT`.
+- **Avisos con la tecla:** `DODGE!  SPACE / B`, `INTERRUPT!  1 / A` y `NOW!  1 / A`.
+- **Todo texto sobre placa opaca:** turno, banner, aviso y ayuda. Las placas se ajustan al ancho del texto y se ocultan cuando están vacías.
+- **Nuevo `TurnOrderBar`:** orden de turnos arriba, con quien actúa en dorado. `CombatManager.CurrentEnemy` indica qué enemigo está atacando.
+- `CombatHUDBuilder` reescrito con el diseño nuevo y el HUD reconstruido en `TestLevel`.
+
+### Problemas
+- Las placas salían muy altas porque el `Text` heredado devuelve alturas preferidas poco fiables. Se resolvió con altura fija y ancho ajustado al texto.
+- El `Outline` dorado teñía las placas semitransparentes de café. Se resolvió con placas opacas.
+
+---
+
+## 2026-11-13 — Sesión 9: sprint y guías al día
+
+**Tipo:** implementación en Unity (validada en Play Mode por MCP) y documentación
+
+### Qué se implementó
+- **Sprint:** acción `Player/Sprint` (mantener Shift izquierdo / RT).
+  - `PlayerInputReader.SprintHeld` lee el botón.
+  - `PlayerMovement` multiplica la velocidad por `sprintMultiplier` (1.75), con transición suave (`speedChangeRate`), y expone `IsSprinting` y `CurrentSpeed` para las animaciones.
+  - Solo en exploración.
+- **`TD_Game_ARQUITECTURA.md` y `TD_Game_GUIA.md` al día:** seguían en el estado del 3 nov. Ahora incluyen sprint, salto, combate, orbes, HUD, la tabla de controles completa, dónde se ajusta cada cosa y problemas frecuentes.
+
+### Validación
+- Caminando: 4 tiles/s. Corriendo: 7 tiles/s. En diagonal corriendo: 7 (normalizado). Al soltar: 0.
+- Consola sin errores.
+
+### Pendiente
+- Las colisiones de los muros siguen pendientes: al correr se ve que el jugador atraviesa la roca.
+
+---
+
+## 2026-11-13 — Sesión 8: salto, orbes, combate más divertido y HUD en Canvas
+
+**Tipo:** implementación en Unity, validada en Play Mode por MCP
+
+### Qué se implementó
+- **Salto en exploración** (`PlayerJump`, acción `Player/Jump` con Espacio / A):
+  - es visual: sube el sprite y la sombra se queda en el suelo;
+  - en el aire se pasa por encima de los enemigos;
+  - **emboscada:** al caer sobre un enemigo, el jugador hace STOMP (×1.2 de daño) y tiene el primer turno.
+- **Orbes** (`SoulOrb` y `OrbSpawner`; prefab `Prefabs/Interactables/Orb.prefab`). Al morir, cada enemigo suelta:
+  - orbes de **alma** (dorados): carga del Macuahuitl;
+  - orbes de **jade** (verdes): vida;
+  - orbes de **tonalli** (azules): concentración.
+  - Saltan desde el enemigo, flotan, los atrae un imán de cerca y **solo se recogen al terminar la pelea, pasando encima**.
+  - Las cantidades están en `EnemyData` (`soulsOnDefeat`, `healthOnDefeat` y `concentrationOnDefeat`).
+- **Tonalli** (concentración): barra que persiste entre combates y se llena con orbes azules, PERFECT y críticos. Llena, activa **Tonalli Burst** (5 / LB, `TonalliBurstAbility`): ×2.5 a todos los enemigos.
+- **Combate más divertido:**
+  - **Crítico con timing** (`ActionCommand`): el ataque se carga y, si pulsas Attack cuando aparece NOW!, hace ×1.6 (×1.84 si es perfecto) y da +Tonalli.
+  - **Combo:** +15 % de daño por cada ataque seguido en el mismo turno.
+  - **Contraataque automático** al esquivar o interrumpir con PERFECT.
+  - **Impacto:** temblor de cámara (`CameraFollow.Shake`) y *hit stop* en críticos, en muertes y en las habilidades grandes.
+- **HUD en Canvas** (sustituye a `CombatDebugHUD`, que se eliminó):
+  - panel del jugador siempre visible (vida, estamina, Tonalli, pociones, Macuahuitl y aviso TONALLI READY);
+  - menú de acciones con tarjetas 1–5 y End Turn: muestra tecla y coste, está bloqueado o atenuado según el caso y se puede pulsar con el ratón;
+  - línea de ayuda;
+  - barras de vida que siguen a cada enemigo, con marcador de objetivo;
+  - banner animado, aviso DODGE!/INTERRUPT!/NOW! que late, contador de combo y números flotantes, también al recoger orbes.
+  - Se genera con **TD_Game > Build Combat HUD** (`Scripts/Editor/CombatHUDBuilder.cs`).
+- **Cambio de diseño:** la victoria ya no rellena la vida ni da las almas directamente; ahora se obtienen de los orbes.
+
+### Archivos
+- Nuevos:
+  - `Scripts/Player/PlayerJump.cs`
+  - `Scripts/Interactions/{SoulOrb, OrbSpawner}.cs`
+  - `Scripts/Combat/ActionCommand.cs`
+  - `Scripts/Combat/Abilities/TonalliBurstAbility.cs`
+  - `Scripts/UI/{UIBar, PlayerStatusPanel, ActionButton, CombatActionMenu, EnemyHealthBars, CombatMessages, CombatHUD}.cs`
+  - `Scripts/Editor/CombatHUDBuilder.cs`
+  - `ScriptableObjects/Abilities/Ability_TonalliBurst.asset`
+  - `Prefabs/Interactables/Orb.prefab`
+- Modificados:
+  - `PlayerInputReader`, `PlayerCombatant`, `PlayerStats`, `EnemyData`
+  - `CombatEnemy`, `CombatContext`, `CombatManager`, `CombatArena`, `CombatFeed`, `CombatInput`, `CombatRewards`
+  - `PlayerTurn`, `EnemyTurn`, `AttackAbility`, `SeismicAbility`, `CameraFollow`
+  - `PlayerControls.inputactions`, los 3 `EnemyData_Test*` y `TestLevel`
+- Eliminado: `Scripts/UI/CombatDebugHUD.cs`.
+
+### Validación (Play Mode por MCP)
+- El salto sube el sprite hasta 0.43 tiles y aterriza.
+- Saltar sobre la Hound inicia una **emboscada**: STOMP de 17 y primer turno del jugador.
+- El ataque suma combo y Tonalli Burst vacía la barra y gana el combate.
+- La Hound suelta 7 orbes (2 de alma, 2 de jade y 3 de tonalli), que no se recogen durante la pelea.
+- Al pasar encima en exploración se recogen todos: +10 de vida, +8 de carga y +15 de Tonalli.
+- La vida no se rellena al ganar.
+- El HUD se comprobó con capturas en combate y en exploración.
+- Consola de TD_Game sin errores ni advertencias.
+- **Sin probar con teclado real:** el *timing* del crítico (NOW!) y de esquivar e interrumpir. Por MCP no se puede acertar la ventana por la latencia.
+
+### Problemas
+- Con Unity en segundo plano, el Play Mode no avanzaba (`Time.time` = 0). Se resolvió con `Application.runInBackground = true` solo durante las pruebas.
+- Al simular teclas, llamar `InputSystem.Update()` a mano hacía que `WasPressedThisFrame` no se detectara.
+- Los paneles del HUD se veían marrones porque el `Outline` dorado se transparentaba bajo el fondo semitransparente. Se resolvió con fondos opacos.
+
+### Pendiente
+- Sonidos para los orbes, el crítico y el contraataque (18 nov).
+- Animaciones reales en lugar de `CombatMotion` y del salto con el sprite.
+- Valores de los orbes y del combate: balance del 19 nov.
+
+---
+
 ## 2026-11-12 — Sesión 7: jugador en 8 direcciones y combate por turnos (tareas de Toño)
 
 **Tipo:** implementación en Unity, validada en Play Mode por MCP

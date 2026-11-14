@@ -18,6 +18,13 @@ namespace TD_Game
         /// <summary>Floating number or word at a world position.</summary>
         public static event Action<Vector3, string, Color> Popup;
 
+        /// <summary>Camera shake: amplitude in tiles and duration in seconds.</summary>
+        public static event Action<float, float> Shake;
+        /// <summary>Hit stop: the game freezes for a few hundredths of a second so big hits feel heavy.</summary>
+        public static event Action<float> HitStop;
+
+        public static void RequestShake(float amplitude, float duration) => Shake?.Invoke(amplitude, duration);
+        public static void RequestHitStop(float seconds) => HitStop?.Invoke(seconds);
         public static void ShowBanner(string text, float seconds) => Banner?.Invoke(text, seconds);
         public static void SetTurnLabel(string text) => TurnLabel?.Invoke(text);
         public static void SetCounterPrompt(string text) => CounterPrompt?.Invoke(text);
@@ -30,6 +37,8 @@ namespace TD_Game
             TurnLabel = null;
             CounterPrompt = null;
             Popup = null;
+            Shake = null;
+            HitStop = null;
         }
     }
 }

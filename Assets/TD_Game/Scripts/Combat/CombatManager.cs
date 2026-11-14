@@ -36,6 +36,8 @@ namespace TD_Game
         public CombatContext Context { get; private set; }
         public bool InCombat => Context != null;
         public PlayerTurn PlayerTurn => playerTurn;
+        /// <summary>The enemy acting right now, or null during the player's turn (turn order UI).</summary>
+        public CombatEnemy CurrentEnemy { get; private set; }
 
         void Awake()
         {
@@ -53,13 +55,14 @@ namespace TD_Game
             if (Instance == this) Instance = null;
         }
 
-        public bool TryStartCombat(CombatEnemy lead)
+        /// <summary>Starts a battle against this enemy and the ones nearby. ambush = the player landed on it from a jump.</summary>
+        public bool TryStartCombat(CombatEnemy lead, bool ambush = false)
         {
             if (!enabled || InCombat || !GameState.IsExploring || lead == null || !lead.IsAvailable) return false;
             if (player == null) { Debug.LogError($"[{nameof(CombatManager)}] Player is not assigned.", this); return false; }
 
-            Context = new CombatContext(player, GatherEnemies(lead), this);
-            StartCoroutine(BattleRoutine());
+            Context = new CombatContext(player, GatherEnemies(lead), input, this);
+            StartCoroutine(BattleRoutine(ambush));
             return true;
         }
 
@@ -75,7 +78,7 @@ namespace TD_Game
             return list;
         }
 
-        IEnumerator BattleRoutine()
+        IEnumerator BattleRoutine(bool ambush)
         {
             var context = Context;
             Vector3 returnPosition = player.transform.position;
@@ -86,10 +89,11 @@ namespace TD_Game
             arena.Enter(player, context.Enemies);
             input.Enable();
             CombatStarted?.Invoke();
-            CombatFeed.ShowBanner("Battle!", introTime);
+            CombatFeed.ShowBanner(ambush ? "AMBUSH!" : "Battle!", introTime);
             yield return new WaitForSeconds(introTime);
 
-            bool enemiesFirst = context.Enemies[0].Data.startsBattleFirst;
+            bool enemiesFirst = !ambush && context.Enemies[0].Data.startsBattleFirst;
+            if (ambush) yield return Stomp(context);
             while (!context.PlayerDead && !context.AllEnemiesDead)
             {
                 if (!enemiesFirst) yield return playerTurn.Run(context);
@@ -99,7 +103,9 @@ namespace TD_Game
                 {
                     if (context.PlayerDead || context.AllEnemiesDead) break;
                     if (enemy == null || enemy.Health.IsDead) continue;
+                    CurrentEnemy = enemy;
                     yield return enemyTurn.Run(context, enemy);
+                    CurrentEnemy = null;
                 }
             }
 
@@ -116,6 +122,15 @@ namespace TD_Game
 
             if (victory) CombatWon?.Invoke(context.Defeated);
             else CombatLost?.Invoke();
+        }
+
+        /// <summary>Ambush opener: the player falls on the first enemy.</summary>
+        IEnumerator Stomp(CombatContext context)
+        {
+            var lead = context.Enemies[0];
+            yield return CombatMotion.Hop(player.transform, 0.8f, 0.35f, null);
+            yield return CombatMotion.Lunge(player.transform, lead.transform.position, context.StopDistance(lead), 0.12f,
+                () => context.DamageEnemy(lead, player.AttackDamage(player.Stats.ambushMultiplier), critical: true, label: "STOMP"));
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

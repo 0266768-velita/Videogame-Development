@@ -27,10 +27,45 @@ namespace TD_Game
         float explorationSize;
         Coroutine zoomRoutine;
 
+        Coroutine hitStopRoutine;
+
         void Awake()
         {
             focus = new GameObject("CombatFocus").transform;
             focus.SetParent(transform, false);
+        }
+
+        void OnEnable()
+        {
+            CombatFeed.Shake += OnShake;
+            CombatFeed.HitStop += OnHitStop;
+        }
+
+        void OnDisable()
+        {
+            CombatFeed.Shake -= OnShake;
+            CombatFeed.HitStop -= OnHitStop;
+            Time.timeScale = 1f;
+        }
+
+        void OnShake(float amplitude, float duration)
+        {
+            if (cameraFollow != null) cameraFollow.Shake(amplitude, duration);
+        }
+
+        void OnHitStop(float seconds)
+        {
+            if (hitStopRoutine != null) StopCoroutine(hitStopRoutine);
+            hitStopRoutine = StartCoroutine(HitStopRoutine(seconds));
+        }
+
+        // Freezes the game for a moment so heavy hits feel heavy.
+        IEnumerator HitStopRoutine(float seconds)
+        {
+            Time.timeScale = 0.05f;
+            yield return new WaitForSecondsRealtime(seconds);
+            Time.timeScale = 1f;
+            hitStopRoutine = null;
         }
 
         public void Enter(PlayerCombatant player, IReadOnlyList<CombatEnemy> enemies)

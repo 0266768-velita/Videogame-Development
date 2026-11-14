@@ -11,7 +11,7 @@ namespace TD_Game
         [Min(1f)] public float damageMultiplier = 1.5f;
         [Tooltip("Player turns the damage boost lasts (the turn it is used counts).")]
         [Min(1)] public int turns = 3;
-        public Color flashColor = new Color(0.8f, 0.3f, 1f);
+        public Color flashColor = MexicaPalette.Deathly;   // the pale power of Mictlantecuhtli
 
         protected override IEnumerator Execute(CombatContext context)
         {
