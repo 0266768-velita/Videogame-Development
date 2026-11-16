@@ -60,6 +60,8 @@ namespace TD_Game
         {
             CombatFeed.ShowBanner("You have fallen...", defeatBannerTime);
             yield return new WaitForSeconds(defeatBannerTime);
+            // Full Game Over screen (4.18): waits for Retry or Main Menu.
+            if (DefeatScreen.Instance != null) yield return DefeatScreen.Instance.Show();
 
             var player = context.Player;
             player.Teleport(player.Progression.Checkpoint);

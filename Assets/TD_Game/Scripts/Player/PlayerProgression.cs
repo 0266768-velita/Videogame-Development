@@ -44,5 +44,20 @@ namespace TD_Game
         public void RegisterVictory() => Victories++;
 
         public void SetCheckpoint(Vector3 position) => Checkpoint = position;
+
+        /// <summary>Abilities in the list (for the save).</summary>
+        public IReadOnlyList<CombatAbility> UnlockedAbilities => unlockedAbilities;
+
+        /// <summary>Loads saved progress (SaveController). Does not raise AbilityUnlocked.</summary>
+        public void LoadSaved(float bonusMaxHealth, float bonusMaxStamina, int victories, Vector3 checkpoint,
+            IEnumerable<CombatAbility> abilities)
+        {
+            BonusMaxHealth = Mathf.Max(0f, bonusMaxHealth);
+            BonusMaxStamina = Mathf.Max(0f, bonusMaxStamina);
+            Victories = Mathf.Max(0, victories);
+            Checkpoint = checkpoint;
+            foreach (var ability in abilities)
+                if (ability != null && !unlockedAbilities.Contains(ability)) unlockedAbilities.Add(ability);
+        }
     }
 }

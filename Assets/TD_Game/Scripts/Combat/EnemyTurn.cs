@@ -21,9 +21,10 @@ namespace TD_Game
         public IEnumerator Run(CombatContext context, CombatEnemy enemy)
         {
             CombatFeed.SetTurnLabel(enemy.Data.displayName.ToUpperInvariant() + " ATTACKS");
+            enemy.BeginTurn();
             yield return new WaitForSeconds(0.5f);
 
-            var attack = enemy.Data.PickAttack();
+            var attack = enemy.PickAttack();
             CombatFeed.ShowBanner(attack.attackName, 1f);
 
             for (int i = 0; i < attack.hits && !context.PlayerDead && !enemy.Health.IsDead; i++)
@@ -81,8 +82,13 @@ namespace TD_Game
 
         IEnumerator Land(CombatContext context, CombatEnemy enemy, EnemyAttack attack)
         {
-            float damage = Mathf.Round(enemy.Data.attackPower * attack.damageMultiplier);
-            if (attack.lungeAtTarget)
+            float damage = Mathf.Round(enemy.AttackPower * attack.damageMultiplier);
+            if (damage <= 0f)
+            {
+                // Pure support ability (howl, guard...): no hit, only its effect.
+                yield return new WaitForSeconds(0.4f);
+            }
+            else if (attack.lungeAtTarget)
             {
                 yield return CombatMotion.Lunge(enemy.transform, context.Player.transform.position,
                     context.StopDistance(enemy), enemyLungeTime, () => context.DamagePlayer(damage, enemy.Data));
@@ -112,6 +118,26 @@ namespace TD_Game
                 case AttackEffect.Weaken:
                     player.Weaken(attack.effectAmount);
                     CombatFeed.ShowPopup(player.transform.position + above, "WEAKENED", MexicaPalette.Ash);
+                    break;
+                case AttackEffect.EmpowerSelf:
+                    if (enemy.Health.IsDead) break;
+                    enemy.Empower(attack.effectAmount);
+                    CombatFeed.ShowPopup(enemy.transform.position + above, "POWER UP", MexicaPalette.Cinnabar);
+                    break;
+                case AttackEffect.LifeSteal:
+                    if (enemy.Health.IsDead) break;
+                    float stolen = Mathf.Round(enemy.AttackPower * attack.damageMultiplier * attack.effectAmount);
+                    enemy.Health.Heal(stolen);
+                    CombatFeed.ShowPopup(enemy.transform.position + above, "+" + stolen, MexicaPalette.Jade);
+                    break;
+                case AttackEffect.Stun:
+                    player.Stun();
+                    CombatFeed.ShowPopup(player.transform.position + above, "STUNNED", MexicaPalette.AgedGold);
+                    break;
+                case AttackEffect.Guard:
+                    if (enemy.Health.IsDead) break;
+                    enemy.SetGuard(attack.effectAmount);
+                    CombatFeed.ShowPopup(enemy.transform.position + above, "GUARD", MexicaPalette.Bone);
                     break;
             }
         }

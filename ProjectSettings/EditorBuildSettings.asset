@@ -6,12 +6,15 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Boot.unity
-    guid: 380a46eae55967e4e871ee512df8de4a
+    path: Assets/TD_Game/Scenes/MainMenu/TD_Boot.unity
+    guid: 14b8742809addd94fbcd991219a63293
   - enabled: 1
-    path: Assets/Scenes/MainMenu.unity
-    guid: 96f3f7c00487cbe4e8131788ae1216ec
+    path: Assets/TD_Game/Scenes/MainMenu/TD_MainMenu.unity
+    guid: c36f7439b90e26a489e67f80b1a7d06b
   - enabled: 1
-    path: Assets/Scenes/Game.unity
-    guid: 892c19bc55e93934099b0c120bf56c92
+    path: Assets/TD_Game/Scenes/Levels/MainMap.unity
+    guid: ae6c43ab9652a404aa50c795de96f9dd
+  - enabled: 1
+    path: Assets/TD_Game/Scenes/Testing/TestLevel.unity
+    guid: 7a5e5fbd764b19a4a83889eae431ddab
   m_configObjects: {}

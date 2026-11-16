@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81a23aa0fe8b9fc4bb0e179ddb05f628, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.AudioLibrary
+  menu: {fileID: 8300000, guid: 81050381e8b908346b6292b39d69347e, type: 3}
+  explore: {fileID: 8300000, guid: 08728f11316065246a94ad0b5bc1c2d7, type: 3}
+  battle: {fileID: 8300000, guid: d39227a105368c440bf0c0e410612ac3, type: 3}
+  boss: {fileID: 8300000, guid: 94278a4fb5cd75940b7d3b7bc069f32e, type: 3}
+  gameOver: {fileID: 8300000, guid: 9325fbb1073155642a573f078b6eb5e1, type: 3}
+  sfx:
+  - name: alert
+    clip: {fileID: 8300000, guid: eb768490159cff7478f867a8ca2832ff, type: 3}
+    volume: 1
+  - name: defeat
+    clip: {fileID: 8300000, guid: c8a94d04b494838439f0a4cede90deb6, type: 3}
+    volume: 1
+  - name: dodge
+    clip: {fileID: 8300000, guid: 7f0bb28f1386a9a44ac526f7d610450b, type: 3}
+    volume: 1
+  - name: door
+    clip: {fileID: 8300000, guid: 2aa8021fb996e5840a079d6d39a9df2a, type: 3}
+    volume: 1
+  - name: enemy_die
+    clip: {fileID: 8300000, guid: 95a0c754e9238374486f989b6e8e86d3, type: 3}
+    volume: 1
+  - name: enemy_hit
+    clip: {fileID: 8300000, guid: b332852f0d17a1545a4b99c0fbd6a9ca, type: 3}
+    volume: 1
+  - name: error
+    clip: {fileID: 8300000, guid: 0c4b27521a168164dac877a20a6bd5ba, type: 3}
+    volume: 1
+  - name: fall
+    clip: {fileID: 8300000, guid: 4638f057a3eb1df46a9b4bad2a42346f, type: 3}
+    volume: 1
+  - name: fury
+    clip: {fileID: 8300000, guid: 901d5bda99494864eb1846d990ebd1d5, type: 3}
+    volume: 1
+  - name: gib
+    clip: {fileID: 8300000, guid: 0af8bd80ac664264580f3d5ae63c0ead, type: 3}
+    volume: 1
+  - name: hurt
+    clip: {fileID: 8300000, guid: 6ae2cbda974d3ae42b27dbc9bdd72e89, type: 3}
+    volume: 1
+  - name: interrupt
+    clip: {fileID: 8300000, guid: 2dbabf3751985d649b1e241194cd2550, type: 3}
+    volume: 1
+  - name: jump
+    clip: {fileID: 8300000, guid: c23dfa05908758147af79e26ee1f27e7, type: 3}
+    volume: 1
+  - name: key
+    clip: {fileID: 8300000, guid: 0d8261ad40936f84d82fdb0f89e566cb, type: 3}
+    volume: 1
+  - name: land
+    clip: {fileID: 8300000, guid: 3eefffd6283f3b841ba1f3e2fd868be1, type: 3}
+    volume: 1
+  - name: logo
+    clip: {fileID: 8300000, guid: c2ac0dca82ea2fc4c81e8486840c9b7a, type: 3}
+    volume: 1
+  - name: perfect
+    clip: {fileID: 8300000, guid: acfdf9372d1c49f4eb39e40dec98862d, type: 3}
+    volume: 1
+  - name: potion
+    clip: {fileID: 8300000, guid: a2cc8d5f04c2fbf45bbd9bbfdfed1bde, type: 3}
+    volume: 1
+  - name: roar
+    clip: {fileID: 8300000, guid: 2bfd1132c2cdb4347b62ce6f6e3b6447, type: 3}
+    volume: 1
+  - name: seismic
+    clip: {fileID: 8300000, guid: 202e21a591d0aec449cbccdf916b1516, type: 3}
+    volume: 1
+  - name: splash
+    clip: {fileID: 8300000, guid: e70b50dacd588b349b81394af46d1581, type: 3}
+    volume: 1
+  - name: swing
+    clip: {fileID: 8300000, guid: b6d2817d462fcb5448cfab9de7fa62e5, type: 3}
+    volume: 1
+  - name: telegraph
+    clip: {fileID: 8300000, guid: 614c6fcecf4e6b4468ac791034e597cd, type: 3}
+    volume: 1
+  - name: tip
+    clip: {fileID: 8300000, guid: 4c0bf1d5fd828584d9ff9907051a1f05, type: 3}
+    volume: 1
+  - name: turn_start
+    clip: {fileID: 8300000, guid: a6c39e72bf1ea1a498dea8384df1e924, type: 3}
+    volume: 1
+  - name: ui_back
+    clip: {fileID: 8300000, guid: cde8d346ba27ff845b6fb726e9822a00, type: 3}
+    volume: 1
+  - name: ui_move
+    clip: {fileID: 8300000, guid: 52e6de65934cd114ba58ad16ab130de9, type: 3}
+    volume: 1
+  - name: ui_select
+    clip: {fileID: 8300000, guid: fa880d64a9971b54ca7cdd4f204fe62d, type: 3}
+    volume: 1
+  - name: victory
+    clip: {fileID: 8300000, guid: 70feacf8ac1c93c4e978c9a2e95b2537, type: 3}
+    volume: 1

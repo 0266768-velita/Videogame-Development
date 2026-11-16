@@ -85,7 +85,15 @@ namespace TD_Game
         public void DamageEnemy(CombatEnemy enemy, float amount, bool critical = false, string label = null)
         {
             if (enemy == null || enemy.Health.IsDead) return;
+            // Thick skin (passive) and Guard (unique ability) reduce the damage.
+            amount = Mathf.Round(amount * enemy.DamageTakenMultiplier);
             enemy.Health.TakeDamage(amount);
+            if (enemy.TryEnterPhaseTwo())
+            {
+                CombatFeed.ShowBanner($"{enemy.Data.displayName} transforms!\n{enemy.Data.phaseTwoName}", 1.6f);
+                CombatFeed.RequestShake(0.25f, 0.5f);
+                Run(CombatMotion.Flash(enemy.Sprite, MexicaPalette.Cinnabar, 0.4f));
+            }
 
             string text = Mathf.RoundToInt(amount).ToString();
             if (!string.IsNullOrEmpty(label)) text = label + " " + text;

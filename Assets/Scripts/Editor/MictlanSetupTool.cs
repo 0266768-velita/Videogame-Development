@@ -25,7 +25,7 @@ public static class MictlanSetupTool
     const string EnemyDir = "Assets/Resources/Enemies";
     const string SceneDir = "Assets/Scenes";
 
-    [MenuItem("Mictlan/Rebuild Scenes (Boot, MainMenu, Game)")]
+    [MenuItem("Mictlan (OLD v5 - do not use)/Rebuild OLD game scenes (Boot, MainMenu, Game)")]
     static void MenuRebuild()
     {
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

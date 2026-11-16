@@ -5,6 +5,32 @@ Planificación: `DEVELOPMENT_CALENDAR.md` · Reglas y decisiones técnicas: `CLA
 
 ---
 
+## 2026-11-15/16 — Sesión 13 (Alex): enemigos, flujo del juego y front end de Mictlán v5
+
+**Tipo:** tareas de Alex (2.11, 2.12, 3.8, 3.13, 3.17, 3.18, 4.3, 4.6, 4.7, 4.18, 4.19) + menú, audio y mapa del juego anterior. Validado en Play Mode. **Sin commits.**
+
+### Enemigos y combate
+- **IA de exploración** (`Enemies/EnemyAI.cs`): patrulla, detección con línea de visión, persecución, regreso a casa y aullido que alerta aliados. Valores en `EnemyData` (sección *Exploration*). Los enemigos de prueba de `TestLevel` ya persiguen al jugador (2.12).
+- **Habilidades únicas como datos** (`AttackEffect` nuevos al final del enum): `EmpowerSelf`, `LifeSteal`, `Stun` (el jugador pierde su turno), `Guard`. Pasiva `damageTakenMultiplier` (piel gruesa).
+- **Enemigos finales** (assets en `ScriptableObjects/Enemies/`, prefabs en `Prefabs/Characters/`): Shadow Wolf (zona 1), Mictlan Witch (zona 2), Quinametzin Giant (zona 3) y **Quetzalcóatl** con **segunda fase** al 50 % (`phaseTwoAttacks`). Se crean con **TD_Game > Build Enemy Data And Prefabs** (nunca sobrescribe). También `Player.prefab`.
+- **Game Over completo** (`UI/DefeatScreen.cs`), **tutoriales en contexto** (`UI/ContextTutorial.cs`, `Interactions/TutorialZone.cs`), **guardado** (`Managers/GameSave.cs` + `SaveController.cs`, autoguardado tras cada victoria) y **créditos al vencer al jefe** (`UI/CreditsScreen.cs`, `World/BossArena.cs`). Canvas con **TD_Game > Build Game Flow UI**.
+
+### Front end y mapa de Mictlán v5 (copiados y adaptados, los originales no se tocan)
+- Música y efectos copiados a `Assets/TD_Game/Audio/` y reunidos en `AudioLibrary.asset`. `GameAudio` (música con fundido, volúmenes en PlayerPrefs) y `GameplayAudio` (escucha los eventos del combate; la lógica no reproduce sonidos).
+- Escenas nuevas: `Scenes/MainMenu/TD_Boot.unity` (logo Micta Forge → clasificación M 17+ → descripción del juego) y `TD_MainMenu.unity` (mismo fondo y música del menú anterior; Start, Continue, Options, Credits, Exit). Pausa con ESC (`UI/PauseScreen.cs`).
+- **`Scenes/Levels/MainMap.unity` usa el mapa de Adrián** (los Tilemaps de `TestLevel`), **no** el mapa del juego anterior. Se genera con **TD_Game > Build Main Map (Adrian's map)** (`Editor/MainMapBuilder.cs`; las posiciones están arriba del archivo). Curva de dificultad (4.3): inicio abajo a la izquierda → lobos (zona 1) → brujas (zona 2, arriba) → gigante que bloquea el pasillo (zona 3) → Quetzalcóatl en la sala derecha; al entrar, una reja cierra el pasillo hasta terminar la pelea. Se añadió `TilemapCollider2D` al Tilemap `Walls` de `MainMap` para que la piedra bloquee.
+- Sprites de personajes y fondo del menú del juego anterior en `Art/Characters/Legacy` y `Art/UI/Menu` (PPU 16, cortados por **TD_Game > Import Character And Menu Art**).
+- El menú del juego viejo se renombró a **Mictlan (OLD v5 - do not use)**: al usarlo se sobrescribían las escenas `Boot`, `MainMenu` y `Game` y Build Settings volvía al juego anterior (cambio de una línea en `Assets/Scripts/Editor/MictlanSetupTool.cs`, autorizado por el equipo).
+- **Build Profiles:** `TD_Boot` → `TD_MainMenu` → `MainMap` (+ `TestLevel`).
+- Todo junto: **TD_Game > Build Front End (Menus, Audio, Scenes)**.
+
+### Pendiente / a revisar
+- Los números de vida, daño y tiempos son propuestos: balancear en el playtest (5.4).
+- El mapa de Adrián mide 30×20; cuando lo amplíe (4.1/4.2), mover las posiciones en `MainMapBuilder.cs`, borrar `MainMap` y regenerarlo.
+- `TestLevel` cambió (IA en los enemigos de prueba, GameFlowUI, audio y pausa): hacer pull antes de commitear para evitar conflictos.
+
+---
+
 ## 2026-11-13 — Sesión 12: más oscuro y con mitología mexica
 
 **Tipo:** estilo visual, validado con capturas en Play Mode

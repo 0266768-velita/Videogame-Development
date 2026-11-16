@@ -81,6 +81,7 @@ namespace TD_Game
 
         public void EndBattle()
         {
+            IsStunned = false;
             BuffTurnsLeft = 0;
             weakenMultiplier = 1f;
             if (Body != null) Body.bodyType = RigidbodyType2D.Dynamic;
@@ -137,6 +138,17 @@ namespace TD_Game
         }
 
         public void Weaken(float multiplier) => weakenMultiplier = Mathf.Clamp01(multiplier);
+
+        /// <summary>Stunned by an enemy ability: the next player turn is skipped.</summary>
+        public bool IsStunned { get; private set; }
+        public void Stun() => IsStunned = true;
+        /// <summary>Returns true (and clears the stun) if this turn must be skipped.</summary>
+        public bool ConsumeStun()
+        {
+            bool was = IsStunned;
+            IsStunned = false;
+            return was;
+        }
 
         public void MarkUsed(CombatAbility ability) => usedThisBattle.Add(ability);
         public bool WasUsedThisBattle(CombatAbility ability) => usedThisBattle.Contains(ability);

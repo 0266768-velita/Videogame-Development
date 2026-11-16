@@ -16,7 +16,13 @@ namespace TD_Game
         None,
         DrainStamina,   // removes effectAmount stamina from the player
         HealSelf,       // the enemy heals effectAmount (fraction of its max health)
-        Weaken          // the player's damage is multiplied by effectAmount during their next turn
+        Weaken,         // the player's damage is multiplied by effectAmount during their next turn
+        // Unique abilities of the 3 final enemies (3.8, 3.13, 3.17) and the boss (4.6). Add new ones at the END
+        // so the numbers already saved in the assets do not change.
+        EmpowerSelf,    // the enemy's attack power is multiplied by effectAmount for the rest of the battle (max x2)
+        LifeSteal,      // the enemy heals effectAmount x the damage it dealt
+        Stun,           // the player loses their next turn
+        Guard           // the enemy takes effectAmount x damage until its next turn (0.5 = half damage)
     }
 
     /// <summary>One enemy attack (adapted from Mictlán v5's EnemyAttackData).</summary>
@@ -40,7 +46,7 @@ namespace TD_Game
 
         [Header("Unique effect")]
         public AttackEffect effect = AttackEffect.None;
-        [Tooltip("DrainStamina: stamina points. HealSelf: fraction of max health. Weaken: damage multiplier.")]
+        [Tooltip("DrainStamina: stamina points. HealSelf: fraction of max health. Weaken, EmpowerSelf, Guard: multiplier. LifeSteal: fraction of the damage dealt. Stun: not used.")]
         public float effectAmount = 0f;
         [Tooltip("Off = the effect only applies when the hit lands. On = it applies even if countered.")]
         public bool effectIgnoresCounter = false;

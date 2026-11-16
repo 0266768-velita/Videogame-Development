@@ -24,6 +24,8 @@ namespace TD_Game
         public SpriteRenderer Sprite => sprite;
         public bool InCombat { get; private set; }
         public bool IsAvailable => isActiveAndEnabled && !InCombat && !Health.IsDead;
+        /// <summary>Where it starts; it comes back here after a chase or a player defeat.</summary>
+        public Vector3 HomePosition => homePosition;
 
         void Awake()
         {
@@ -56,10 +58,54 @@ namespace TD_Game
             if (CombatManager.Instance != null) CombatManager.Instance.TryStartCombat(this, ambush);
         }
 
-        public void EnterCombat() => InCombat = true;
+        // ---------------- State during one battle (unique abilities and boss phases) ----------------
+
+        /// <summary>Multiplies its attack power (EmpowerSelf and the boss's second phase).</summary>
+        public float PowerMultiplier { get; private set; } = 1f;
+        /// <summary>Guard from its last attack; lasts until its next turn.</summary>
+        public float GuardMultiplier { get; private set; } = 1f;
+        public bool InPhaseTwo { get; private set; }
+        public float AttackPower => data.attackPower * PowerMultiplier;
+        /// <summary>Damage it really takes: passive thick skin x current guard.</summary>
+        public float DamageTakenMultiplier => data.damageTakenMultiplier * GuardMultiplier;
+
+        /// <summary>Unique id in the scene, used by the save to remember defeated enemies.</summary>
+        public string SaveId => gameObject.scene.name + "/" + GetPath(transform);
+
+        public void EnterCombat()
+        {
+            InCombat = true;
+            ResetBattleState();
+        }
+
         public void ExitCombat() => InCombat = false;
 
+        void ResetBattleState()
+        {
+            PowerMultiplier = 1f;
+            GuardMultiplier = 1f;
+            InPhaseTwo = false;
+        }
+
+        public void Empower(float multiplier) => PowerMultiplier = Mathf.Min(2f, PowerMultiplier * Mathf.Max(1f, multiplier));
+        public void SetGuard(float multiplier) => GuardMultiplier = Mathf.Clamp(multiplier, 0.1f, 1f);
+        /// <summary>Called at the start of its turn: the guard ends.</summary>
+        public void BeginTurn() => GuardMultiplier = 1f;
+
+        /// <summary>Enters the second phase once, when the health falls low enough. Returns true at that moment.</summary>
+        public bool TryEnterPhaseTwo()
+        {
+            if (InPhaseTwo || !data.HasPhaseTwo || Health.IsDead || Health.Normalized > data.phaseTwoAtHealth) return false;
+            InPhaseTwo = true;
+            PowerMultiplier *= data.phaseTwoPowerMultiplier;
+            return true;
+        }
+
+        public EnemyAttack PickAttack() => data.PickAttack(InPhaseTwo);
+
         public void HealFraction(float fraction) => Health.Heal(Health.Max * fraction);
+
+        static string GetPath(Transform t) => t.parent == null ? t.name : GetPath(t.parent) + "/" + t.name;
 
         /// <summary>Raised when any enemy dies (orbs, quests, statistics).</summary>
         public static event System.Action<CombatEnemy> Defeated;
@@ -78,7 +124,10 @@ namespace TD_Game
         public void ResetAfterPlayerDefeat()
         {
             InCombat = false;
+            ResetBattleState();
             transform.position = homePosition;
+            var body = GetComponent<Rigidbody2D>();
+            if (body != null) body.position = homePosition;
             Health.Restore();
             if (sprite != null) sprite.color = baseColor;
         }

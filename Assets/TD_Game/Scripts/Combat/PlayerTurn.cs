@@ -55,6 +55,16 @@ namespace TD_Game
             endRequested = false;
             CombatFeed.SetTurnLabel("YOUR TURN");
 
+            // Stun (enemy unique ability): this turn is lost, but the stamina regenerated above is kept.
+            if (player.ConsumeStun())
+            {
+                CombatFeed.ShowBanner("Stunned! You lose your turn", 1.2f);
+                yield return new WaitForSeconds(1.2f);
+                player.EndTurn();
+                CombatFeed.SetTurnLabel("");
+                yield break;
+            }
+
             while (!context.PlayerDead && !context.AllEnemiesDead)
             {
                 AcceptingInput = true;
