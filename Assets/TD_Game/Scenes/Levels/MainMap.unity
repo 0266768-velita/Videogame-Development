@@ -12307,7 +12307,7 @@ MonoBehaviour:
     m_FontSize: 9
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 9
     m_MaxSize: 40
     m_Alignment: 3
     m_AlignByGeometry: 0
@@ -17324,7 +17324,7 @@ RectTransform:
   m_GameObject: {fileID: 612199464}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.82, y: 0.82, z: 0.82}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1641231168}
@@ -17736,6 +17736,7 @@ GameObject:
   - component: {fileID: 677092912}
   - component: {fileID: 677092916}
   - component: {fileID: 677092917}
+  - component: {fileID: 677092918}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -17962,6 +17963,26 @@ MonoBehaviour:
   torchFront: {x: -0.45, y: 0.42}
   torchBack: {x: -0.45, y: 0.42}
   torchSide: {x: -0.22, y: 0.5}
+--- !u!114 &677092918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 677092906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d26cf4701ab493242bede92f49764240, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.MacuahuitlRig
+  weaponSprite: {fileID: 0}
+  grip: {x: 0.3, y: 0.36}
+  sizeToBody: 0.65
+  guardAngle: -35
+  swayDegrees: 4
+  trailColor: {r: 0.85, g: 0.8, b: 0.7, a: 1}
+  combatPose: {fileID: 2112958154, guid: 1622c75d16ce15649ae8d1e06ce707f8, type: 3}
+  combatGrip: {x: 0.02, y: 0.37}
 --- !u!1 &681152799
 GameObject:
   m_ObjectHideFlags: 0
@@ -61184,7 +61205,7 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 46
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1

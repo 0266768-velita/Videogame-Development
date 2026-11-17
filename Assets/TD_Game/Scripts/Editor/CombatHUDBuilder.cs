@@ -102,6 +102,7 @@ namespace TD_Game.EditorTools
             menu.anchorMin = menu.anchorMax = menu.pivot = new Vector2(1f, 0f);
             menu.anchoredPosition = new Vector2(-16, 16);
             menu.sizeDelta = new Vector2(300, 300);
+            menu.localScale = Vector3.one * 0.82f;   // compact: keeps the right half of the arena free for the enemies
             var menuGroup = menu.gameObject.AddComponent<CanvasGroup>();
 
             const float rowHeight = 38f, gap = 6f, rowWidth = 250f, step = 12f;

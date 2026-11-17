@@ -130,19 +130,14 @@ namespace TD_Game
             if (body != null) body.position = homePosition;
             Health.Restore();
             if (sprite != null) sprite.color = baseColor;
+            var fx = GetComponent<ActorFx>();
+            if (fx != null) fx.Restore();
         }
 
         IEnumerator FadeOut()
         {
-            if (sprite != null)
-            {
-                Color c = sprite.color;
-                for (float t = 0f; t < deathFadeTime; t += Time.deltaTime)
-                {
-                    sprite.color = new Color(c.r, c.g, c.b, 1f - t / deathFadeTime);
-                    yield return null;
-                }
-            }
+            // Flattens, its souls rise as gold wisps, then it fades (CombatMotion.Death).
+            yield return CombatMotion.Death(transform, sprite, Mathf.Max(deathFadeTime, 0.6f));
             InCombat = false;
             gameObject.SetActive(false);
         }

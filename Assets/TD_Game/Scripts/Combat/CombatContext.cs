@@ -93,6 +93,9 @@ namespace TD_Game
                 CombatFeed.ShowBanner($"{enemy.Data.displayName} transforms!\n{enemy.Data.phaseTwoName}", 1.6f);
                 CombatFeed.RequestShake(0.25f, 0.5f);
                 Run(CombatMotion.Flash(enemy.Sprite, MexicaPalette.Cinnabar, 0.4f));
+                Vfx.Ring(enemy.transform.position + Vector3.up * 0.5f, MexicaPalette.Blood, 0.2f, 1.8f, 0.5f);
+                Vfx.Ring(enemy.transform.position, MexicaPalette.Cinnabar, 0.3f, 2.4f, 0.7f, onGround: true, squashY: 0.45f);
+                Vfx.Wisps(enemy.transform.position, 12, MexicaPalette.Blood, 2f, 0.6f);
             }
 
             string text = Mathf.RoundToInt(amount).ToString();
@@ -100,6 +103,7 @@ namespace TD_Game
             CombatFeed.ShowPopup(enemy.transform.position + Vector3.up, critical ? text + "!" : text,
                 critical ? CriticalColor : MexicaPalette.Bone);
             Run(CombatMotion.Flash(enemy.Sprite, HitFlash, 0.12f));
+            CombatMotion.HitReaction(enemy.transform, Player.transform.position, critical ? 1.6f : 1f);
             CombatFeed.RequestShake(critical ? 0.14f : 0.05f, critical ? 0.22f : 0.12f);
             if (critical) CombatFeed.RequestHitStop(0.08f);
 
@@ -125,6 +129,9 @@ namespace TD_Game
             Player.Health.TakeDamage(amount);
             CombatFeed.ShowPopup(Player.transform.position + Vector3.up, "-" + Mathf.RoundToInt(amount), DamageColor);
             Run(CombatMotion.Flash(PlayerSprite, HitFlash, 0.15f));
+            // Enemies stand to the right in the arena: the player is pushed back to the left.
+            CombatMotion.HitReaction(Player.transform, Player.transform.position + Vector3.right, 1.2f);
+            Vfx.Burst(Player.transform.position + Vector3.up * 0.45f, 8, MexicaPalette.Cinnabar, new Vector2(1.5f, 3.5f), 12f, 1.3f, 0.5f);
             CombatFeed.RequestShake(0.1f, 0.18f);
         }
 

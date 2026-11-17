@@ -22,7 +22,29 @@ namespace TD_Game
 
             CombatFeed.ShowBanner(displayName + "!", 1.4f);
             CombatFeed.ShowPopup(player.transform.position + Vector3.up, "FURY", flashColor);
-            yield return CombatMotion.Flash(context.PlayerSprite, flashColor, 0.8f);
+
+            // Mictlantecuhtli's power: the player crouches, then rises tall while pale rings and ashes surround him.
+            var fx = ActorFx.Of(player);
+            Vector3 feet = player.transform.position;
+            fx.Pose = new Vector2(1.25f, 0.75f);
+            fx.Tremble = 0.02f;
+            context.Run(CombatMotion.Flash(context.PlayerSprite, flashColor, 0.9f));
+            var weapon = MacuahuitlRig.Active(player);
+            if (weapon != null) { context.Run(weapon.RaiseTo(-5f, 0.3f)); context.Run(weapon.Glow(flashColor, 0.9f)); }   // raised to the sky
+            for (int i = 0; i < 3; i++)
+            {
+                Vfx.Ring(feet + Vector3.up * 0.4f, flashColor, 1.4f, 0.2f, 0.25f);   // closing in: gathering power
+                Vfx.Wisps(feet, 5, MexicaPalette.Ash, 1.8f, 0.6f);
+                yield return new WaitForSeconds(0.12f);
+            }
+            fx.Pose = Vector2.one;
+            fx.Tremble = 0f;
+            fx.Squash(new Vector2(0.75f, 1.35f));
+            CombatFeed.RequestShake(0.12f, 0.3f);
+            Vfx.Ring(feet, flashColor, 0.3f, 1.8f, 0.45f, onGround: true, squashY: 0.45f);
+            Vfx.Wisps(feet, 14, flashColor, 2.4f, 0.5f);
+            yield return new WaitForSeconds(0.45f);
+            if (weapon != null) weapon.Release();
         }
     }
 }

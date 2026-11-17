@@ -314,6 +314,11 @@ Lo hacen posible tres ajustes:
 | Vida, estamina, daño base, multiplicador de crítico, combo, contraataque, emboscada, Tonalli, pociones | `ScriptableObjects/Characters/PlayerStats_Tlahuelli` |
 | Coste, nombre y descripción de una habilidad, y si empieza desbloqueada | `ScriptableObjects/Abilities/Ability_*` |
 | Ventana del crítico (NOW!) | `Ability_Attack` → **Wind Up Time** y **Critical Window** |
+| Ritmo y altura del Seismic Jump (agacharse, subida, instante arriba, caída, vueltas, onda y cuánto lanza a los enemigos) | `Ability_SeismicJump` → *Choreography* y *Shockwave* |
+| Rebote del aplastamiento y respiración de un personaje | componente `ActorFx` del personaje (se añade solo en el primer combate) |
+| Técnicas del macuahuitl (ángulos, velocidad, efectos) y su orden en el combo | `Ability_Attack` → *Combo Swings* y *Critical Swing* |
+| Arte del macuahuitl, mano y pose de combate de Tlahuelli | `Player` → `MacuahuitlRig` (**Weapon Sprite**, **Grip**, **Combat Pose**, **Combat Grip**) |
+| Encuadre de la pelea respecto al menú | objeto `Combat` → `CombatArena` → **Camera Offset** |
 | Vida, ataques, ventanas de esquiva, efectos únicos y orbes de un enemigo | `ScriptableObjects/Enemies/EnemyData_*` |
 | Qué habilidad desbloquea un enemigo | `EnemyData` → **Unlocks On Defeat** y **Last Stand Ability** |
 | Valor de cada orbe y sus colores | objeto `Combat` → `OrbSpawner` |

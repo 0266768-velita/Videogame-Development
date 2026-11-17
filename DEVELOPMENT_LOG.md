@@ -5,6 +5,130 @@ Planificación: `DEVELOPMENT_CALENDAR.md` · Reglas y decisiones técnicas: `CLA
 
 ---
 
+## 2026-11-17 — Sesión 20 (Toño): traer las animaciones a la rama v0.6
+
+**Tipo:** integración. La rama del equipo pasó de `integrar-version-v5` a **`v0.6`**, la versión 0.6 de Alex.
+
+- Las sesiones 18 y 19 (abajo) estaban sin commit en `integrar-version-v5`. Se guardaron en un stash ("Tono sesiones 14-15…") y se reaplicaron sobre `v0.6`.
+- **Sin conflicto:** habilidades, `CombatMotion`, `CombatContext`, `CombatManager`, `EnemyTurn`, `CombatEnemy`, la carpeta `Scripts/Combat/Fx/` y `tlahuelli.png.meta` (Read/Write).
+- **Fusionado a mano:**
+  - `CameraFollow`: se queda la versión de Alex; su `ClampForView` sustituye a mi `ClampPosition`.
+  - `CombatArena`: versión de Alex (encuadre propio y cámara más abierta para enemigos grandes), más `ActorFx` y `MacuahuitlRig`. Mi `cameraOffset` ya no se usa.
+  - `CombatHUDBuilder`: versión de Alex (6 acciones), más el menú compacto 0.82.
+  - `DEVELOPMENT_LOG`: el de Alex, más estas entradas.
+- **Nombre duplicado:** Alex creó su propio `MacuahuitlSwing` (componente, `Scripts/Player/`). Mi clase de datos se renombró a **`MacuahuitlTechnique`**, conservando el GUID del `.meta`.
+- **Dos macuahuitles:** mientras mi `MacuahuitlRig` está activo apaga el `MacuahuitlSwing` de Alex y lo devuelve al acabar el combate. Su `PlayerSpriteAnimator` y su `GoreEffects` funcionan junto con el rig y con `CombatMotion.Death`.
+- **Escenas y prefab:** se conservaron las de Alex y se reaplicó encima:
+  - `MacuahuitlRig` con la pose `tlahuelli_2_0` en `Player.prefab`, `MainMap` y `TestLevel`;
+  - `CommandMenu` a escala 0.82.
+  - No se reconstruyó ningún HUD.
+- **Validado en MainMap de v0.6** contra el Shadow Wolf: arma del rig visible, la de Alex apagada, golpe con la sangre del gore de Alex y consola sin errores.
+
+---
+
+## 2026-11-17 — Sesión 19 (Toño): Tlahuelli pelea con el macuahuitl
+
+**Tipo:** animación de combate, validada en Play Mode con secuencias de capturas
+
+### Qué se implementó
+- **`MacuahuitlRig`** (`Scripts/Combat/Fx/`): el macuahuitl como sprite aparte en la mano, que sigue la altura, el aplastamiento y la inclinación del cuerpo sin deformarse.
+  - Tiene guardia con balanceo, golpes con estela de hojas fantasma y "follow-through", y brillo con chispas en la punta.
+  - Durante el combate Tlahuelli usa la **pose de perfil** (`tlahuelli_2_0`) mirando al enemigo.
+- **`WeaponSprites`:**
+  - el arma en pixel art (7×17 px, 16 PPU, mismos colores que el sprite de Tlahuelli): madera, navajas de obsidiana con brillos alternos, mango forrado y borla roja;
+  - **`Unarmed`** genera en tiempo de ejecución una copia del cuadro **sin el macuahuitl dibujado**: quita los colores del arma, rellena el hueco si estaba delante del cuerpo y rehace el contorno. Así el arma nunca se ve dos veces.
+  - Para eso se activó **Read/Write** en `tlahuelli.png`.
+- **Golpes que no se repiten** (`MacuahuitlTechnique`). Cada golpe del combo es una técnica distinta y su nombre aparece en pantalla:
+  - **Cleave**: tajo diagonal desde arriba;
+  - **Low Sweep**: barrido bajo a las piernas;
+  - **Rising Cut**: corte ascendente con salto;
+  - **Whirlwind**: remolino, el cuerpo gira con el arma y deja doble corte;
+  - **Obsidian Strike**: crítico; mazazo con esquirlas de obsidiana, corte cruzado y grieta.
+  - El arma se levanta a la posición de cada técnica durante la carga.
+- **El arma en todo el combate:**
+  - **Seismic:** abajo y atrás al agacharse, sobre la cabeza al subir, brilla arriba y se clava en el suelo al caer;
+  - **Mictlan Fury** y **Tonalli Burst:** alzada al cielo brillando; Tonalli la descarga hacia abajo al estallar;
+  - **Poción:** la baja;
+  - **Esquiva:** se va hacia atrás;
+  - **Contraataque PERFECT:** **Backhand** (revés) con corte turquesa;
+  - **Emboscada:** Obsidian Strike desde el aire.
+- **`CombatMotion.Lunge`** acepta un golpe de arma opcional (`strike`) que llama a `onHit` en el momento del impacto.
+- **Encuadre:**
+  - el menú de comandos se escaló a 0.82 y `cameraOffset` quedó en (0.6, -0.3) (también en la escena);
+  - los enemigos quedan a la izquierda del menú y Tlahuelli a la vista.
+
+### Archivos
+- Nuevos: `Scripts/Combat/Fx/{MacuahuitlRig, MacuahuitlSwing, WeaponSprites}.cs`.
+- Modificados:
+  - `AttackAbility`, `SeismicAbility`, `FuryAbility`, `PotionAbility` y `TonalliBurstAbility`;
+  - `CombatMotion`, `CombatArena`, `EnemyTurn`, `CombatManager` y `CombatHUDBuilder`;
+  - `Player.prefab`, `TestLevel` (Tlahuelli con su sprite real) y `tlahuelli.png.meta` (Read/Write).
+
+### Validación
+- Secuencias de capturas de los 4 golpes del combo, del Seismic y de una victoria.
+- Al ganar, el arma se guarda y vuelve el sprite original (`tlahuelli_0_0`).
+- Consola de TD_Game sin errores ni advertencias.
+
+### MainMap (con permiso de Toño; la escena es de Alex)
+- **HUD reconstruido** con el builder actual. Era la estructura estándar del builder, sin cambios manuales, y ningún script lo referenciaba. Ahora tiene menú compacto 0.82, rombos, grecas y viñeta.
+- El `Player` de MainMap **no es instancia del prefab**: se le añadió `MacuahuitlRig` con la pose de combate `tlahuelli_2_0`.
+- Validado con una pelea contra el Shadow Wolf: Tlahuelli de perfil con el arma, el lobo libre del menú y el tajo impactando. Sin errores.
+
+### Notas
+- En `TestLevel` sigue apareciendo el panel de tutorial de Alex (`ContextTutorial`) arriba de la pelea.
+- El `Player` de MainMap y el del prefab son independientes: un cambio en uno no llega al otro.
+- Si cambia el arte de Tlahuelli y el arma dibujada usa otros colores, hay que actualizar `WeaponSprites.DrawnClub`.
+
+---
+
+## 2026-11-17 — Sesión 18 (Toño): animaciones del combate y nuevo Seismic Jump
+
+**Tipo:** animación procedural, validada en Play Mode con secuencias de capturas. Hecha **sobre la sesión 13 de Alex** (pull previo).
+
+### Qué se implementó
+- **`ActorFx`** (`Scripts/Combat/Fx/`): anima solo el hijo `Visual`, así que colisiones y sombra no se mueven.
+  - Squash & stretch con muelle (rebota), altura, inclinación que gira sobre el centro del cuerpo, retroceso, temblor y respiración.
+  - Es relativo a la escala del `Visual`, así que sirve con los sprites de Alex.
+- **`Vfx`, `VfxPiece` y `VfxSprites`:** efectos generados en código y teñidos con `MexicaPalette`:
+  - anillos y ondas expansivas, polvo, escombros que rebotan en el suelo y chispas;
+  - corte en media luna, grietas en el suelo y estelas (afterimages);
+  - almas que suben y proyectiles.
+- **`CombatMotion` reescrito** (misma API):
+  - **Ataque:** se echa hacia atrás, se lanza estirado con estela, impacto y regresa con un saltito.
+  - **Esquiva:** salto hacia atrás con estela turquesa.
+  - **Golpe recibido:** retroceso y aplastamiento.
+  - **Enemigo:** se agacha y tiembla durante la telegrafía (`ChargeUp`).
+  - **Muerte:** se aplasta, suben almas doradas, salen escombros y se desvanece.
+- **Seismic Jump nuevo:** agacharse → salto estirado con voltereta y estela → instante arriba con destello → caída en picada → impacto. El impacto trae aplastamiento, *hit stop*, temblor fuerte, grieta en el suelo, dos ondas y rocas. La onda alcanza a cada enemigo según su distancia y lo lanza por los aires. Todo el ritmo es editable en `Ability_SeismicJump`.
+- **Más efectos:**
+  - ataque: corte en media luna con chispas; en el crítico, doble corte cruzado y anillo;
+  - Mictlan Fury: anillos que se cierran, cenizas y estallido;
+  - poción: luz de jade que sube;
+  - Tonalli Burst: se eleva con anillos turquesa y estalla sobre todos;
+  - STOMP: grieta y polvo;
+  - hechizos enemigos: proyectil;
+  - interrumpir: el enemigo se tambalea; PERFECT: anillo turquesa;
+  - fase 2 del jefe: ondas rojas;
+  - inicio del combate: todos se ponen en guardia y empiezan a respirar.
+- **Encuadre del combate:** el menú de comandos tapaba al enemigo principal.
+  - `CombatArena.cameraOffset` (0.6, -0.8) sube la pelea en pantalla.
+  - Si la cámara choca con los límites del mapa, los luchadores se desplazan hacia dentro (`CameraFollow.ClampPosition`).
+
+### Archivos
+- Nuevos: `Scripts/Combat/Fx/{ActorFx, Vfx, VfxPiece, VfxSprites}.cs`.
+- Modificados:
+  - `CombatMotion`, `CombatArena`, `CombatContext`, `CombatManager` (STOMP), `EnemyTurn` y `CameraFollow`;
+  - `CombatEnemy` (solo `FadeOut` usa `CombatMotion.Death` y el reinicio restaura `ActorFx`);
+  - `AttackAbility`, `SeismicAbility`, `FuryAbility`, `PotionAbility` y `TonalliBurstAbility`;
+  - `Ability_SeismicJump.asset`.
+
+### Validación
+- Secuencias de 24 y 18 capturas del Seismic Jump y del ataque.
+- Encuadre comprobado en el pasillo (Brute) y junto a la pared (Hound).
+- Consola de TD_Game sin errores ni advertencias.
+
+---
+
 ## 2026-11-17 — Sesión 17 (Alex): sonidos del combate, volumen, Quetzalcóatl, .exe
 
 - **Sonidos del combate:** al cambiar de escena, el `GameAudio` repetido se destruía con `Destroy(gameObject)` y se llevaba al `GameplayAudio` del mismo objeto: en `MainMap` (entrando desde el menú) no sonaban golpes ni esquives. Ahora usa `Destroy(this)`. Se añadieron los sonidos del combate de Mictlán v5 que faltaban: `swing` al atacar, `seismic`, `jump` / `land`.

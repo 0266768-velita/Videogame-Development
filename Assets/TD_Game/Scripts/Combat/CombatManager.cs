@@ -128,9 +128,17 @@ namespace TD_Game
         IEnumerator Stomp(CombatContext context)
         {
             var lead = context.Enemies[0];
-            yield return CombatMotion.Hop(player.transform, 0.8f, 0.35f, null);
+            var weapon = MacuahuitlRig.Active(player);
+            if (weapon != null) context.Run(weapon.RaiseTo(MacuahuitlTechnique.ObsidianStrike.windAngle, 0.3f));   // raised overhead in the air
+            yield return CombatMotion.Hop(player.transform, 1.1f, 0.4f, null);
             yield return CombatMotion.Lunge(player.transform, lead.transform.position, context.StopDistance(lead), 0.12f,
-                () => context.DamageEnemy(lead, player.AttackDamage(player.Stats.ambushMultiplier), critical: true, label: "STOMP"));
+                () =>
+                {
+                    Vfx.Crack(lead.transform.position, 1.4f, 1.2f);
+                    Vfx.Dust(lead.transform.position, 6, MexicaPalette.Ash, 1.2f);
+                    context.DamageEnemy(lead, player.AttackDamage(player.Stats.ambushMultiplier), critical: true, label: "STOMP");
+                },
+                weapon != null ? impact => weapon.Strike(MacuahuitlTechnique.ObsidianStrike, impact) : null);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

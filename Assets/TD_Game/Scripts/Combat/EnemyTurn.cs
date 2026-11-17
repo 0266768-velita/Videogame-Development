@@ -42,6 +42,8 @@ namespace TD_Game
         {
             float windUp = attack.windUpTime;
             context.Run(CombatMotion.Telegraph(enemy.Sprite, windUp, telegraphColor));
+            context.Run(CombatMotion.ChargeUp(enemy.transform, windUp));
+            if (!attack.lungeAtTarget) Vfx.Wisps(enemy.transform.position, 6, telegraphColor, 1.2f, 0.4f);   // a spell gathering
 
             var result = ActionCommand.Result.Miss;
             if (attack.counter == CounterType.Unavoidable) yield return new WaitForSeconds(windUp);
@@ -64,6 +66,14 @@ namespace TD_Game
             var player = context.Player;
             bool interrupt = attack.counter == CounterType.Interrupt;
             CombatFeed.ShowBanner(perfect ? "PERFECT!" : interrupt ? "Interrupted!" : "Dodged!", 0.9f);
+            if (interrupt)
+            {
+                // The spell breaks: a flash on the caster, who staggers.
+                Vfx.Ring(enemy.transform.position + Vector3.up * 0.5f, MexicaPalette.Bone, 0.2f, 1.2f, 0.3f);
+                Vfx.Burst(enemy.transform.position + Vector3.up * 0.5f, 10, MexicaPalette.Bone, new Vector2(2f, 4f), 8f, 1.2f, 0.4f, toGround: false, upward: 0.2f);
+                CombatMotion.HitReaction(enemy.transform, player.transform.position, 0.8f);
+            }
+            if (perfect) Vfx.Ring(player.transform.position + Vector3.up * 0.4f, MexicaPalette.Turquoise, 0.2f, 1.3f, 0.35f);
 
             if (!interrupt)
                 yield return CombatMotion.Step(player.transform, new Vector3(-dodgeStepDistance, 0.4f, 0f), 0.12f);
@@ -76,8 +86,15 @@ namespace TD_Game
             player.AddStamina(player.Stats.perfectCounterStaminaBonus);
             player.AddConcentration(player.Stats.concentrationPerPerfect);
             float damage = player.AttackDamage(player.Stats.counterAttackMultiplier);
+            var weapon = MacuahuitlRig.Active(player);
+            if (weapon != null) context.Run(weapon.RaiseTo(MacuahuitlTechnique.Backhand.windAngle, 0.08f));
             yield return CombatMotion.Lunge(player.transform, enemy.transform.position, context.StopDistance(enemy), 0.12f,
-                () => context.DamageEnemy(enemy, damage, critical: true, label: "COUNTER"));
+                () =>
+                {
+                    Vfx.Slash(enemy.transform.position + Vector3.up * 0.5f, 1f, MexicaPalette.Turquoise, 1.1f, MacuahuitlTechnique.Backhand.slashAngle);
+                    context.DamageEnemy(enemy, damage, critical: true, label: "COUNTER");
+                },
+                weapon != null ? impact => weapon.Strike(MacuahuitlTechnique.Backhand, impact) : null);
         }
 
         IEnumerator Land(CombatContext context, CombatEnemy enemy, EnemyAttack attack)
@@ -95,8 +112,11 @@ namespace TD_Game
             }
             else
             {
+                // Ranged attack or spell: a projectile flies to the player.
+                yield return Vfx.Projectile(enemy.transform.position + Vector3.up * 0.5f,
+                    context.Player.transform.position + Vector3.up * 0.45f, telegraphColor, 0.3f);
                 context.DamagePlayer(damage, enemy.Data);
-                yield return new WaitForSeconds(0.4f);
+                yield return new WaitForSeconds(0.3f);
             }
         }
 

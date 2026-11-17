@@ -276,6 +276,7 @@ El repositorio contiene un juego **top-down 2D anterior** (documentado en `ARQUI
 | 2026-11-13 | **Estilo del menú de combate** inspirado en los JRPG modernos (comandos en diagonal a la derecha, placas oscuras y filo dorado, orden de turnos arriba), sin copiar arte de ningún juego. Todo texto del HUD va sobre placa opaca para que se lea sobre cualquier fondo. |
 | 2026-11-13 | **Paleta mexica seria** (`Scripts/UI/MexicaPalette.cs`), para un juego serio para adolescentes con temática mexica, como lo griego en God of War. Materiales del mundo azteca en lugar de colores saturados: obsidiana, hueso y ceniza (Mictlán), oro viejo y ocre, cinabrio y tezontle (rojo de los códices), jade (vida) y turquesa/xiuhuitl (tonalli). **Todo color nuevo de UI o combate se toma de `MexicaPalette`.** |
 | 2026-11-13 | **Más oscuro y con mitología mexica** (petición del equipo: un juego serio, no para niños). Paleta más oscura; grecas de almenas escalonadas (Templo Mayor) en paneles, avisos y sobre el menú; insignias de tecla en rombo de piedra; viñeta que oscurece la arena al empezar el combate. **Las barras se nombran con las tres fuerzas anímicas mexicas:** TEYOLIA · LIFE, IHIYOTL · BREATH y TONALLI · SPIRIT. Los textos de turno van en mayúsculas. |
+| 2026-11-17 | **Animación procedural del combate** (`ActorFx` + `Vfx`) mientras no exista el arte animado: todo efecto vive en `Scripts/Combat/Fx/` y usa `MexicaPalette`. Al llegar el Animator se sustituye `CombatMotion` sin tocar turnos ni habilidades. |
 
 ### Convención de importación del arte de TD_Game
 
@@ -333,7 +334,9 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
     - `TryStartCombat(enemy, ambush)`.
   - `CombatArena`:
     - el jugador va a la izquierda y los enemigos a la derecha sobre el mismo mapa; la cámara hace zoom a 2.8125 (×3);
-    - aplica el temblor de cámara y el *hit stop* (`Time.timeScale` a 0.05 un instante).
+    - aplica el temblor de cámara y el *hit stop* (`Time.timeScale` a 0.05 un instante);
+    - `cameraOffset` (0.6, -0.3), junto con el menú de comandos compacto (escala 0.82), deja a los enemigos a la izquierda del menú. Si la cámara no puede llegar por los límites del mapa, los luchadores se desplazan hacia dentro (`CameraFollow.ClampPosition`);
+    - activa la respiración de todos los luchadores mientras dura la pelea.
   - `PlayerTurn`: 5 ranuras (attack, skill1, skill2, potion, ultimate) expuestas en `Slots`; `Performing` indica la acción en curso.
   - `EnemyTurn`:
     - telegrafía, ventana de esquivar o interrumpir y anti-spam;
@@ -343,7 +346,22 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
   - `CombatInput`: lee el mapa `Combat`.
   - `CombatContext`: input, daño (con temblor, *hit stop* y números críticos), objetivo y Last Stand.
   - `CombatFeed`: eventos estáticos para la UI y la cámara; la lógica de combate **nunca** habla con la UI directamente.
-  - `CombatMotion`: movimientos provisionales hasta tener el Animator.
+  - `CombatMotion`: movimientos con "game feel": anticipación, estirado, estela, impacto y regreso; esquiva con salto; carga del enemigo; reacción al golpe; muerte con almas. Son provisionales hasta tener el Animator, pero mantienen la misma API y los callbacks `onHit`.
+  - **Animación procedural** (`Scripts/Combat/Fx/`):
+    - `ActorFx` anima solo el hijo `Visual`; el root y la sombra se quedan en el suelo. Incluye squash & stretch con muelle, altura, inclinación alrededor del centro del cuerpo, retroceso, temblor y respiración en combate. Se añade solo con `ActorFx.Of(actor)`.
+    - `Vfx` (con `VfxPiece` y `VfxSprites`, texturas generadas en código): anillos y ondas, polvo, escombros, chispas, cortes en media luna, grietas en el suelo, estelas (afterimages), almas y proyectiles.
+    - Orden de dibujo de los efectos: -5 los del suelo y 20 los de delante.
+    - **`MacuahuitlRig`** (en el `Player` de `TestLevel`, en el de `MainMap` —que no es instancia del prefab— y en `Prefabs/Characters/Player.prefab`): el macuahuitl de Tlahuelli en combate.
+      - Es un sprite aparte, pixel art de 7×17 px a 16 PPU generado por `WeaponSprites`: madera, navajas de obsidiana, mango y borla roja. Se puede sustituir por arte de Aseprite en **Weapon Sprite**.
+      - Sigue a la mano (`grip` / `combatGrip`) y al cuerpo (`ActorFx`), sin deformarse.
+      - En combate muestra la pose de perfil `tlahuelli_2_0` (**Combat Pose**) con una copia **sin el macuahuitl dibujado** (`WeaponSprites.Unarmed`, que quita los colores del arma y rellena el hueco). Requiere **Read/Write** en `tlahuelli.png`.
+      - Fuera de combate se oculta y el sprite original vuelve tal cual.
+      - Convive con **`MacuahuitlSwing`** de Alex (`Scripts/Player/`, creado por `MainMapBuilder`: un macuahuitl que solo aparece al atacar): mientras el rig está activo lo apaga y al terminar el combate lo devuelve. También convive con `PlayerSpriteAnimator` (caminata de Alex): el rig convierte su cuadro de cada frame a la versión sin arma.
+      - API: `RaiseTo`, `Strike(MacuahuitlTechnique, onImpact)`, `Glow`, `Release` y `MacuahuitlRig.Active(player)`.
+    - **`MacuahuitlTechnique`** (`Scripts/Combat/Fx/`; se llamaba `MacuahuitlSwing`, renombrado para no chocar con el componente de Alex del mismo nombre): un golpe definido por ángulos (0 = arriba, positivo = hacia atrás), tiempo, punto de impacto y efectos. Técnicas:
+      - **Cleave** (tajo), **Low Sweep** (barrido bajo), **Rising Cut** (ascendente con salto) y **Whirlwind** (remolino con giro del cuerpo): son el combo, en `Ability_Attack` → *Combo Swings*;
+      - **Obsidian Strike**: crítico, emboscada; agrieta el suelo;
+      - **Backhand**: contraataque PERFECT.
 - **Ataque y combos:**
   - el ataque tiene una carga de 0.55 s;
   - si pulsas Attack otra vez cuando sale **NOW!**, es **crítico** (×1.6, o ×1.84 si es perfecto) y da +Tonalli;
@@ -381,7 +399,7 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
   - Se crea con el menú **TD_Game > Build Combat HUD** (`Scripts/Editor/CombatHUDBuilder.cs`) y después se edita en el Inspector. Para reconstruirlo, borrar `CombatHUD` y volver a usar el menú.
   - `PlayerStatusPanel`: siempre visible arriba a la izquierda (vida, estamina, Tonalli, pociones, Macuahuitl). Barras: TEYOLIA · LIFE, IHIYOTL · BREATH y TONALLI · SPIRIT.
   - `CombatActionMenu` y `ActionButton`: **lista diagonal de comandos** abajo a la derecha (filas 1–5 y End Turn, también con ratón):
-    - cada fila tiene una insignia de tecla redonda y el nombre grande en cursiva, sobre placa negra opaca con línea dorada;
+    - cada fila tiene una insignia de tecla en rombo de piedra y el nombre grande en cursiva, sobre placa negra opaca con línea dorada;
     - en el turno enemigo el menú se desliza fuera y aparece la barra **DEFEND** con las teclas de defensa.
   - `TurnOrderBar`: orden de turnos arriba; quien actúa sale en dorado (`CombatManager.CurrentEnemy`).
   - `EnemyHealthBars`: barras que siguen a cada enemigo, con marcador ▼ sobre el objetivo.

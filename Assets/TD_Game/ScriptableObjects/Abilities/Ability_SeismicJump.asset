@@ -18,6 +18,11 @@ MonoBehaviour:
   unlockedByDefault: 0
   oncePerBattle: 0
   damageMultiplier: 1.2
-  jumpHeight: 1.2
-  jumpTime: 0.45
-  waveSpeed: 12
+  crouchTime: 0.22
+  jumpHeight: 1.8
+  riseTime: 0.38
+  hangTime: 0.14
+  slamTime: 0.1
+  spins: 1
+  waveSpeed: 10
+  launchHeight: 0.7

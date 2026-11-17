@@ -28,6 +28,8 @@ namespace TD_Game
         Coroutine zoomRoutine;
 
         Coroutine hitStopRoutine;
+        readonly List<ActorFx> actors = new List<ActorFx>();
+        MacuahuitlRig weapon;
 
         void Awake()
         {
@@ -92,6 +94,20 @@ namespace TD_Game
                 enemies[i].transform.position = center + offset;
             }
 
+            // Everyone takes a fighting stance: a little pop, dust, and breathing while the battle lasts.
+            // Tlahuelli draws the animated Macuahuitl (MacuahuitlRig).
+            actors.Clear();
+            actors.Add(ActorFx.Of(player));
+            weapon = MacuahuitlRig.Of(player);
+            weapon.Show(true);
+            foreach (var e in enemies) actors.Add(ActorFx.Of(e));
+            foreach (var fx in actors)
+            {
+                fx.Breathing = true;
+                fx.Squash(new Vector2(0.8f, 1.25f));
+                Vfx.Dust(fx.transform.position, 3, MexicaPalette.Ash, 0.7f);
+            }
+
             if (cameraFollow == null) return;
             var cam = cameraFollow.GetComponent<Camera>();
             explorationSize = cam.orthographicSize;
@@ -105,6 +121,11 @@ namespace TD_Game
         /// <summary>Gives the camera back to the player. snap = jump instead of gliding (respawn).</summary>
         public void Exit(bool snap)
         {
+            foreach (var fx in actors)
+                if (fx != null) { fx.Breathing = false; fx.Restore(); }
+            if (weapon != null) weapon.Show(false);
+            actors.Clear();
+
             if (cameraFollow == null) return;
             var cam = cameraFollow.GetComponent<Camera>();
             cameraFollow.Follow(previousTarget);

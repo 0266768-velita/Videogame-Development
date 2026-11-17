@@ -315,6 +315,7 @@ GameObject:
   - component: {fileID: 1567247515156459713}
   - component: {fileID: 949903283621427636}
   - component: {fileID: 2227530827134978083}
+  - component: {fileID: 7189522071251868357}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -541,6 +542,26 @@ MonoBehaviour:
   torchFront: {x: -0.45, y: 0.42}
   torchBack: {x: -0.45, y: 0.42}
   torchSide: {x: -0.22, y: 0.5}
+--- !u!114 &7189522071251868357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5317769719091848023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d26cf4701ab493242bede92f49764240, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.MacuahuitlRig
+  weaponSprite: {fileID: 0}
+  grip: {x: 0.3, y: 0.36}
+  sizeToBody: 0.65
+  guardAngle: -35
+  swayDegrees: 4
+  trailColor: {r: 0.85, g: 0.8, b: 0.7, a: 1}
+  combatPose: {fileID: 2112958154, guid: 1622c75d16ce15649ae8d1e06ce707f8, type: 3}
+  combatGrip: {x: 0.02, y: 0.37}
 --- !u!1 &5578000853322487732
 GameObject:
   m_ObjectHideFlags: 0
