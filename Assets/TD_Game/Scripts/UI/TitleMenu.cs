@@ -11,6 +11,11 @@ namespace TD_Game
     /// </summary>
     public class TitleMenu : MonoBehaviour
     {
+        [Header("Style")]
+        [SerializeField] Font menuFont;          // Pirata One
+        [Tooltip("Soft round light used for the torches, the moon and the fog of the background.")]
+        [SerializeField] Sprite glow;
+
         [Header("Art")]
         [SerializeField] Texture2D background;
         [Tooltip("Optional logo image; empty = the title is written with text.")]
@@ -21,14 +26,17 @@ namespace TD_Game
 
         [Header("Scenes")]
         [SerializeField] string gameScene = SceneIds.MainMap;
+        [Tooltip("Story comic shown before a NEW game.")]
+        [SerializeField] string prologueScene = SceneIds.Prologue;
 
         [Header("Credits")]
-        [SerializeField, TextArea(4, 12)] string credits =
+        // Fixed in code (not in the scene) so an old saved text can never replace it.
+        const string TeamCredits =
             "MICTLÁN\nA game by Micta Forge\n\n" +
-            "Jetzuvely del Carmen González Gutiérrez\n" +
-            "Adrián Gallardo Medina\n" +
             "Antonio Enríquez Velasco\n" +
-            "Alejandro Cornejo Pérez";
+            "Alejandro Cornejo Pérez\n" +
+            "Adrián Gallardo Medina\n" +
+            "Jetzuvely del Carmen González Gutiérrez";
 
         enum Stage { Title, Menu, Options, Credits }
         Stage stage = Stage.Title;
@@ -36,20 +44,28 @@ namespace TD_Game
         GameObject menuPanel, optionsPanel, creditsPanel;
         Text pressStart;
         RawImage backgroundImage;
-        Button startButton, continueButton, masterButton, musicButton, sfxButton, fullscreenButton;
+        Button startButton, continueButton, masterButton, musicButton, sfxButton, fullscreenButton, goreButton;
 
         void Start()
         {
             Time.timeScale = 1f;
             GameState.SetMode(GameMode.Exploration);
             GameAudio.PlayMusic(MusicTrack.Menu);
+            MenuWidgets.Use(menuFont, true);
             Build();
         }
 
         void Update()
         {
-            if (backgroundImage != null)   // slow "breathing" zoom, as in Mictlán v5
-                backgroundImage.rectTransform.localScale = Vector3.one * (1.04f + 0.03f * Mathf.Sin(Time.unscaledTime * 0.12f));
+            if (backgroundImage != null)
+            {
+                // The background breathes and drifts slowly, like a camera floating over Teotihuacan.
+                float t = Time.unscaledTime;
+                backgroundImage.rectTransform.localScale = Vector3.one * (1.08f + 0.04f * Mathf.Sin(t * 0.25f));
+                backgroundImage.rectTransform.anchoredPosition = new Vector2(Mathf.Sin(t * 0.13f) * 40f, Mathf.Cos(t * 0.17f) * 20f);
+            }
+            MoveEmbers();
+            AnimateBackground();
 
             switch (stage)
             {
@@ -74,8 +90,10 @@ namespace TD_Game
             {
                 backgroundImage = MenuWidgets.Picture("Background", root, background);
                 MenuWidgets.Stretch(backgroundImage.rectTransform);
+                MakeBackgroundAlive(backgroundImage.rectTransform);
             }
             MenuWidgets.Stretch(MenuWidgets.Image("Shade", root, new Color(0f, 0f, 0f, background != null ? 0.25f : 0.5f)).rectTransform);
+            MakeEmbers(root);
 
             if (gameLogo != null)
             {
@@ -141,18 +159,103 @@ namespace TD_Game
             musicButton = MenuWidgets.Button(t, "", new Vector2(0, -90), size, () => { GameAudio.MusicVolume = Cycle(GameAudio.MusicVolume); Refresh(); }, 28);
             sfxButton = MenuWidgets.Button(t, "", new Vector2(0, -160), size, () => { GameAudio.SfxVolume = Cycle(GameAudio.SfxVolume); Refresh(); }, 28);
             fullscreenButton = MenuWidgets.Button(t, "", new Vector2(0, -230), size, ToggleFullscreen, 28);
-            MenuWidgets.Button(t, "Back", new Vector2(0, -310), size, ShowMenu, 28);
+            goreButton = MenuWidgets.Button(t, "", new Vector2(0, -300), size, () => { GoreEffects.Enabled = !GoreEffects.Enabled; Refresh(); }, 28);
+            MenuWidgets.Button(t, "Back", new Vector2(0, -380), size, ShowMenu, 28);
             Refresh();
         }
 
         void BuildCredits(RectTransform root)
         {
             creditsPanel = MenuWidgets.Stretch(MenuWidgets.Rect("CreditsPanel", root)).gameObject;
-            var plate = MenuWidgets.Image("Plate", creditsPanel.transform, MexicaPalette.WithAlpha(MexicaPalette.ObsidianPlate, 0.85f));
-            MenuWidgets.Center(plate.rectTransform, new Vector2(0, -20), new Vector2(1100, 480));
-            var body = MenuWidgets.Label("Body", creditsPanel.transform, credits, 34, MexicaPalette.Bone);
+            MenuWidgets.Panel("Plate", creditsPanel.transform, new Vector2(0, -20), new Vector2(1100, 480));
+            var body = MenuWidgets.Label("Body", creditsPanel.transform, TeamCredits, 34, MexicaPalette.Bone);
             MenuWidgets.Center(body.rectTransform, new Vector2(0, 10), new Vector2(1050, 380));
             MenuWidgets.Button(creditsPanel.transform, "Back", new Vector2(0, -300), new Vector2(440, 58), ShowMenu, 28);
+        }
+
+        // ---------------- A living background: torches, moon, stars and fog ----------------
+        // Everything is a child of the background picture, so it moves with it. Positions are 0..1 of the picture.
+
+        Image[] torchLights, stars;
+        Image moonHalo;
+        RectTransform[] fog;
+
+        Image Light(RectTransform parent, string name, Vector2 where, float size, Color color)
+        {
+            var image = MenuWidgets.Image(name, parent, color);
+            image.sprite = glow;
+            var r = image.rectTransform;
+            r.anchorMin = r.anchorMax = new Vector2(where.x, 1f - where.y);
+            r.sizeDelta = Vector2.one * size;
+            return image;
+        }
+
+        void MakeBackgroundAlive(RectTransform bg)
+        {
+            if (glow == null) return;
+            torchLights = new[]
+            {
+                Light(bg, "TorchLight", new Vector2(0.347f, 0.36f), 90f, new Color(1f, 0.6f, 0.2f, 0.7f)),
+                Light(bg, "TorchLight", new Vector2(0.370f, 0.36f), 90f, new Color(1f, 0.6f, 0.2f, 0.7f)),
+            };
+            moonHalo = Light(bg, "MoonHalo", new Vector2(0.743f, 0.216f), 380f, new Color(1f, 0.95f, 0.8f, 0.25f));
+            stars = new Image[30];
+            for (int i = 0; i < stars.Length; i++)
+                stars[i] = Light(bg, "Star", new Vector2(Random.value, Random.Range(0.02f, 0.4f)), Random.Range(10f, 18f), Color.white);
+            fog = new RectTransform[3];
+            for (int i = 0; i < fog.Length; i++)
+            {
+                var band = Light(bg, "Fog", new Vector2(i / 3f, 0.82f + i * 0.05f), 1f, new Color(0.7f, 0.6f, 0.75f, 0.12f));
+                band.rectTransform.sizeDelta = new Vector2(1400f, 160f);
+                fog[i] = band.rectTransform;
+            }
+        }
+
+        void AnimateBackground()
+        {
+            if (torchLights == null) return;
+            float t = Time.unscaledTime;
+            for (int i = 0; i < torchLights.Length; i++)   // fire flickers fast and irregularly
+            {
+                float flicker = 0.75f + 0.15f * Mathf.Sin(t * 13f + i * 2f) + 0.1f * Mathf.Sin(t * 29f + i);
+                torchLights[i].rectTransform.localScale = Vector3.one * flicker;
+            }
+            moonHalo.rectTransform.localScale = Vector3.one * (1f + 0.06f * Mathf.Sin(t * 0.8f));   // the moon breathes
+            for (int i = 0; i < stars.Length; i++)   // stars twinkle
+                stars[i].color = new Color(1f, 1f, 1f, 0.15f + 0.6f * Mathf.Abs(Mathf.Sin(t * (0.7f + i % 5 * 0.3f) + i)));
+            for (int i = 0; i < fog.Length; i++)    // fog drifts slowly sideways and wraps around
+            {
+                float x = Mathf.Repeat(t * (12f + i * 6f) + i * 600f, 2800f) - 1400f;
+                fog[i].anchoredPosition = new Vector2(x, 0f);
+            }
+        }
+
+        // ---------------- Floating embers (simple: small squares that rise and come back to the bottom) ----------------
+
+        RectTransform[] embers;
+
+        void MakeEmbers(RectTransform root)
+        {
+            embers = new RectTransform[40];
+            for (int i = 0; i < embers.Length; i++)
+            {
+                var ember = MenuWidgets.Image("Ember", root, new Color(1f, Random.Range(0.35f, 0.65f), 0.15f, Random.Range(0.4f, 0.9f)));
+                MenuWidgets.Center(ember.rectTransform, new Vector2(Random.Range(-960f, 960f), Random.Range(-540f, 540f)), Vector2.one * Random.Range(4f, 9f));
+                embers[i] = ember.rectTransform;
+            }
+        }
+
+        void MoveEmbers()
+        {
+            if (embers == null) return;
+            for (int i = 0; i < embers.Length; i++)
+            {
+                Vector2 p = embers[i].anchoredPosition;
+                p.y += (30f + i % 5 * 12f) * Time.unscaledDeltaTime;                 // rise
+                p.x += Mathf.Sin(Time.unscaledTime * 1.3f + i) * 20f * Time.unscaledDeltaTime;   // sway
+                if (p.y > 560f) p = new Vector2(Random.Range(-960f, 960f), -560f);   // back to the bottom
+                embers[i].anchoredPosition = p;
+            }
         }
 
         // ---------------- Navigation ----------------
@@ -188,7 +291,8 @@ namespace TD_Game
         {
             GameSave.NewGame();
             ContextTutorial.ResetAll();
-            SceneFader.Load(gameScene);
+            // New game: first the story of Tlahuelli, then the map.
+            SceneFader.Load(Application.CanStreamedLevelBeLoaded(prologueScene) ? prologueScene : gameScene);
         }
 
         void OnContinue()
@@ -230,6 +334,7 @@ namespace TD_Game
             MenuWidgets.SetLabel(musicButton, $"Music Volume: {Mathf.RoundToInt(GameAudio.MusicVolume * 100f)}%");
             MenuWidgets.SetLabel(sfxButton, $"Effects Volume: {Mathf.RoundToInt(GameAudio.SfxVolume * 100f)}%");
             MenuWidgets.SetLabel(fullscreenButton, "Fullscreen: " + (Screen.fullScreen ? "On" : "Off"));
+            MenuWidgets.SetLabel(goreButton, "Gore (17+): " + (GoreEffects.Enabled ? "On" : "Off"));
         }
     }
 }

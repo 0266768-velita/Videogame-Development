@@ -59,6 +59,9 @@ namespace TD_Game
         [Tooltip("Total Tonalli (concentration) in blue orbs.")]
         [Min(0f)] public float concentrationOnDefeat = 20f;
 
+        [Header("Gold (spent in the shop)")]
+        [Min(0)] public int goldOnDefeat = 10;
+
         [Header("Rewards")]
         [Tooltip("Permanent increase of the player's max health.")]
         [Min(0f)] public float bonusMaxHealth = 0f;

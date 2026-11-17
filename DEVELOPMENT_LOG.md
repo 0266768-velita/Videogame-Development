@@ -5,6 +5,63 @@ Planificación: `DEVELOPMENT_CALENDAR.md` · Reglas y decisiones técnicas: `CLA
 
 ---
 
+## 2026-11-17 — Sesión 17 (Alex): sonidos del combate, volumen, Quetzalcóatl, .exe
+
+- **Sonidos del combate:** al cambiar de escena, el `GameAudio` repetido se destruía con `Destroy(gameObject)` y se llevaba al `GameplayAudio` del mismo objeto: en `MainMap` (entrando desde el menú) no sonaban golpes ni esquives. Ahora usa `Destroy(this)`. Se añadieron los sonidos del combate de Mictlán v5 que faltaban: `swing` al atacar, `seismic`, `jump` / `land`.
+- **Volumen por defecto** más bajo: general 60 %, música 45 %, efectos 100 %.
+- **Créditos** fijos en código (`const`), en el orden Antonio, Alejandro, Adrián, Jetzuvely; la escena ya no puede guardar un texto viejo.
+- **Clasificación:** los textos usan *Best Fit* de Unity UI para caber en cualquier tamaño de pantalla.
+- **Minimapa:** flecha que gira hacia donde mira Tlahuelli (`PropArt.MapArrow`, `Minimap` lee `PlayerDirection.LastValid`).
+- **Quetzalcóatl** nuevo, parecido al de v5 pero más intimidante (`PropArt.Quetzalcoatl`, 4 cuadros).
+- **Build de Windows:** menú **Mictlan > Build Game For Friends (.exe)** → `Builds/Mictlan/Mictlan.exe` (la carpeta `Builds/` está en `.gitignore`). Cambia `PlayerSettings` (compañía Micta Forge, producto Mictlan, pantalla completa).
+
+---
+
+## 2026-11-17 — Sesión 16 (Alex): mapa natural, sonido, tienda tipo RE4, gore, cómic
+
+- **Sonido arreglado:** ningún `GameAudio` tenía asignada la `AudioLibrary` (`library: {fileID: 0}`), por eso el juego estaba mudo. `FrontEndBuilder.ConnectAudio()` la vuelve a cargar del disco y la asigna en cada escena; *Play From The Start* además quita el "Mute Audio" de la vista Game.
+- **Mapa natural** (`MainMapBuilder.Plan()` + `Editor/TerrainArt.cs`): adiós a los muros de piedra. Bosque denso de bordes irregulares, ríos con **puentes** entre las zonas, cresta de rocas entre A y D, lagunas redondas con orilla de arena/espuma (16 versiones de agua y de pozo según los lados con tierra), pozos, árboles y rocas sueltos que nunca tapan el camino de tierra. Tiles de 16 px (misma densidad que los personajes) con **contorno oscuro** en árboles y rocas; guardados como `Tile` en `Art/Tilesets/Mictlan` para pintar a mano con la Tile Palette.
+- **Templo de Quetzalcóatl:** piso y muros de piedra con greca, reja de obsidiana, cabezas de serpiente emplumada y braseros encendidos (`Editor/PropArt.cs`).
+- **Títulos de zona estilo GTA** (`UI/ZoneTitleCard.cs` + `World/ZoneArea.cs`): el nombre del territorio del GDD aparece grande y se desvanece al entrar.
+- **Tienda tipo RE4:** carpa con toldo rayado, repisas, linternas, caja, barril y tapete; vendedor encapuchado con ojos brillantes (capas ordenadas con `SortingGroup`).
+- **Tlahuelli:** el Macuahuitl ya está dibujado en su sprite; el Macuahuitl extra solo aparece al atacar. La antorcha tiene una posición fija por dirección (de frente en la mano libre, de espaldas y de lado detrás del cuerpo).
+- **Gore como el juego viejo:** al morir, el sprite del enemigo se corta en pedazos (`Sprite.Create`) que salen volando con `Rigidbody2D`, más huesos y sangre; los enemigos se **ensangrentan** más mientras menos vida tienen.
+- **Clasificación** con estilo de etiqueta de caja física (letra sencilla en negritas, caja de la M y caja de descriptores). **Menú** más vivo: antorchas de la pirámide parpadeando, halo de la luna, estrellas y niebla (además de las chispas, que se quedan).
+- **Cómic del prólogo** con ilustraciones nuevas: la madre enferma, el altar bajo la lluvia, los tronos vacíos, la tumba, el puño, Mictlantecuhtli y el camino.
+- Se borró el menú **Mictlan (OLD v5 - do not use)** (se quitó su `[MenuItem]` en `Assets/Scripts/Editor/MictlanSetupTool.cs`).
+- Probado en Play Mode: clasificación, menú, mapa nuevo, pelea con sangre en el lobo y explosión en pedazos. **No probado:** escuchar el audio (no puedo oír), comprar en la tienda, la llave y la pelea con el jefe.
+
+---
+
+## 2026-11-16 — Sesión 15 (Alex): animación, llave, vendedor, prólogo, menú Mictlan
+
+Decisiones del equipo (Alex): historia del **GDD** (prólogo en cómic); se quedan **lobos, brujas y gigantes**; la vida **no** se rellena al ganar; el proyecto se queda en `Documentos\Mictlan-v5` con acceso directo en el Escritorio (OneDrive).
+- **Tlahuelli animado** en 4 direcciones con el sprite de Mictlán v5 (`PlayerSpriteAnimator`), antorcha en la mano izquierda y **Macuahuitl** en la derecha que se levanta y se estira al atacar (`MacuahuitlSwing`, sprite generado por `ArtGenerator`).
+- **Llave de obsidiana** (como en el juego viejo): aparece al vencer a todos los enemigos normales (`ObsidianKey`) y abre la puerta de Quetzalcóatl (`KeyDoor`). Se guarda (`SaveData.hasKey`).
+- **Vendedor** (`MerchantShop`) pegado a la pared norte de la sala B, con puesto y antorchas: pociones, apostar 10/50 y el artefacto **Espejo Humeante** (`MirrorAbility`, 6ª ranura de combate, tecla 6 / RT; acción `Combat/Artifact` en `PlayerControls.inputactions`; el HUD tiene 7 filas).
+- **Prólogo en cómic** (`TD_Prologue`, `PrologueComic`) con el texto del GDD; **Start Game** lo muestra antes del mapa.
+- **Menú:** marcos aztecas del juego viejo (`AztecFrames`, copia de `AztecUI`), fondo que se mueve y chispas; créditos: Antonio, Alejandro, Adrián, Jetzuvely (nombres completos).
+- **Cámara** menos cercana (6.75 en exploración, 4.21875 en combate), la pelea se encuadra a la izquierda del menú de comandos; **minimapa y oro arriba a la derecha**; tips de exploración cada 25 s y nombres de territorios del GDD al entrar a cada zona.
+- **Menú `Mictlan`** arriba en Unity: *Rebuild Everything And Play*, *Play From The Start*, *Rebuild The Main Map*.
+- Probado en Play Mode: menú, créditos, prólogo completo, mapa, caminar, pelea con el ataque del Macuahuitl y la 6ª fila. **No probado:** comprar/apostar en la tienda, la llave y la puerta, la pelea con Quetzalcóatl.
+
+---
+
+## 2026-11-16 — Sesión 14 (Alex): oro y tienda, minimapa, gore, antorcha, mapa grande y oscuro
+
+- **Oro:** `EnemyData.goldOnDefeat` (lobo 8, bruja 15, gigante 30); se suma al ganar (`CombatRewards`), vive en `PlayerProgression.Gold` y se guarda. **Tienda** de pociones (`Interactions/PotionShop.cs`, tecla E, 20 de oro) en la sala B de `MainMap`. Contador `UI/GoldCounter.cs`.
+- **Minimapa reutilizable** (`UI/Minimap.cs`): segunda cámara + RenderTexture sobre los límites del Tilemap `Ground` de cualquier escena; punto del jugador; se oculta en combate.
+- **Transiciones entre mapas** (petición de Adrián): `World/SceneDoor.cs` + `World/SpawnPoint.cs`.
+- **Gore simple** (`World/GoreEffects.cs`): manchas al golpear, charco y pedazos con `Rigidbody2D` al morir; opción en Options. Sprites copiados a `Art/Effects/`.
+- **Antorcha** en la mano de Tlahuelli (prefab y `MainMap`) y **oscuridad** pegada a la cámara (`Art/Effects/Darkness.png`, capa TransparentFX para que el minimapa no la dibuje).
+- **Menú:** fuente **Pirata One** (Google Fonts, licencia OFL en `Art/Fonts/PirataOne-OFL.txt`) y **marco azteca** 9-slice (`Art/UI/AztecFrame.png`), ambos generados/asignados por `Editor/ArtGenerator.cs` y `FrontEndBuilder`.
+- **Combate:** `CombatArena` mueve toda la pelea dentro de lo que la cámara puede mostrar (`CameraFollow.ClampForView`) y abre más la cámara con enemigos grandes: Tlahuelli ya no queda en la orilla ni sale al esquivar.
+- **`MainMap` más grande y oscuro:** 88×40 tiles, 5 salas al estilo del mapa de Adrián (mismos tiles), tintes oscuros por Tilemap, 12 enemigos por zonas + jefe. Provisional hasta que Adrián entregue el mapa principal.
+- Guía de estudio: `GUIA_ALEX.md`.
+- Probado en Play Mode: menú con la nueva fuente y marcos, pelea junto a la esquina del mapa (bien encuadrada), victoria con gore, minimapa y contador de oro. **No probado:** comprar en la tienda, la pelea con el jefe y los créditos.
+
+---
+
 ## 2026-11-15/16 — Sesión 13 (Alex): enemigos, flujo del juego y front end de Mictlán v5
 
 **Tipo:** tareas de Alex (2.11, 2.12, 3.8, 3.13, 3.17, 3.18, 4.3, 4.6, 4.7, 4.18, 4.19) + menú, audio y mapa del juego anterior. Validado en Play Mode. **Sin commits.**

@@ -108,7 +108,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 3.2, y: 1.2}
+  m_Size: {x: 3.8, y: 1.4}
   m_EdgeRadius: 0
 --- !u!114 &1259000297500745271
 MonoBehaviour:
@@ -237,7 +237,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 909587395, guid: eb270bd1328f5254ebb35c22b7fdbc1c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d0975f8269bd734418e6f80073504e09, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -261,9 +261,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD_Game.SpriteFlipbook
   frames:
-  - {fileID: 909587395, guid: eb270bd1328f5254ebb35c22b7fdbc1c, type: 3}
-  - {fileID: -208272775, guid: eb270bd1328f5254ebb35c22b7fdbc1c, type: 3}
-  - {fileID: 1116313217, guid: eb270bd1328f5254ebb35c22b7fdbc1c, type: 3}
-  - {fileID: 2076774021, guid: eb270bd1328f5254ebb35c22b7fdbc1c, type: 3}
-  secondsPerFrame: 0.18
+  - {fileID: 21300000, guid: d0975f8269bd734418e6f80073504e09, type: 3}
+  - {fileID: 21300000, guid: 6a509755f64a33f4cade62aae2bc5113, type: 3}
+  - {fileID: 21300000, guid: 3ec9d47aa14622d4192a807f10d4bb79, type: 3}
+  - {fileID: 21300000, guid: 806a75c88016d4549919657c1dbf8eb2, type: 3}
+  secondsPerFrame: 0.22
   pulse: 0

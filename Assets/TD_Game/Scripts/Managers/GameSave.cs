@@ -13,6 +13,8 @@ namespace TD_Game
         public float bonusMaxHealth, bonusMaxStamina;
         public int victories;
         public int potions;
+        public int gold;
+        public bool hasKey;
         public float concentration;
         public List<string> abilities = new List<string>();
         public List<string> defeatedEnemies = new List<string>();

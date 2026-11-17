@@ -21,9 +21,11 @@ namespace TD_Game
             var progression = player.Progression;
 
             float healthBonus = 0f, staminaBonus = 0f;
+            int gold = 0;
             var newAbilities = new List<CombatAbility>();
             foreach (var enemy in context.Defeated)
             {
+                gold += enemy.goldOnDefeat;
                 healthBonus += enemy.bonusMaxHealth;
                 staminaBonus += enemy.bonusMaxStamina;
                 if (enemy.unlocksOnDefeat == null) continue;
@@ -33,6 +35,7 @@ namespace TD_Game
 
             progression.Grow(healthBonus, staminaBonus);
             progression.RegisterVictory();
+            progression.AddGold(gold);
             player.AddPotions(player.Stats.potionsOnVictory);
             // Health is NOT refilled: the green jade orbs heal. Growth adds its bonus on top.
             player.RefreshMaxHealth();
@@ -41,8 +44,9 @@ namespace TD_Game
             string growth = healthBonus > 0f || staminaBonus > 0f
                 ? $"\nMax HP +{Mathf.RoundToInt(healthBonus)}   Max Stamina +{Mathf.RoundToInt(staminaBonus)}"
                 : "";
+            string goldText = gold > 0 ? $"   +{gold} gold" : "";
             CombatFeed.ShowBanner(
-                $"Victory!  Collect the orbs{growth}",
+                $"Victory!{goldText}  Collect the orbs{growth}",
                 victoryBannerTime);
             yield return new WaitForSeconds(victoryBannerTime);
 

@@ -30,19 +30,19 @@ namespace TD_Game
 
         public static float MasterVolume
         {
-            get => PlayerPrefs.GetFloat(MasterKey, 1f);
+            get => PlayerPrefs.GetFloat(MasterKey, 0.6f);   // 60% by default (100% was too loud)
             set { PlayerPrefs.SetFloat(MasterKey, Mathf.Clamp01(value)); AudioListener.volume = Mathf.Clamp01(value); }
         }
 
         public static float MusicVolume
         {
-            get => PlayerPrefs.GetFloat(MusicKey, 0.7f);
+            get => PlayerPrefs.GetFloat(MusicKey, 0.45f);
             set { PlayerPrefs.SetFloat(MusicKey, Mathf.Clamp01(value)); if (Instance != null) Instance.ApplyMusicVolume(); }
         }
 
         public static float SfxVolume
         {
-            get => PlayerPrefs.GetFloat(SfxKey, 1f);
+            get => PlayerPrefs.GetFloat(SfxKey, 1f);   // effects louder than the music so hits are heard
             set => PlayerPrefs.SetFloat(SfxKey, Mathf.Clamp01(value));
         }
 
@@ -54,7 +54,8 @@ namespace TD_Game
             {
                 // A new scene: the surviving GameAudio plays this scene's song.
                 Instance.PlayTrack(sceneMusic);
-                Destroy(gameObject);
+                Destroy(this);   // only this component: GameplayAudio on the same object must keep working
+
                 return;
             }
             Instance = this;

@@ -17,6 +17,8 @@ namespace TD_Game
         [SerializeField] CombatAbility skill2;
         [SerializeField] CombatAbility potion;
         [SerializeField] CombatAbility ultimate;
+        [Tooltip("Key 6: the artifact sold by the merchant (locked until bought).")]
+        [SerializeField] CombatAbility artifact;
 
         [SerializeField, Min(0f)] float outOfStaminaPause = 0.7f;
 
@@ -25,7 +27,7 @@ namespace TD_Game
         CombatAbility[] slots;
 
         /// <summary>The five slots in menu order: attack, skill 1, skill 2, potion, ultimate.</summary>
-        public CombatAbility[] Slots => slots ??= new[] { attack, skill1, skill2, potion, ultimate };
+        public CombatAbility[] Slots => slots ??= new[] { attack, skill1, skill2, potion, ultimate, artifact };
         public CombatAbility Attack => attack;
         public CombatAbility Skill1 => skill1;
         public CombatAbility Skill2 => skill2;
@@ -114,6 +116,7 @@ namespace TD_Game
             else if (input.Skill2.WasPressedThisFrame()) requested = skill2;
             else if (input.Potion.WasPressedThisFrame()) requested = potion;
             else if (input.Ultimate.WasPressedThisFrame()) requested = ultimate;
+            else if (artifact != null && input.Artifact.WasPressedThisFrame()) requested = artifact;
         }
 
         bool CanDoAnything(CombatContext context)

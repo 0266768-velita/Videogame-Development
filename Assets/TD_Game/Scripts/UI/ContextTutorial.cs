@@ -27,6 +27,18 @@ namespace TD_Game
         [SerializeField, TextArea] string unlockHint = "You learned a new skill. Use it in battle with its key (2 or 3).";
         [SerializeField, TextArea] string defeatHint = "You return to the last place where you won a battle.\nYour progress is kept and you always get potions to retry.";
 
+        [Header("Tips while exploring (one every few seconds, each only once)")]
+        [SerializeField, Min(5f)] float secondsBetweenTips = 25f;
+        [SerializeField, TextArea] string[] explorationTips =
+        {
+            "The map of the whole level is in the top right corner. The red dot is you.",
+            "Enemies chase you when they see you. Walls hide you from them.",
+            "Defeated enemies drop gold. The merchant in the Valley of Tlazolteotl sells potions and an artifact.",
+            "Green orbs heal you, blue orbs fill your Tonalli. Collect them after every battle.",
+            "Defeat every servant of the gods: the obsidian key opens the door to Quetzalcoatl.",
+            "Press ESC to pause the game and change the volume.",
+        };
+
         static readonly HashSet<string> seen = new HashSet<string>();
         static ContextTutorial instance;
 
@@ -92,6 +104,22 @@ namespace TD_Game
             yield return null;
             ShowOnce("start", startHint);
             StartCoroutine(ShowQueue());
+            StartCoroutine(ExplorationTips());
+        }
+
+        /// <summary>Every few seconds of exploring, the next tip that was not shown yet.</summary>
+        IEnumerator ExplorationTips()
+        {
+            for (int i = 0; i < explorationTips.Length; i++)
+            {
+                float explored = 0f;
+                while (explored < secondsBetweenTips)
+                {
+                    if (GameState.IsExploring) explored += Time.deltaTime;
+                    yield return null;
+                }
+                ShowOnce("tip" + i, explorationTips[i]);
+            }
         }
 
         void OnCombatStarted() => ShowOnce("combat", combatHint);

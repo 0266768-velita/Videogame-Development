@@ -105,7 +105,7 @@ namespace TD_Game.EditorTools
             var menuGroup = menu.gameObject.AddComponent<CanvasGroup>();
 
             const float rowHeight = 38f, gap = 6f, rowWidth = 250f, step = 12f;
-            string[] names = { "Action1", "Action2", "Action3", "Action4", "Action5", "EndTurn" };
+            string[] names = { "Action1", "Action2", "Action3", "Action4", "Action5", "Action6", "EndTurn" };
             var rows = new ActionButton[names.Length];
             for (int i = 0; i < names.Length; i++)
             {
@@ -145,8 +145,8 @@ namespace TD_Game.EditorTools
             Set(actionMenu, "enemyTurnBar", enemyGroup);
             var so = new SerializedObject(actionMenu);
             var list = so.FindProperty("buttons");
-            list.arraySize = 5;
-            for (int i = 0; i < 5; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = rows[i];
+            list.arraySize = names.Length - 1;   // every row except End Turn
+            for (int i = 0; i < names.Length - 1; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = rows[i];
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

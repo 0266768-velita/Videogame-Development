@@ -319,6 +319,16 @@
                     "interactions": "",
                     "initialStateCheck": false,
                     "priority": 0
+                },
+                {
+                    "name": "Artifact",
+                    "type": "Button",
+                    "id": "21ca5130-f1ab-4765-b166-c3ecafe62413",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
                 }
             ],
             "bindings": [
@@ -550,6 +560,28 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "Ultimate",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2b2c42ef-0a29-4404-88f1-814767a67f03",
+                    "path": "<Keyboard>/6",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Artifact",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d3afe98a-7bba-4627-b80f-d6898699b86f",
+                    "path": "<Gamepad>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Artifact",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

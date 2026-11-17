@@ -14,7 +14,15 @@ namespace TD_Game
     public static class MenuWidgets
     {
         static Font font;
+        static bool aztecFrames;
         public static Font Font => font != null ? font : (font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+
+        /// <summary>Menu style: the artistic font (Pirata One) and the Aztec frames of Mictlán v5. Call before building.</summary>
+        public static void Use(Font menuFont, bool useAztecFrames)
+        {
+            if (menuFont != null) font = menuFont;
+            aztecFrames = useAztecFrames;
+        }
 
         /// <summary>A full-screen canvas (1920x1080 reference) under the parent.</summary>
         public static RectTransform Screen(string name, int sortingOrder, Transform parent)
@@ -92,20 +100,27 @@ namespace TD_Game
             var r = Rect("Button_" + text, parent);
             Center(r, position, size);
             var image = r.gameObject.AddComponent<Image>();
-            image.color = Color.white;
-            var outline = r.gameObject.AddComponent<Outline>();
-            outline.effectColor = MexicaPalette.AgedGold;
-            outline.effectDistance = new Vector2(2f, -2f);
-
             var button = r.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
-            var colors = button.colors;
-            colors.normalColor = MexicaPalette.ObsidianPlate;
-            colors.highlightedColor = MexicaPalette.Cinnabar;
-            colors.selectedColor = MexicaPalette.Cinnabar;
-            colors.pressedColor = MexicaPalette.Tezontle;
-            colors.disabledColor = MexicaPalette.WithAlpha(MexicaPalette.ObsidianPlate, 0.5f);
-            button.colors = colors;
+            if (aztecFrames)
+            {
+                // Aztec frame of Mictlán v5: one picture per state (normal, highlight, selected, pressed, disabled).
+                AztecFrames.StyleButton(button, image, size.x, size.y);
+            }
+            else
+            {
+                image.color = Color.white;
+                var outline = r.gameObject.AddComponent<Outline>();
+                outline.effectColor = MexicaPalette.AgedGold;
+                outline.effectDistance = new Vector2(2f, -2f);
+                button.targetGraphic = image;
+                var colors = button.colors;
+                colors.normalColor = MexicaPalette.ObsidianPlate;
+                colors.highlightedColor = MexicaPalette.Cinnabar;
+                colors.selectedColor = MexicaPalette.Cinnabar;
+                colors.pressedColor = MexicaPalette.Tezontle;
+                colors.disabledColor = MexicaPalette.WithAlpha(MexicaPalette.ObsidianPlate, 0.5f);
+                button.colors = colors;
+            }
             button.onClick.AddListener(() => GameAudio.PlaySfx("ui_select", 1f, 0f));
             button.onClick.AddListener(onClick);
             r.gameObject.AddComponent<MenuSelectSound>();
@@ -113,6 +128,15 @@ namespace TD_Game
             var label = Label("Label", r, text, fontSize, MexicaPalette.Bone);
             Stretch(label.rectTransform);
             return button;
+        }
+
+        /// <summary>A panel with the Aztec frame (credits, shop, prologue captions).</summary>
+        public static Image Panel(string name, Transform parent, Vector2 position, Vector2 size)
+        {
+            var image = Image(name, parent, Color.white);
+            Center(image.rectTransform, position, size);
+            AztecFrames.StylePanel(image, size.x, size.y);
+            return image;
         }
 
         public static void SetLabel(Button button, string text) => button.GetComponentInChildren<Text>().text = text;

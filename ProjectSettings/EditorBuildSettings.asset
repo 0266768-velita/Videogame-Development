@@ -12,8 +12,11 @@ EditorBuildSettings:
     path: Assets/TD_Game/Scenes/MainMenu/TD_MainMenu.unity
     guid: c36f7439b90e26a489e67f80b1a7d06b
   - enabled: 1
+    path: Assets/TD_Game/Scenes/MainMenu/TD_Prologue.unity
+    guid: 04e07f91b342e1c469ba27644af76aed
+  - enabled: 1
     path: Assets/TD_Game/Scenes/Levels/MainMap.unity
-    guid: ae6c43ab9652a404aa50c795de96f9dd
+    guid: 80f84126539842442a47bcd70db4cdbf
   - enabled: 1
     path: Assets/TD_Game/Scenes/Testing/TestLevel.unity
     guid: 7a5e5fbd764b19a4a83889eae431ddab

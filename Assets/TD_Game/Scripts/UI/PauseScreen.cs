@@ -12,6 +12,7 @@ namespace TD_Game
     public class PauseScreen : MonoBehaviour
     {
         [SerializeField] string mainMenuScene = SceneIds.MainMenu;
+        [SerializeField] Font menuFont;          // Pirata One
 
         GameObject panel;
         Button resumeButton, musicButton, sfxButton;
@@ -19,6 +20,7 @@ namespace TD_Game
 
         void Start()
         {
+            MenuWidgets.Use(menuFont, true);
             var root = MenuWidgets.Screen("PauseCanvas", 50, transform);
             panel = MenuWidgets.Stretch(MenuWidgets.Rect("PausePanel", root)).gameObject;
             var t = panel.transform;

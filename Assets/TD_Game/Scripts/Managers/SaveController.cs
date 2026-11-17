@@ -73,6 +73,8 @@ namespace TD_Game
                 bonusMaxStamina = progression.BonusMaxStamina,
                 victories = progression.Victories,
                 potions = player.Potions,
+                gold = progression.Gold,
+                hasKey = progression.HasKey,
                 concentration = player.Concentration,
                 defeatedEnemies = new List<string>(defeated),
                 seenTutorials = new List<string>(ContextTutorial.Seen)
@@ -101,6 +103,8 @@ namespace TD_Game
             player.Progression.LoadSaved(data.bonusMaxHealth, data.bonusMaxStamina, data.victories, checkpoint, abilities);
             player.FullRestore();
             player.AddPotions(data.potions - player.Potions);
+            player.Progression.LoadGold(data.gold);
+            if (data.hasKey) player.Progression.GiveKey();
             player.ClearConcentration();
             player.AddConcentration(data.concentration);
             player.Teleport(checkpoint);

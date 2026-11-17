@@ -11,9 +11,9 @@ namespace TD_Game
     public class CombatActionMenu : MonoBehaviour
     {
         [SerializeField] CombatManager combat;
-        [Tooltip("One per PlayerTurn slot, in order: attack, skill 1, skill 2, potion, ultimate.")]
+        [Tooltip("One per PlayerTurn slot, in order: attack, skill 1, skill 2, potion, ultimate, artifact.")]
         [SerializeField] ActionButton[] buttons;
-        [SerializeField] string[] keyHints = { "1", "2", "3", "4", "5" };
+        [SerializeField] string[] keyHints = { "1", "2", "3", "4", "5", "6" };
         [SerializeField] ActionButton endTurnButton;
         [Tooltip("Plate with the target, combo and the description of the action in progress.")]
         [SerializeField] Text hint;

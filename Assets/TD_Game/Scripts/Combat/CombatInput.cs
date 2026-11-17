@@ -22,6 +22,8 @@ namespace TD_Game
         public InputAction Skill2 { get; private set; }
         public InputAction Potion { get; private set; }
         public InputAction Ultimate { get; private set; }
+        /// <summary>Key 6 / RT: the artifact bought from the merchant.</summary>
+        public InputAction Artifact { get; private set; }
         public InputAction EndTurn { get; private set; }
         public InputAction TargetPrev { get; private set; }
         public InputAction TargetNext { get; private set; }
@@ -42,6 +44,7 @@ namespace TD_Game
             Skill2 = map.FindAction("Skill2", true);
             Potion = map.FindAction("Potion", true);
             Ultimate = map.FindAction("Ultimate", true);
+            Artifact = map.FindAction("Artifact", true);
             EndTurn = map.FindAction("EndTurn", true);
             TargetPrev = map.FindAction("TargetPrev", true);
             TargetNext = map.FindAction("TargetNext", true);

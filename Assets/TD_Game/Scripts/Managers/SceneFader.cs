@@ -11,6 +11,7 @@ namespace TD_Game
         // "TD_" so they never get confused with the Boot / MainMenu scenes of the previous game.
         public const string Boot = "TD_Boot";
         public const string MainMenu = "TD_MainMenu";
+        public const string Prologue = "TD_Prologue";
         public const string MainMap = "MainMap";
     }
 

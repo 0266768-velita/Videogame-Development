@@ -22,14 +22,17 @@ namespace TD_Game
         [SerializeField, Min(0f)] float delayAfterVictory = 1.5f;
         [Tooltip("Loaded at the end. If it is not in Build Settings, the current scene restarts.")]
         [SerializeField] string mainMenuScene = SceneIds.MainMenu;
-        [SerializeField, TextArea(10, 30)] string credits =
+        // Fixed in code (not in the scene) so an old saved text can never replace it.
+        const string EndCredits =
             "MICTLÁN\n\n" +
-            "Tlahuelli crossed the nine levels of the underworld\nand defeated Quetzalcóatl.\n\n\n" +
-            "A GAME BY\n\nAdrian\nAlex\nToño\nVely\n\n\n" +
-            "PROGRAMMING\nAdrian · Alex · Toño\n\n" +
-            "ART\nVely\n\n" +
-            "GAME DESIGN\nThe whole team\n\n\n" +
-            "Made with Unity 6\n\n\n" +
+            "The gods did not answer Tlahuelli's prayers.\nNow Quetzalcóatl has fallen to the Macuahuitl.\n\n\n" +
+            "A GAME BY MICTA FORGE\n\n" +
+            "Antonio Enríquez Velasco\n" +
+            "Alejandro Cornejo Pérez\n" +
+            "Adrián Gallardo Medina\n" +
+            "Jetzuvely del Carmen González Gutiérrez\n\n\n" +
+            "Made with Unity 6\n" +
+            "Font: Pirata One (SIL Open Font License)\n\n\n" +
             "THANK YOU FOR PLAYING";
 
         bool playing;
@@ -37,7 +40,7 @@ namespace TD_Game
         void Awake()
         {
             if (panel != null) { panel.alpha = 0f; panel.blocksRaycasts = false; }
-            if (creditsText != null) creditsText.text = credits;
+            if (creditsText != null) creditsText.text = EndCredits;
         }
 
         void OnEnable() => CombatManager.CombatWon += OnCombatWon;

@@ -148,15 +148,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 231824d9827595d4aa5305ca336b677a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD_Game.TitleMenu
+  menuFont: {fileID: 12800000, guid: 366cbbd1481eb254a8fe21a009ddf558, type: 3}
+  glow: {fileID: 21300000, guid: 606b663b79ba5fd4487f393a3bfc0a24, type: 3}
   background: {fileID: 2800000, guid: 6ffede1609ef3f34f9b1639614295b77, type: 3}
   gameLogo: {fileID: 0}
   title: "MICTL\xC1N"
   studio: Micta Forge
   version: v.04
   gameScene: MainMap
-  credits: "MICTL\xC1N\nA game by Micta Forge\n\nJetzuvely del Carmen Gonz\xE1lez
-    Guti\xE9rrez\nAdri\xE1n Gallardo Medina\nAntonio Enr\xEDquez Velasco\nAlejandro
-    Cornejo P\xE9rez"
+  prologueScene: TD_Prologue
 --- !u!4 &1050357894
 Transform:
   m_ObjectHideFlags: 0
@@ -201,7 +201,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfa8e9a0dbd81d344b7f45db0b2db7f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD_Game.GameAudio
-  library: {fileID: 0}
+  library: {fileID: 11400000, guid: 7fd90e90efc88c7449c62fcc294a3113, type: 2}
   sceneMusic: 1
   crossFadeSeconds: 0.8
   sfxVoices: 10

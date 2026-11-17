@@ -83,6 +83,7 @@ MonoBehaviour:
   soulsOnDefeat: 25
   healthOnDefeat: 20
   concentrationOnDefeat: 20
+  goldOnDefeat: 30
   bonusMaxHealth: 15
   bonusMaxStamina: 0
   unlocksOnDefeat:

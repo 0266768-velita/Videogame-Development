@@ -43,6 +43,28 @@ namespace TD_Game
 
         public void RegisterVictory() => Victories++;
 
+        // ---------------- Gold (enemies give it, the shop takes it) ----------------
+
+        public int Gold { get; private set; }
+
+        public void AddGold(int amount) => Gold += Mathf.Max(0, amount);
+
+        /// <summary>Pays if there is enough gold. Returns false (and pays nothing) if not.</summary>
+        public bool TrySpendGold(int price)
+        {
+            if (Gold < price) return false;
+            Gold -= price;
+            return true;
+        }
+
+        public void LoadGold(int amount) => Gold = Mathf.Max(0, amount);
+
+        // ---------------- Obsidian key and shop artifact ----------------
+
+        /// <summary>The obsidian key that opens Quetzalcóatl's door.</summary>
+        public bool HasKey { get; private set; }
+        public void GiveKey() => HasKey = true;
+
         public void SetCheckpoint(Vector3 position) => Checkpoint = position;
 
         /// <summary>Abilities in the list (for the save).</summary>

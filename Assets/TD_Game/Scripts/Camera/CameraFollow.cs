@@ -105,6 +105,19 @@ namespace TD_Game
             hasBounds = true;
         }
 
+        /// <summary>
+        /// Moves a point so a view of this size centred on it fits inside the map (used by the battle arena,
+        /// so the whole fight is on screen even next to the edge of the map).
+        /// </summary>
+        public Vector3 ClampForView(Vector3 point, float orthographicSize)
+        {
+            if (!hasBounds) return point;
+            float halfWidth = orthographicSize * cam.aspect;
+            point.x = ClampAxis(point.x, worldBounds.min.x, worldBounds.max.x, halfWidth);
+            point.y = ClampAxis(point.y, worldBounds.min.y, worldBounds.max.y, orthographicSize);
+            return point;
+        }
+
         Vector3 DesiredPosition()
         {
             Vector3 p = target.position;

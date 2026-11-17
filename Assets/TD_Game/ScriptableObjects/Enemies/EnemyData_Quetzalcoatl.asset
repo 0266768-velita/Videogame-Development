@@ -26,7 +26,7 @@ MonoBehaviour:
   attackPower: 18
   damageTakenMultiplier: 1
   startsBattleFirst: 1
-  bodyRadius: 2
+  bodyRadius: 2.4
   attacks:
   - attackName: Tail Lash
     damageMultiplier: 1
@@ -143,6 +143,7 @@ MonoBehaviour:
   soulsOnDefeat: 0
   healthOnDefeat: 0
   concentrationOnDefeat: 0
+  goldOnDefeat: 0
   bonusMaxHealth: 0
   bonusMaxStamina: 0
   unlocksOnDefeat: []

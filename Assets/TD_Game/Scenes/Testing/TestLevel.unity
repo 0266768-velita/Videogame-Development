@@ -5458,6 +5458,7 @@ MonoBehaviour:
   skill2: {fileID: 11400000, guid: 6f201b4981ebd2b488d09d46ffffd97e, type: 2}
   potion: {fileID: 11400000, guid: fd715241cfbb75049ad4c5f59010c7b1, type: 2}
   ultimate: {fileID: 11400000, guid: a74e7d8e5ce76c94a96f72e0015d9834, type: 2}
+  artifact: {fileID: 0}
   outOfStaminaPause: 0.7
 --- !u!114 &368934190
 MonoBehaviour:
@@ -9320,7 +9321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfa8e9a0dbd81d344b7f45db0b2db7f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD_Game.GameAudio
-  library: {fileID: 0}
+  library: {fileID: 11400000, guid: 7fd90e90efc88c7449c62fcc294a3113, type: 2}
   sceneMusic: 2
   crossFadeSeconds: 0.8
   sfxVoices: 10
@@ -11241,6 +11242,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TD_Game.PauseScreen
   mainMenuScene: TD_MainMenu
+  menuFont: {fileID: 12800000, guid: 366cbbd1481eb254a8fe21a009ddf558, type: 3}
 --- !u!4 &1467921724
 Transform:
   m_ObjectHideFlags: 0
@@ -19644,10 +19646,6 @@ MonoBehaviour:
   scrollSeconds: 25
   delayAfterVictory: 1.5
   mainMenuScene: MainMenu
-  credits: "MICTL\xC1N\n\nTlahuelli crossed the nine levels of the underworld\nand
-    defeated Quetzalc\xF3atl.\n\n\nA GAME BY\n\nAdrian\nAlex\nTo\xF1o\nVely\n\n\nPROGRAMMING\nAdrian
-    \xB7 Alex \xB7 To\xF1o\n\nART\nVely\n\nGAME DESIGN\nThe whole team\n\n\nMade
-    with Unity 6\n\n\nTHANK YOU FOR PLAYING"
 --- !u!225 &1967202566
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -20210,6 +20208,15 @@ MonoBehaviour:
 
     Your progress
     is kept and you always get potions to retry.'
+  secondsBetweenTips: 25
+  explorationTips:
+  - The map of the whole level is in the top right corner. The red dot is you.
+  - Enemies chase you when they see you. Walls hide you from them.
+  - Defeated enemies drop gold. The merchant in the Valley of Tlazolteotl sells potions
+    and an artifact.
+  - Green orbs heal you, blue orbs fill your Tonalli. Collect them after every battle.
+  - 'Defeat every servant of the gods: the obsidian key opens the door to Quetzalcoatl.'
+  - Press ESC to pause the game and change the volume.
 --- !u!225 &2075258880
 CanvasGroup:
   m_ObjectHideFlags: 0

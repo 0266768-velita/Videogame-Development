@@ -13,10 +13,37 @@ namespace TD_Game
         [SerializeField] PlayerCombatant player;
 
         readonly List<CombatEnemy> enemies = new List<CombatEnemy>();
+        PlayerJump jump;
+        bool wasAirborne;
+        CombatAbility lastAction;
+
+        /// <summary>
+        /// Sounds that come from what the player is doing (same as Mictlán v5's combat):
+        /// swinging the Macuahuitl, Seismic Jump, jumping and landing.
+        /// </summary>
+        void Update()
+        {
+            var combat = CombatManager.Instance;
+            var action = combat != null && combat.InCombat ? combat.PlayerTurn.Performing : null;
+            if (action != null && action != lastAction)
+            {
+                if (action is SeismicAbility) GameAudio.PlaySfx("seismic");
+                else if (!(action is PotionAbility)) GameAudio.PlaySfx("swing", 0.8f, 0.1f);
+            }
+            lastAction = action;
+
+            if (jump != null)
+            {
+                if (jump.IsAirborne && !wasAirborne) GameAudio.PlaySfx("jump", 0.6f, 0.05f);
+                if (!jump.IsAirborne && wasAirborne) GameAudio.PlaySfx("land", 0.5f, 0.05f);
+                wasAirborne = jump.IsAirborne;
+            }
+        }
 
         void Start()
         {
             if (player == null) player = FindAnyObjectByType<PlayerCombatant>();
+            if (player != null) jump = player.GetComponent<PlayerJump>();
             if (player != null)
             {
                 player.Health.Damaged += OnPlayerDamaged;
@@ -115,18 +142,14 @@ namespace TD_Game
 
         // ---------------- Hits and pickups ----------------
 
-        void OnPlayerDamaged(float _) => GameAudio.PlaySfx("hurt");
+        void OnPlayerDamaged(float _) => GameAudio.PlaySfx("hurt", 1f, 0.06f);
 
         void OnPlayerHealed(float amount)
         {
             if (amount > 0.5f && GameState.Mode == GameMode.Combat) GameAudio.PlaySfx("potion");
         }
 
-        void OnEnemyDamaged(float _)
-        {
-            GameAudio.PlaySfx("swing", 0.7f);
-            GameAudio.PlaySfx("enemy_hit");
-        }
+        void OnEnemyDamaged(float _) => GameAudio.PlaySfx("enemy_hit", 1f, 0.08f);
 
         void OnOrbCollected(SoulOrb orb, PlayerCombatant who) => GameAudio.PlaySfx("key", 0.35f, 0.15f);
     }

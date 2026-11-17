@@ -13,6 +13,8 @@ namespace TD_Game
     /// </summary>
     public class BootScreens : MonoBehaviour
     {
+        [SerializeField] Font menuFont;          // Pirata One
+
         [Header("1) Studio logo")]
         [SerializeField] Texture2D studioLogo;
         [SerializeField] string studioName = "MICTA FORGE";
@@ -22,7 +24,7 @@ namespace TD_Game
         [SerializeField] Texture2D ratingImage;
         [SerializeField] string ratingLetter = "M";
         [SerializeField] string ratingLabel = "MATURE 17+";
-        [SerializeField, TextArea(2, 4)] string ratingDescriptors = "Blood and Gore\nViolence";
+        [SerializeField, TextArea(2, 6)] string contentDescriptors = "Blood and Gore\nIntense Violence\nMature Themes";
         [SerializeField, Min(0.5f)] float ratingSeconds = 3.5f;
 
         [Header("3) Description of the game")]
@@ -44,6 +46,7 @@ namespace TD_Game
         void Start()
         {
             Time.timeScale = 1f;
+            MenuWidgets.Use(menuFont, false);
             var root = MenuWidgets.Screen("BootCanvas", 10, transform);
             MenuWidgets.Stretch(MenuWidgets.Image("Black", root, Color.black).rectTransform);
             BuildLogo(root);
@@ -88,23 +91,59 @@ namespace TD_Game
                 MenuWidgets.Center(image.rectTransform, Vector2.zero, new Vector2(h * ratingImage.width / Mathf.Max(1, ratingImage.height), h));
                 return;
             }
-            // Rating box drawn with UI (white frame, black inside, big letter), like the classic rating labels.
-            var box = MenuWidgets.Image("Box", slide, Color.white);
-            MenuWidgets.Center(box.rectTransform, new Vector2(-170, 20), new Vector2(240, 310));
-            var inner = MenuWidgets.Image("Inner", box.transform, Color.black);
-            MenuWidgets.Stretch(inner.rectTransform);
-            inner.rectTransform.offsetMin = new Vector2(10, 10);
-            inner.rectTransform.offsetMax = new Vector2(-10, -10);
-            var letter = MenuWidgets.Label("Letter", inner.transform, ratingLetter, 200, Color.white);
-            letter.fontStyle = FontStyle.Bold;
-            MenuWidgets.Center(letter.rectTransform, new Vector2(0, 25), new Vector2(220, 230));
-            var label = MenuWidgets.Label("Label", inner.transform, ratingLabel, 30, Color.white);
-            MenuWidgets.Center(label.rectTransform, new Vector2(0, -110), new Vector2(220, 40));
+            // Rating label like the one printed on the back of a game box: a white frame with the big letter,
+            // the age bar, and next to it a framed list of content descriptors. Plain bold font (like the real ones).
+            var plain = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var label = MenuWidgets.Rect("RatingLabel", slide);
+            MenuWidgets.Center(label, new Vector2(0, 30), new Vector2(620, 340));
 
-            var descriptors = MenuWidgets.Label("Descriptors", slide, ratingDescriptors, 34, Color.white, TextAnchor.MiddleLeft);
-            MenuWidgets.Center(descriptors.rectTransform, new Vector2(170, 20), new Vector2(420, 240));
-            var note = MenuWidgets.Label("Note", slide, "Rating: " + ratingLabel, 24, MexicaPalette.Ash);
-            MenuWidgets.Center(note.rectTransform, new Vector2(0, -200), new Vector2(900, 40));
+            var box = Frame("LetterBox", label, new Vector2(-170, 0), new Vector2(240, 330), 8);
+            var letter = Plain(MenuWidgets.Label("Letter", box, ratingLetter, 230, Color.white), plain);
+            MenuWidgets.Center(letter.rectTransform, new Vector2(0, 40), new Vector2(220, 240));
+            var bar = MenuWidgets.Image("AgeBar", box, Color.white);
+            MenuWidgets.Center(bar.rectTransform, new Vector2(0, -118), new Vector2(214, 62));
+            var age = Plain(MenuWidgets.Label("Age", bar.transform, ratingLabel, 30, Color.black), plain);
+            MenuWidgets.Stretch(age.rectTransform);
+            var side = Plain(MenuWidgets.Label("Side", box, "CONTENT RATED", 13, Color.white), plain);
+            MenuWidgets.Center(side.rectTransform, new Vector2(0, -158), new Vector2(220, 18));
+
+            var info = Frame("Descriptors", label, new Vector2(130, 0), new Vector2(330, 330), 4);
+            var descriptors = Plain(MenuWidgets.Label("Text", info, contentDescriptors, 30, Color.white, TextAnchor.UpperLeft), plain);
+            MenuWidgets.Stretch(descriptors.rectTransform);
+            descriptors.rectTransform.offsetMin = new Vector2(22, 22);
+            descriptors.rectTransform.offsetMax = new Vector2(-18, -22);
+
+            var note = Fit(MenuWidgets.Label("Note", slide, "This game contains intense violence, blood and gore.", 26, MexicaPalette.Ash));
+            MenuWidgets.Center(note.rectTransform, new Vector2(0, -230), new Vector2(1100, 40));
+        }
+
+        /// <summary>A white frame with a black inside (returns the inside).</summary>
+        static RectTransform Frame(string name, RectTransform parent, Vector2 position, Vector2 size, float border)
+        {
+            var outer = MenuWidgets.Image(name, parent, Color.white);
+            MenuWidgets.Center(outer.rectTransform, position, size);
+            var inner = MenuWidgets.Image("Inside", outer.transform, Color.black);
+            MenuWidgets.Stretch(inner.rectTransform);
+            inner.rectTransform.offsetMin = new Vector2(border, border);
+            inner.rectTransform.offsetMax = new Vector2(-border, -border);
+            return inner.rectTransform;
+        }
+
+        static Text Plain(Text text, Font font)
+        {
+            text.font = font;
+            text.fontStyle = FontStyle.Bold;
+            return Fit(text);
+        }
+
+        /// <summary>Best Fit (Unity UI): the text shrinks by itself if it does not fit in its box, on any screen size.</summary>
+        static Text Fit(Text text)
+        {
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 8;
+            text.resizeTextMaxSize = text.fontSize;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            return text;
         }
 
         void BuildDescription(RectTransform parent)
@@ -113,7 +152,7 @@ namespace TD_Game
             var title = MenuWidgets.Label("Title", slide, descriptionTitle, 80, MexicaPalette.AgedGold);
             title.fontStyle = FontStyle.Bold;
             MenuWidgets.Center(title.rectTransform, new Vector2(0, 200), new Vector2(1200, 110));
-            var body = MenuWidgets.Label("Body", slide, description, 32, MexicaPalette.Bone);
+            var body = Fit(MenuWidgets.Label("Body", slide, description, 32, MexicaPalette.Bone));
             MenuWidgets.Center(body.rectTransform, new Vector2(0, -40), new Vector2(1500, 360));
         }
 

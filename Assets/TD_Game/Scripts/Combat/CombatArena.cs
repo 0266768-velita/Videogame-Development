@@ -72,7 +72,14 @@ namespace TD_Game
         {
             Vector3 lead = enemies[0].transform.position;
             Vector3 center = (player.transform.position + lead) * 0.5f;
-            float half = battleDistance * 0.5f;
+            // Big enemies (giant, boss) stand a bit farther, and the camera opens a little more for them.
+            float bigness = Mathf.Max(0f, enemies[0].Data.bodyRadius - 0.5f);
+            float half = battleDistance * 0.5f + bigness * 0.5f;
+            float viewSize = combatOrthographicSize + bigness;
+
+            // The camera cannot go past the edge of the map: move the whole fight inside what it can show,
+            // so the player (and the dodge step to the left) never leaves the screen.
+            if (cameraFollow != null) center = cameraFollow.ClampForView(center, viewSize);
 
             player.Teleport(center + Vector3.left * half);
             player.Direction.Face(Vector2.right);
@@ -89,9 +96,10 @@ namespace TD_Game
             var cam = cameraFollow.GetComponent<Camera>();
             explorationSize = cam.orthographicSize;
             previousTarget = cameraFollow.Target;
-            focus.position = center;
+            // The camera looks a bit to the right of the fight, so both fighters sit left of the command menu.
+            focus.position = center + Vector3.right * 1.5f;
             cameraFollow.Follow(focus);
-            Zoom(cam, combatOrthographicSize);
+            Zoom(cam, viewSize);
         }
 
         /// <summary>Gives the camera back to the player. snap = jump instead of gliding (respawn).</summary>

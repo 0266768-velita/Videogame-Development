@@ -1,42 +1,80 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 namespace TD_Game.EditorTools
 {
     /// <summary>
-    /// Creates the scene MainMap from Adrián's map (the Tilemaps of TestLevel: left room, rock block with a corridor,
-    /// right room, ponds and pillars) and places the final content on it (task 4.3, difficulty curve):
-    ///   start (bottom-left) -> zone 1: wolves -> zone 2: witches (top of the left room)
-    ///   -> zone 3: the giant guarding the corridor -> right room: Quetzalcóatl (boss zone, the corridor closes behind you).
-    /// The positions are fields at the top of this file, so they are easy to move when Adrián enlarges the map.
-    /// It never overwrites MainMap: delete it to rebuild. Menu: TD_Game > Build Main Map (Adrian's map).
+    /// Creates MainMap in the style of Adrián's map (same tiles: grass, dirt, stone, water, pillars) but bigger
+    /// (88 x 40 tiles, 5 rooms) and darker, and places everything on it:
+    ///   room A (start, zone 1: wolves) -> room B (zone 2: witches, the potion SHOP) -> room C and room D
+    ///   (zone 3: giants) -> room E (Quetzalcóatl; the corridor closes behind you).
+    /// Also adds the minimap, the gold counter, gore, Tlahuelli's torch and the darkness around the light.
+    /// The tiles are painted once here and then the scene is a normal Tilemap scene: Adrián can repaint it
+    /// with the Tile Palette. It never overwrites MainMap: delete it to rebuild.
+    /// Menu: TD_Game > Build Main Map (big, Adrian's style).
     /// </summary>
     public static class MainMapBuilder
     {
         public const string MainMapPath = "Assets/TD_Game/Scenes/Levels/MainMap.unity";
         const string TestLevelPath = "Assets/TD_Game/Scenes/Testing/TestLevel.unity";
         const string PrefabFolder = "Assets/TD_Game/Prefabs/Characters";
-        const string GateSprite = "Assets/TD_Game/Art/Tilesets/Placeholder/Textures/Square_64.png";
+        const string TileFolder = "Assets/TD_Game/Art/Tilesets/Placeholder/Tiles";
+        const string Textures = "Assets/TD_Game/Art/Tilesets/Placeholder/Textures";
 
-        // ---------------- Layout on Adrián's map (world units, 1 tile = 1 unit) ----------------
-        static readonly Vector2 PlayerStart = new Vector2(-12.5f, -7.5f);
+        // ---------------- Layout (cells; 1 tile = 1 unit) ----------------
+        static readonly RectInt MapArea = new RectInt(0, 0, 88, 40);
+        static readonly RectInt[] Floors =
+        {
+            new RectInt(1, 1, 24, 18),    // A  start, zone 1 (Territories of Tlaloc)
+            new RectInt(1, 21, 24, 18),   // B  zone 2 + merchant (Valley of Tlazolteotl)
+            new RectInt(27, 21, 30, 18),  // C  zone 3 (Valley of Serpents)
+            new RectInt(27, 1, 30, 18),   // D  zone 3 (Valley of Serpents)
+        };
+        static readonly RectInt Temple = new RectInt(59, 5, 28, 30);   // E  boss (Celestial Temple)
+        // The path of the player: start -> bridge A/B -> bridge B/C -> bridge C/D -> temple door.
+        static readonly Vector2Int[] PathPoints =
+        {
+            new Vector2Int(3, 3), new Vector2Int(11, 3), new Vector2Int(11, 30), new Vector2Int(41, 30),
+            new Vector2Int(41, 9), new Vector2Int(58, 9),
+        };
+        static readonly (Vector2 center, float radius)[] Ponds =
+        {
+            (new Vector2(6.5f, 11.5f), 2.3f), (new Vector2(18f, 27f), 2.6f), (new Vector2(48f, 34f), 2.4f), (new Vector2(33f, 7f), 2.2f),
+        };
+        static readonly Vector2Int[] Pits = { new Vector2Int(19, 6), new Vector2Int(4, 34), new Vector2Int(51, 11), new Vector2Int(36, 25) };
+        static readonly RectInt ShopArea = new RectInt(9, 31, 10, 8);
+
+        static readonly Vector2 PlayerStart = new Vector2(3.5f, 3.5f);
         static readonly (string prefab, Vector2 position)[] Enemies =
         {
-            ("Enemy_Wolf", new Vector2(-6.5f, -7.5f)),     // zone 1
-            ("Enemy_Wolf", new Vector2(-11.5f, -1.5f)),    // zone 1
-            ("Enemy_Witch", new Vector2(-11.5f, 5.5f)),    // zone 2
-            ("Enemy_Witch", new Vector2(-5.5f, 6.5f)),     // zone 2
-            ("Enemy_Giant", new Vector2(-2.5f, 0f)),       // zone 3: guards the corridor
+            ("Enemy_Wolf", new Vector2(9.5f, 8.5f)), ("Enemy_Wolf", new Vector2(18.5f, 13.5f)), ("Enemy_Wolf", new Vector2(5.5f, 16.5f)),   // zone 1
+            ("Enemy_Witch", new Vector2(5.5f, 26.5f)), ("Enemy_Witch", new Vector2(21.5f, 34.5f)), ("Enemy_Wolf", new Vector2(14.5f, 23.5f)), // zone 2
+            ("Enemy_Witch", new Vector2(32.5f, 33.5f)), ("Enemy_Giant", new Vector2(52.5f, 29.5f)), ("Enemy_Witch", new Vector2(49.5f, 23.5f)), // zone 3
+            ("Enemy_Giant", new Vector2(33.5f, 13.5f)), ("Enemy_Giant", new Vector2(47.5f, 5.5f)), ("Enemy_Wolf", new Vector2(53.5f, 15.5f)),  // zone 3
         };
-        static readonly Vector2 BossPosition = new Vector2(10.5f, 0f);
-        static readonly Vector2 ArenaTrigger = new Vector2(7.5f, -0.5f);   // a band across the right room
-        static readonly Vector2 ArenaTriggerSize = new Vector2(1f, 18f);
-        static readonly Vector2 GatePosition = new Vector2(5.5f, 0f);      // closes the corridor (cells y -1 and 0)
-        static readonly Vector2 GateSize = new Vector2(1f, 2f);
+        static readonly Vector2 ShopPosition = new Vector2(13.5f, 34.6f);   // tent against the forest at the north of room B
+        static readonly Vector2 KeyDoorPosition = new Vector2(58.5f, 10f);   // in the west wall of the temple
+        static readonly Vector2 BossPosition = new Vector2(78.5f, 20f);
+        static readonly Vector2 GatePosition = new Vector2(59.5f, 10f);      // closes behind you during the boss fight
+        static readonly Vector2 ArenaTrigger = new Vector2(62.5f, 20f);
+        static readonly Vector2 ArenaTriggerSize = new Vector2(1f, 28f);
+        const float ExplorationZoom = 6.75f;   // camera size: Tlahuelli small on screen, like the old Zelda / Pokemon
+        const float CombatZoom = 4.21875f;
+        static readonly (string title, string subtitle, RectInt area)[] Territories =   // names from the GDD
+        {
+            ("TERRITORIES OF TLÁLOC", "The rainforest of the rain god", new RectInt(1, 1, 24, 18)),
+            ("VALLEY OF TLAZOLTÉOTL", "Where the witches sing", new RectInt(1, 21, 24, 18)),
+            ("VALLEY OF SERPENTS", "Land of the Quinametzin giants", new RectInt(27, 1, 30, 38)),
+            ("CELESTIAL TEMPLE", "The house of Quetzalcóatl", new RectInt(59, 5, 28, 30)),
+        };
 
-        [MenuItem("TD_Game/Build Main Map (Adrian's map)")]
+        enum Kind { Forest, Floor, Path, Water, BridgeV, BridgeH, Rock, Pit, TempleFloor, TempleWall }
+
+        [MenuItem("TD_Game/Build Main Map (big, Adrian's style)")]
         public static void BuildFromMenu() => Build(FrontEndBuilder.EnsureAudioLibrary());
 
         public static void Build(AudioLibrary library)
@@ -44,64 +82,292 @@ namespace TD_Game.EditorTools
             if (System.IO.File.Exists(MainMapPath)) { Debug.Log("[TD_Game] MainMap already exists (delete it to rebuild)."); return; }
 
             FrontEndBuilder.EnsureFolder("Assets/TD_Game/Scenes/Levels");
-            AssetDatabase.CopyAsset(TestLevelPath, MainMapPath);
+            AssetDatabase.CopyAsset(TestLevelPath, MainMapPath);   // the systems (player, combat, HUD...) come from TestLevel
             var scene = EditorSceneManager.OpenScene(MainMapPath);
 
-            // Remove the test enemies (and any orb): the final ones are placed below.
-            foreach (var enemy in Object.FindObjectsByType<CombatEnemy>(FindObjectsInactive.Include))
-                Object.DestroyImmediate(enemy.gameObject);
-            foreach (var orb in Object.FindObjectsByType<SoulOrb>(FindObjectsInactive.Include))
-                Object.DestroyImmediate(orb.gameObject);
+            foreach (var enemy in Object.FindObjectsByType<CombatEnemy>(FindObjectsInactive.Include)) Object.DestroyImmediate(enemy.gameObject);
+            foreach (var orb in Object.FindObjectsByType<SoulOrb>(FindObjectsInactive.Include)) Object.DestroyImmediate(orb.gameObject);
 
-            AddWallCollisions();
-            PlacePlayer();
+            PaintMap();
+            var player = PlacePlayer();
             var parent = new GameObject("Enemies").transform;
             int i = 0;
             foreach (var (prefab, position) in Enemies) Spawn(prefab, position, parent, $"{prefab}_{++i}");
             BuildBossZone();
+            BuildTempleEntrance();
+            BuildKeyAndDoor();
+            var mapUI = BuildMapUI(player);
+            BuildShop(mapUI.shopPrompt);
+            BuildTerritoryHints(mapUI.zoneTitle);
+            AddGore();
+            AddDarkness();
+            SetZoomAndCombat();
             FrontEndBuilder.AddLevelServicesToOpenScene(library, MusicTrack.Explore);
 
             EditorSceneManager.SaveScene(scene);
-            Debug.Log("[TD_Game] MainMap built on Adrian's map.");
+            Debug.Log("[TD_Game] MainMap built (natural terrain).");
         }
 
-        /// <summary>The stone of the Walls tilemap blocks the player and the enemies.</summary>
-        static void AddWallCollisions()
+        // ---------------- Tiles: natural barriers (forest, rivers with bridges, rocks, pits) ----------------
+
+        static void PaintMap()
         {
+            Tilemap ground = null, walls = null, deco = null;
             foreach (var map in Object.FindObjectsByType<Tilemap>())
-                if (map.name == "Walls" && map.GetComponent<TilemapCollider2D>() == null)
-                    map.gameObject.AddComponent<TilemapCollider2D>();
+            {
+                if (map.name == "Ground") ground = map;
+                else if (map.name == "Walls") walls = map;
+                else if (map.name == "Decoration") deco = map;
+            }
+            ground.ClearAllTiles(); walls.ClearAllTiles(); deco.ClearAllTiles();
+            ground.color = Color.white; walls.color = Color.white; deco.color = Color.white;
+            var art = TerrainArt.Generate();
+            var k = Plan();
+
+            for (int x = 0; x < MapArea.width; x++)
+                for (int y = 0; y < MapArea.height; y++)
+                {
+                    var cell = new Vector3Int(x, y, 0);
+                    float n = PixelCanvas.Hash(x, y, 99);
+                    TileBase grass = n < 0.06f ? art.flowers : art.grass[(int)(n * 1000) % art.grass.Length];
+                    switch (k[x, y])
+                    {
+                        case Kind.Floor: ground.SetTile(cell, grass); break;
+                        case Kind.Path: ground.SetTile(cell, art.dirt); break;
+                        case Kind.BridgeV: ground.SetTile(cell, art.bridgeVertical); break;
+                        case Kind.BridgeH: ground.SetTile(cell, art.bridgeHorizontal); break;
+                        case Kind.TempleFloor: ground.SetTile(cell, art.templeFloor); break;
+                        case Kind.TempleWall: ground.SetTile(cell, art.templeFloor); walls.SetTile(cell, art.templeWall); break;
+                        case Kind.Water: ground.SetTile(cell, grass); walls.SetTile(cell, art.water[LandMask(k, x, y, Kind.Water)]); break;
+                        case Kind.Pit: ground.SetTile(cell, grass); walls.SetTile(cell, art.pits[LandMask(k, x, y, Kind.Pit)]); break;
+                        case Kind.Rock: ground.SetTile(cell, grass); walls.SetTile(cell, art.rocks[(int)(n * 100) % art.rocks.Length]); break;
+                        default:   // forest: trees (dead trees in the Valley of Serpents, the land of Mictlan)
+                            ground.SetTile(cell, grass);
+                            bool deadLand = x > 26 && n < 0.35f;
+                            walls.SetTile(cell, deadLand ? art.trees[2] : art.trees[(int)(n * 1000) % 2]);
+                            break;
+                    }
+                }
+            if (walls.GetComponent<TilemapCollider2D>() == null) walls.gameObject.AddComponent<TilemapCollider2D>();
         }
 
-        static void PlacePlayer()
+        /// <summary>Which sides of this water (or pit) cell touch land: decides the shape of the shore.</summary>
+        static int LandMask(Kind[,] k, int x, int y, Kind kind)
+        {
+            bool Land(int cx, int cy)
+            {
+                if (cx < 0 || cy < 0 || cx >= MapArea.width || cy >= MapArea.height) return false;
+                var other = k[cx, cy];
+                if (kind == Kind.Water && (other == Kind.BridgeV || other == Kind.BridgeH)) return false;   // the bridge is over water
+                return other != kind;
+            }
+            // North in the picture = up on the screen = y + 1 on the map.
+            return TerrainArt.Mask(Land(x, y + 1), Land(x + 1, y), Land(x, y - 1), Land(x - 1, y));
+        }
+
+        /// <summary>Decides what every cell of the map is. Simple rules, no randomness that can block the path.</summary>
+        static Kind[,] Plan()
+        {
+            int w = MapArea.width, h = MapArea.height;
+            var k = new Kind[w, h];   // everything starts as forest
+
+            // 1. Clearings (the 4 zones) with irregular forest edges.
+            foreach (var room in Floors)
+                foreach (var c in room.allPositionsWithin)
+                {
+                    int edge = Mathf.Min(Mathf.Min(c.x - room.xMin, room.xMax - 1 - c.x), Mathf.Min(c.y - room.yMin, room.yMax - 1 - c.y));
+                    if (edge > 0 || PixelCanvas.Hash(c.x, c.y, 5) > 0.45f) k[c.x, c.y] = Kind.Floor;
+                }
+
+            // 2. Rivers between the zones, with a bridge where the path crosses.
+            for (int x = 1; x < 57; x++)
+                for (int y = 19; y <= 20; y++)
+                    if (x < 25 || x > 26) k[x, y] = Kind.Water;                                 // river A|B and C|D
+            for (int y = 21; y < 39; y++) for (int x = 25; x <= 26; x++) k[x, y] = Kind.Water;   // river B|C
+            for (int x = 1; x < 57; x++)                                                         // the river meanders a little
+                if (x < 24 || x > 27)
+                {
+                    if (PixelCanvas.Hash(x, 0, 21) > 0.65f && k[x, 18] == Kind.Floor) k[x, 18] = Kind.Water;
+                    if (PixelCanvas.Hash(x, 1, 21) > 0.65f && k[x, 21] == Kind.Floor) k[x, 21] = Kind.Water;
+                }
+            for (int y = 18; y <= 21; y++) { k[11, y] = Kind.BridgeV; k[12, y] = Kind.BridgeV; k[41, y] = Kind.BridgeV; k[42, y] = Kind.BridgeV; }
+            for (int x = 24; x <= 27; x++) { k[x, 30] = Kind.BridgeH; k[x, 31] = Kind.BridgeH; }
+
+            // 3. A ridge of rocks between A and D (you cannot skip the zones).
+            for (int y = 1; y < 19; y++) for (int x = 25; x <= 26; x++) k[x, y] = PixelCanvas.Hash(x, y, 8) < 0.6f ? Kind.Rock : Kind.Forest;
+
+            // 4. The temple: stone floor surrounded by temple walls, with a door on the west side.
+            foreach (var c in Temple.allPositionsWithin) k[c.x, c.y] = Kind.TempleFloor;
+            for (int x = Temple.xMin - 1; x <= Temple.xMax; x++) { k[x, Temple.yMin - 1] = Kind.TempleWall; k[x, Temple.yMax] = Kind.TempleWall; }
+            for (int y = Temple.yMin - 1; y <= Temple.yMax; y++) { k[Temple.xMin - 1, y] = Kind.TempleWall; if (Temple.xMax < w) k[Temple.xMax, y] = Kind.TempleWall; }
+            for (int y = 9; y <= 10; y++) { k[57, y] = Kind.Path; k[58, y] = Kind.TempleFloor; }
+
+            // 5. Ponds (round) and pits.
+            foreach (var (center, radius) in Ponds)
+                for (int x = (int)(center.x - radius - 1); x <= center.x + radius + 1; x++)
+                    for (int y = (int)(center.y - radius - 1); y <= center.y + radius + 1; y++)
+                        if (Inside(x, y) && k[x, y] == Kind.Floor && Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), center) <= radius)
+                            k[x, y] = Kind.Water;
+            foreach (var p in Pits)
+                for (int x = p.x; x < p.x + 3; x++)
+                    for (int y = p.y; y < p.y + 2; y++)
+                        if (Inside(x, y) && k[x, y] == Kind.Floor && !(x == p.x + 2 && y == p.y + 1)) k[x, y] = Kind.Pit;
+
+            // 6. The dirt path (always free) and the protected places (enemies, shop, start).
+            var free = new bool[w, h];
+            for (int i = 0; i + 1 < PathPoints.Length; i++)
+            {
+                var a = PathPoints[i]; var b = PathPoints[i + 1];
+                for (int x = Mathf.Min(a.x, b.x); x <= Mathf.Max(a.x, b.x) + 1; x++)
+                    for (int y = Mathf.Min(a.y, b.y); y <= Mathf.Max(a.y, b.y) + 1; y++)
+                    {
+                        if (!Inside(x, y)) continue;
+                        if (k[x, y] == Kind.Floor || k[x, y] == Kind.Forest || k[x, y] == Kind.Pit) k[x, y] = Kind.Path;
+                        for (int dx = -2; dx <= 2; dx++) for (int dy = -2; dy <= 2; dy++) if (Inside(x + dx, y + dy)) free[x + dx, y + dy] = true;
+                    }
+            }
+            foreach (var c in ShopArea.allPositionsWithin) { k[c.x, c.y] = Kind.Floor; free[c.x, c.y] = true; }
+            foreach (var (_, position) in Enemies) Protect(free, position, 2);
+            Protect(free, PlayerStart, 2);
+
+            // 7. Lonely trees and rocks inside the clearings (never on the path or next to an enemy).
+            for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
+                {
+                    if (k[x, y] != Kind.Floor || free[x, y]) continue;
+                    float n = PixelCanvas.Hash(x, y, 77);
+                    if (n < 0.045f) k[x, y] = Kind.Forest;
+                    else if (n < 0.065f) k[x, y] = Kind.Rock;
+                }
+            return k;
+        }
+
+        static bool Inside(int x, int y) => x >= 0 && y >= 0 && x < MapArea.width && y < MapArea.height;
+
+        static void Protect(bool[,] free, Vector2 position, int radius)
+        {
+            for (int dx = -radius; dx <= radius; dx++)
+                for (int dy = -radius; dy <= radius; dy++)
+                {
+                    int x = (int)position.x + dx, y = (int)position.y + dy;
+                    if (Inside(x, y)) free[x, y] = true;
+                }
+        }
+
+        // ---------------- Player with torch ----------------
+
+        static PlayerCombatant PlacePlayer()
         {
             var player = Object.FindAnyObjectByType<PlayerCombatant>();
-            if (player == null) return;
             player.transform.position = PlayerStart;
-            // Tlahuelli with the pixel art of Mictlán v5.
-            var visual = player.transform.Find("Visual");
-            var frames = LegacyArtImporter.Frames("tlahuelli");
-            if (visual != null && frames.Length > 0)
-            {
-                var sr = visual.GetComponent<SpriteRenderer>();
-                sr.sprite = frames[0];
-                sr.color = Color.white;
-            }
+            SetupPlayerVisual(player.gameObject);
             var camera = Object.FindAnyObjectByType<Camera>();
-            if (camera != null) camera.transform.position = new Vector3(PlayerStart.x, PlayerStart.y, camera.transform.position.z);
+            camera.transform.position = new Vector3(PlayerStart.x, PlayerStart.y, camera.transform.position.z);
+            camera.backgroundColor = Color.black;
+            return player;
         }
+
+        /// <summary>
+        /// Tlahuelli with the pixel art of Mictlán v5, animated in 4 directions (PlayerSpriteAnimator),
+        /// a torch in the left hand and the Macuahuitl in the right hand (it swings when attacking).
+        /// Used for the player of MainMap and for Player.prefab.
+        /// </summary>
+        public static void SetupPlayerVisual(GameObject player)
+        {
+            var visual = player.transform.Find("Visual");
+            if (visual == null) return;
+            var sr = visual.GetComponent<SpriteRenderer>();
+            var down = LegacyArtImporter.Frames("tlahuelli", 0);
+            if (down.Length == 0) return;
+            sr.sprite = down[0];
+            sr.color = Color.white;
+
+            var torch = AddTorch(visual);
+            var weapon = AddMacuahuitl(visual);
+
+            var animator = player.GetComponent<PlayerSpriteAnimator>();
+            if (animator == null) animator = player.AddComponent<PlayerSpriteAnimator>();
+            var so = new SerializedObject(animator);
+            so.FindProperty("sprite").objectReferenceValue = sr;
+            SetArray(so.FindProperty("walkDown"), down);
+            SetArray(so.FindProperty("walkUp"), LegacyArtImporter.Frames("tlahuelli", 1));
+            SetArray(so.FindProperty("walkSide"), LegacyArtImporter.Frames("tlahuelli", 2));
+            so.FindProperty("torch").objectReferenceValue = torch;
+            so.FindProperty("torchFlame").objectReferenceValue = torch.GetComponent<SpriteRenderer>();
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static void SetArray(SerializedProperty list, Object[] items)
+        {
+            list.arraySize = items.Length;
+            for (int i = 0; i < items.Length; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = items[i];
+        }
+
+        /// <summary>A burning torch in the LEFT hand (x below 0): two flame frames + a warm glow.</summary>
+        public static Transform AddTorch(Transform holder, float x = -0.42f)
+        {
+            var old = holder.Find("Torch");
+            if (old != null) Object.DestroyImmediate(old.gameObject, true);   // rebuild it with the current settings
+            var torch = new GameObject("Torch");
+            torch.transform.SetParent(holder, false);
+            torch.transform.localPosition = new Vector3(x, 0.3f, 0f);
+            var flame = torch.AddComponent<SpriteRenderer>();
+            flame.sprite = ArtGenerator.Effect("torch_0");
+            flame.sortingOrder = 1;
+            torch.AddComponent<SpriteFlipbook>().Setup(new[] { ArtGenerator.Effect("torch_0"), ArtGenerator.Effect("torch_1") }, 0.15f);
+
+            var glow = new GameObject("Glow");
+            glow.transform.SetParent(torch.transform, false);
+            glow.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+            glow.transform.localScale = Vector3.one * 1.6f;
+            var light = glow.AddComponent<SpriteRenderer>();
+            light.sprite = ArtGenerator.Effect("glow");
+            light.color = new Color(1f, 0.55f, 0.2f, 0.35f);
+            light.sortingOrder = 501;   // above the darkness: warm light around the flame
+            glow.AddComponent<SpriteFlipbook>().Setup(null, 1f, 0.06f);
+            return torch.transform;
+        }
+
+        /// <summary>The Macuahuitl in the RIGHT hand, resting on the shoulder; MacuahuitlSwing animates the attack.</summary>
+        static Transform AddMacuahuitl(Transform visual)
+        {
+            var old = visual.Find("Macuahuitl");
+            if (old != null) Object.DestroyImmediate(old.gameObject, true);
+            var weapon = new GameObject("Macuahuitl");
+            weapon.transform.SetParent(visual, false);
+            weapon.transform.localPosition = new Vector3(0.15f, 0.45f, 0f);   // the front hand (battle: looking right)
+            var sr = weapon.AddComponent<SpriteRenderer>();
+            sr.sprite = ArtGenerator.Effect("macuahuitl");
+            sr.sortingOrder = 2;
+            weapon.AddComponent<MacuahuitlSwing>();
+            return weapon.transform;
+        }
+
+        /// <summary>The night: a big black sprite with a soft hole, glued to the camera.</summary>
+        static void AddDarkness()
+        {
+            var camera = Object.FindAnyObjectByType<Camera>();
+            var dark = new GameObject("Darkness");
+            dark.layer = LayerMask.NameToLayer("TransparentFX");   // the minimap does not draw it
+            dark.transform.SetParent(camera.transform, false);
+            dark.transform.localPosition = new Vector3(0f, 0f, 10f);
+            dark.transform.localScale = Vector3.one * 2.6f;
+            var sr = dark.AddComponent<SpriteRenderer>();
+            sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(ArtGenerator.DarknessPath);
+            sr.sortingOrder = 500;
+        }
+
+        // ---------------- Enemies and boss ----------------
 
         static CombatEnemy Spawn(string prefabName, Vector2 position, Transform parent, string name)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabFolder}/{prefabName}.prefab");
-            if (prefab == null) { Debug.LogError("[TD_Game] Missing prefab " + prefabName); return null; }
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             go.name = name;
             go.transform.position = position;
             return go.GetComponent<CombatEnemy>();
         }
 
-        /// <summary>Right room: Quetzalcóatl. Walking in closes the corridor until the fight ends (task 4.7).</summary>
         static void BuildBossZone()
         {
             var zone = new GameObject("BossZone").transform;
@@ -109,12 +375,13 @@ namespace TD_Game.EditorTools
 
             var gate = new GameObject("BossGate");
             gate.transform.SetParent(zone, false);
-            gate.transform.position = GatePosition;
-            gate.transform.localScale = new Vector3(GateSize.x, GateSize.y, 1f);   // the square sprite is 1 x 1 tile
+            gate.transform.position = GatePosition + new Vector2(0f, -1f);   // the sprite stands on its bottom
             var sprite = gate.AddComponent<SpriteRenderer>();
-            sprite.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(GateSprite);
-            sprite.color = MexicaPalette.Cinnabar;
-            gate.AddComponent<BoxCollider2D>();
+            sprite.sprite = PropArt.Sprite("temple_gate_closed");
+            sprite.spriteSortPoint = SpriteSortPoint.Pivot;
+            var gateBox = gate.AddComponent<BoxCollider2D>();
+            gateBox.size = new Vector2(1f, 2f);
+            gateBox.offset = new Vector2(0f, 1f);
 
             var arena = new GameObject("BossArena");
             arena.transform.SetParent(zone, false);
@@ -122,12 +389,318 @@ namespace TD_Game.EditorTools
             var box = arena.AddComponent<BoxCollider2D>();
             box.isTrigger = true;
             box.size = ArenaTriggerSize;
-            var bossArena = arena.AddComponent<BossArena>();
-            var so = new SerializedObject(bossArena);
+            var so = new SerializedObject(arena.AddComponent<BossArena>());
             so.FindProperty("boss").objectReferenceValue = boss;
             var gates = so.FindProperty("gates");
             gates.arraySize = 1;
             gates.GetArrayElementAtIndex(0).objectReferenceValue = gate;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        // ---------------- Shop ----------------
+
+        /// <summary>The merchant's tent against the forest: back cloth and shelves, the hooded merchant, and the counter.</summary>
+        static void BuildShop(Text prompt)
+        {
+            var shop = new GameObject("Merchant (Shop)");
+            shop.transform.position = ShopPosition;
+
+            // The three layers of the tent are ordered inside a SortingGroup: back, merchant, front.
+            var tent = new GameObject("Tent");
+            tent.transform.SetParent(shop.transform, false);
+            tent.AddComponent<UnityEngine.Rendering.SortingGroup>();
+            Layer(tent.transform, "TentBack", PropArt.Sprite("tent_back"), Vector3.zero, 0);
+            var merchant = Layer(tent.transform, "Merchant", PropArt.Sprite("merchant"), new Vector3(0f, 1.3f, 0f), 1);
+            merchant.gameObject.AddComponent<SpriteFlipbook>().Setup(null, 1f, 0.02f);   // breathes slowly
+            Layer(tent.transform, "TentFront", PropArt.Sprite("tent_front"), Vector3.zero, 2);
+
+            // Solid parts: the counter and the back of the tent.
+            var counter = shop.AddComponent<BoxCollider2D>();
+            counter.offset = new Vector2(0f, 0.85f);
+            counter.size = new Vector2(3.4f, 0.9f);
+            var back = shop.AddComponent<BoxCollider2D>();
+            back.offset = new Vector2(0f, 2.5f);
+            back.size = new Vector2(4.6f, 2.2f);
+
+            // Warm light of the two lanterns (outside the SortingGroup, above the darkness).
+            foreach (float x in new[] { -1.4f, 1.4f }) Glow(shop.transform, new Vector3(x, 2.2f, 0f), 2.2f, new Color(1f, 0.7f, 0.3f, 0.4f));
+
+            // Where the player stands to talk (in front of the counter).
+            var front = new GameObject("TalkArea");
+            front.transform.SetParent(shop.transform, false);
+            front.transform.localPosition = new Vector3(0f, -0.3f, 0f);
+            var area = front.AddComponent<BoxCollider2D>();
+            area.isTrigger = true;
+            area.size = new Vector2(3.6f, 1.4f);
+            var so = new SerializedObject(front.AddComponent<MerchantShop>());
+            so.FindProperty("promptText").objectReferenceValue = prompt;
+            so.FindProperty("menuFont").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Font>(ArtGenerator.FontPath);
+            so.FindProperty("artifact").objectReferenceValue = FrontEndBuilder.EnsureArtifact();
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static SpriteRenderer Layer(Transform parent, string name, Sprite sprite, Vector3 position, int order)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = position;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = order;
+            return sr;
+        }
+
+        static void Glow(Transform parent, Vector3 position, float size, Color color)
+        {
+            var glow = new GameObject("Glow");
+            glow.transform.SetParent(parent, false);
+            glow.transform.localPosition = position;
+            glow.transform.localScale = Vector3.one * size;
+            var sr = glow.AddComponent<SpriteRenderer>();
+            sr.sprite = ArtGenerator.Effect("glow");
+            sr.color = color;
+            sr.sortingOrder = 501;   // above the darkness
+            glow.AddComponent<SpriteFlipbook>().Setup(null, 1f, 0.06f);
+        }
+
+        // ---------------- Entrance of the Celestial Temple ----------------
+
+        /// <summary>Feathered-serpent heads guard the obsidian door, with braziers burning on both sides.</summary>
+        static void BuildTempleEntrance()
+        {
+            var parent = new GameObject("TempleEntrance").transform;
+            var door = KeyDoorPosition;
+            Prop(parent, "SerpentHead_North", PropArt.Sprite("serpent_head"), new Vector2(door.x - 1.6f, door.y + 1.4f), false);
+            Prop(parent, "SerpentHead_South", PropArt.Sprite("serpent_head"), new Vector2(door.x - 1.6f, door.y - 2.6f), false);
+            foreach (var p in new[]
+                     {
+                         new Vector2(door.x - 3.2f, door.y + 1.6f), new Vector2(door.x - 3.2f, door.y - 2.4f),   // outside the door
+                         new Vector2(64f, 12.5f), new Vector2(64f, 7f), new Vector2(72f, 12.5f), new Vector2(72f, 7f),   // the aisle inside
+                         new Vector2(75f, 26f), new Vector2(82f, 26f), new Vector2(75f, 14f), new Vector2(82f, 14f),     // around the boss
+                     })
+            {
+                var brazier = Prop(parent, "Brazier", PropArt.Sprite("brazier_0"), p, true);
+                brazier.gameObject.AddComponent<SpriteFlipbook>().Setup(new[] { PropArt.Sprite("brazier_0"), PropArt.Sprite("brazier_1") }, 0.2f);
+                Glow(brazier.transform, new Vector3(0f, 0.8f, 0f), 2.6f, new Color(1f, 0.55f, 0.2f, 0.4f));
+            }
+        }
+
+        static SpriteRenderer Prop(Transform parent, string name, Sprite sprite, Vector2 position, bool solid)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.position = position;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.spriteSortPoint = SpriteSortPoint.Pivot;
+            var box = go.AddComponent<BoxCollider2D>();   // statues and braziers cannot be walked through
+            box.size = solid ? new Vector2(0.6f, 0.4f) : new Vector2(1.2f, 0.6f);
+            box.offset = new Vector2(0f, box.size.y / 2f);
+            return sr;
+        }
+
+        // ---------------- Obsidian key and the sealed door ----------------
+
+        static void BuildKeyAndDoor()
+        {
+            var key = new GameObject("ObsidianKey");
+            var keySprite = key.AddComponent<SpriteRenderer>();
+            keySprite.sprite = ArtGenerator.Effect("key");
+            keySprite.sortingOrder = 3;
+            var pickup = key.AddComponent<CircleCollider2D>();
+            pickup.isTrigger = true;
+            pickup.radius = 0.6f;
+            var k = new SerializedObject(key.AddComponent<ObsidianKey>());
+            k.FindProperty("sprite").objectReferenceValue = keySprite;
+            k.FindProperty("pickupArea").objectReferenceValue = pickup;
+            k.ApplyModifiedPropertiesWithoutUndo();
+
+            var door = new GameObject("ObsidianDoor");
+            door.transform.position = KeyDoorPosition + new Vector2(0f, -1f);   // the sprite stands on its bottom
+            var doorSprite = door.AddComponent<SpriteRenderer>();
+            doorSprite.sprite = PropArt.Sprite("temple_gate_closed");
+            doorSprite.spriteSortPoint = SpriteSortPoint.Pivot;
+            var blocker = door.AddComponent<BoxCollider2D>();
+            blocker.size = new Vector2(1f, 2f);
+            blocker.offset = new Vector2(0f, 1f);
+            var d = new SerializedObject(door.AddComponent<KeyDoor>());
+            d.FindProperty("sprite").objectReferenceValue = doorSprite;
+            d.FindProperty("closedSprite").objectReferenceValue = PropArt.Sprite("temple_gate_closed");
+            d.FindProperty("openSprite").objectReferenceValue = PropArt.Sprite("temple_gate_open");
+            d.FindProperty("blocker").objectReferenceValue = blocker;
+            d.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        // ---------------- Territory names (GDD) ----------------
+
+        static void BuildTerritoryHints(ZoneTitleCard card)
+        {
+            var parent = new GameObject("Territories").transform;
+            foreach (var (title, subtitle, area) in Territories)
+            {
+                var zone = new GameObject("Zone_" + title);
+                zone.transform.SetParent(parent, false);
+                zone.transform.position = new Vector3(area.x + area.width / 2f, area.y + area.height / 2f, 0f);
+                var box = zone.AddComponent<BoxCollider2D>();
+                box.isTrigger = true;
+                box.size = new Vector2(area.width - 2, area.height - 2);
+                var so = new SerializedObject(zone.AddComponent<ZoneArea>());
+                so.FindProperty("zoneName").stringValue = title;
+                so.FindProperty("subtitle").stringValue = subtitle;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        // ---------------- Camera: less zoom; combat HUD with the artifact row ----------------
+
+        static void SetZoomAndCombat()
+        {
+            var camera = Object.FindAnyObjectByType<Camera>();
+            camera.orthographicSize = ExplorationZoom;
+            var a = new SerializedObject(Object.FindAnyObjectByType<CombatArena>());
+            a.FindProperty("combatOrthographicSize").floatValue = CombatZoom;
+            a.ApplyModifiedPropertiesWithoutUndo();
+
+            // Artifact slot (key 6) and every ability known by the save.
+            var t = new SerializedObject(Object.FindAnyObjectByType<PlayerTurn>());
+            t.FindProperty("artifact").objectReferenceValue = FrontEndBuilder.EnsureArtifact();
+            t.ApplyModifiedPropertiesWithoutUndo();
+            FrontEndBuilder.RefreshSaveAbilities();
+
+            // The tips box goes at the top centre, between the life bars (left) and the minimap (right).
+            var hint = GameObject.Find("TutorialHint");
+            if (hint != null)
+            {
+                var rect = (RectTransform)hint.transform;
+                rect.anchoredPosition = new Vector2(0f, -10f);
+                rect.sizeDelta = new Vector2(460f, 70f);
+            }
+
+            // Rebuild the combat HUD so it has the 6th command row.
+            var hud = GameObject.Find("CombatHUD");
+            if (hud != null) Object.DestroyImmediate(hud);
+            CombatHUDBuilder.Build();
+        }
+
+        // ---------------- Minimap, gold and shop text ----------------
+
+        static (Text shopPrompt, ZoneTitleCard zoneTitle) BuildMapUI(PlayerCombatant player)
+        {
+            var font = AssetDatabase.LoadAssetAtPath<Font>(ArtGenerator.FontPath);
+            var frame = AssetDatabase.LoadAssetAtPath<Sprite>(ArtGenerator.FramePath);
+            var canvasGo = new GameObject("MapUI", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+            canvasGo.layer = LayerMask.NameToLayer("UI");
+            var canvas = canvasGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 5;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(960, 540);
+            scaler.matchWidthOrHeight = 1f;
+            var root = canvasGo.transform;
+
+            // Minimap (top left, under the life bars)
+            var mapFrame = Box("Minimap", root, frame, new Vector2(1, 1), new Vector2(-10, -50), new Vector2(208, 100));
+            var group = mapFrame.gameObject.AddComponent<CanvasGroup>();
+            var image = new GameObject("Map", typeof(RectTransform)).AddComponent<RawImage>();
+            image.transform.SetParent(mapFrame, false);
+            image.rectTransform.sizeDelta = new Vector2(192, 87);
+            var dot = new GameObject("PlayerArrow", typeof(RectTransform)).AddComponent<Image>();
+            dot.transform.SetParent(image.transform, false);
+            dot.rectTransform.sizeDelta = new Vector2(13, 13);
+            dot.sprite = PropArt.Sprite("map_arrow");   // turns with the direction Tlahuelli is looking
+            var minimap = mapFrame.gameObject.AddComponent<Minimap>();
+            var mm = new SerializedObject(minimap);
+            mm.FindProperty("player").objectReferenceValue = player.transform;
+            mm.FindProperty("mapImage").objectReferenceValue = image;
+            mm.FindProperty("playerDot").objectReferenceValue = dot.rectTransform;
+            mm.FindProperty("group").objectReferenceValue = group;
+            mm.ApplyModifiedPropertiesWithoutUndo();
+
+            // Gold counter (under the minimap)
+            var goldBox = Box("Gold", root, frame, new Vector2(1, 1), new Vector2(-10, -10), new Vector2(208, 34));
+            var goldText = Label(goldBox, font, "GOLD  0", 16, MexicaPalette.AgedGold);
+            var gold = goldBox.gameObject.AddComponent<GoldCounter>();
+            var g = new SerializedObject(gold);
+            g.FindProperty("player").objectReferenceValue = player.GetComponent<PlayerProgression>();
+            g.FindProperty("label").objectReferenceValue = goldText;
+            g.ApplyModifiedPropertiesWithoutUndo();
+
+            // Shop message (bottom centre), hidden until you stand at the shop
+            var shopBox = Box("ShopPrompt", root, frame, new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(460, 34));
+            var shopText = Label(shopBox, font, "", 17, MexicaPalette.Bone);
+
+            // Zone title (big, in the upper middle of the screen, like GTA)
+            var titleRoot = new GameObject("ZoneTitle", typeof(RectTransform));
+            titleRoot.layer = LayerMask.NameToLayer("UI");
+            var titleRect = (RectTransform)titleRoot.transform;
+            titleRect.SetParent(root, false);
+            titleRect.anchorMin = titleRect.anchorMax = titleRect.pivot = new Vector2(0.5f, 0.5f);
+            titleRect.anchoredPosition = new Vector2(0f, 120f);
+            titleRect.sizeDelta = new Vector2(700f, 110f);
+            var titleGroup = titleRoot.AddComponent<CanvasGroup>();
+            var big = Label(titleRect, font, "", 46, MexicaPalette.Bone);
+            big.rectTransform.offsetMin = new Vector2(0f, 35f);
+            var shadow = big.gameObject.AddComponent<Outline>();
+            shadow.effectColor = Color.black;
+            shadow.effectDistance = new Vector2(2f, -2f);
+            var small = Label(titleRect, font, "", 20, MexicaPalette.AgedGold);
+            small.rectTransform.offsetMax = new Vector2(0f, -70f);
+            small.gameObject.AddComponent<Outline>().effectColor = Color.black;
+            var card = titleRoot.AddComponent<ZoneTitleCard>();
+            var z = new SerializedObject(card);
+            z.FindProperty("group").objectReferenceValue = titleGroup;
+            z.FindProperty("title").objectReferenceValue = big;
+            z.FindProperty("subtitle").objectReferenceValue = small;
+            z.ApplyModifiedPropertiesWithoutUndo();
+            return (shopText, card);
+        }
+
+        static RectTransform Box(string name, Transform parent, Sprite frame, Vector2 anchor, Vector2 position, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.layer = LayerMask.NameToLayer("UI");
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(parent, false);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(anchor.x, anchor.y == 0 ? 0 : 1);
+            if (anchor.x == 0.5f) rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            var image = go.AddComponent<Image>();
+            image.sprite = frame;
+            image.type = Image.Type.Sliced;
+            image.pixelsPerUnitMultiplier = 3f;   // thin border for small boxes
+            image.raycastTarget = false;
+            return rect;
+        }
+
+        static Text Label(RectTransform parent, Font font, string text, int size, Color color)
+        {
+            var t = new GameObject("Text", typeof(RectTransform)).AddComponent<Text>();
+            t.transform.SetParent(parent, false);
+            t.rectTransform.anchorMin = Vector2.zero; t.rectTransform.anchorMax = Vector2.one;
+            t.rectTransform.offsetMin = t.rectTransform.offsetMax = Vector2.zero;
+            t.font = font; t.fontSize = size; t.color = color; t.text = text;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.raycastTarget = false;
+            return t;
+        }
+
+        // ---------------- Gore ----------------
+
+        static void AddGore()
+        {
+            var gore = new GameObject("GoreEffects").AddComponent<GoreEffects>();
+            var so = new SerializedObject(gore);
+            var blood = so.FindProperty("bloodStains");
+            blood.arraySize = 6;
+            for (int i = 0; i < 6; i++) blood.GetArrayElementAtIndex(i).objectReferenceValue = ArtGenerator.Effect($"blood_{i}");
+            var gibs = so.FindProperty("gibs");
+            gibs.arraySize = 12;
+            int n = 0;
+            for (int a = 0; a < 4; a++)
+                for (int b = 0; b < 3; b++)
+                    gibs.GetArrayElementAtIndex(n++).objectReferenceValue = ArtGenerator.Effect($"gib_{a}_{b}");
             so.ApplyModifiedPropertiesWithoutUndo();
         }
     }
