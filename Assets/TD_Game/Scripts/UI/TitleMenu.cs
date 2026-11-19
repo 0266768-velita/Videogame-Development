@@ -44,7 +44,7 @@ namespace TD_Game
         GameObject menuPanel, optionsPanel, creditsPanel;
         Text pressStart;
         RawImage backgroundImage;
-        Button startButton, continueButton, masterButton, musicButton, sfxButton, fullscreenButton, goreButton;
+        Button startButton, continueButton, masterButton, musicButton, sfxButton, fullscreenButton, goreButton, controllerButton;
 
         void Start()
         {
@@ -160,7 +160,8 @@ namespace TD_Game
             sfxButton = MenuWidgets.Button(t, "", new Vector2(0, -160), size, () => { GameAudio.SfxVolume = Cycle(GameAudio.SfxVolume); Refresh(); }, 28);
             fullscreenButton = MenuWidgets.Button(t, "", new Vector2(0, -230), size, ToggleFullscreen, 28);
             goreButton = MenuWidgets.Button(t, "", new Vector2(0, -300), size, () => { GoreEffects.Enabled = !GoreEffects.Enabled; Refresh(); }, 28);
-            MenuWidgets.Button(t, "Back", new Vector2(0, -380), size, ShowMenu, 28);
+            controllerButton = MenuWidgets.Button(t, "", new Vector2(0, -370), size, () => { InputPrompts.GamepadEnabled = !InputPrompts.GamepadEnabled; Refresh(); }, 28);
+            MenuWidgets.Button(t, "Back", new Vector2(0, -440), size, ShowMenu, 28);
             Refresh();
         }
 
@@ -335,6 +336,7 @@ namespace TD_Game
             MenuWidgets.SetLabel(sfxButton, $"Effects Volume: {Mathf.RoundToInt(GameAudio.SfxVolume * 100f)}%");
             MenuWidgets.SetLabel(fullscreenButton, "Fullscreen: " + (Screen.fullScreen ? "On" : "Off"));
             MenuWidgets.SetLabel(goreButton, "Gore (17+): " + (GoreEffects.Enabled ? "On" : "Off"));
+            MenuWidgets.SetLabel(controllerButton, "Controller buttons: " + (!InputPrompts.GamepadEnabled ? "Off (keyboard)" : UnityEngine.InputSystem.Gamepad.current != null ? "On (Xbox)" : "On (no controller found)"));
         }
     }
 }

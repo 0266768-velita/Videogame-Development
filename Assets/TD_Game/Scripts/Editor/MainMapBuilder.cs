@@ -47,6 +47,7 @@ namespace TD_Game.EditorTools
         };
         static readonly Vector2Int[] Pits = { new Vector2Int(19, 6), new Vector2Int(4, 34), new Vector2Int(51, 11), new Vector2Int(36, 25) };
         static readonly RectInt ShopArea = new RectInt(9, 31, 10, 8);
+        static readonly RectInt PuzzleArea = new RectInt(29, 32, 12, 6);   // shrine of the four fires (room C)
 
         static readonly Vector2 PlayerStart = new Vector2(3.5f, 3.5f);
         static readonly (string prefab, Vector2 position)[] Enemies =
@@ -92,13 +93,24 @@ namespace TD_Game.EditorTools
             var player = PlacePlayer();
             var parent = new GameObject("Enemies").transform;
             int i = 0;
-            foreach (var (prefab, position) in Enemies) Spawn(prefab, position, parent, $"{prefab}_{++i}");
+            foreach (var (prefab, position) in Enemies)
+            {
+                var enemy = Spawn(prefab, position, parent, $"{prefab}_{++i}");
+                // Progressive difficulty: the deeper the zone, the stronger (more health and damage).
+                float strength = i <= 3 ? 1.2f : i <= 6 ? 1.6f : 2f;
+                var e = new SerializedObject(enemy);
+                e.FindProperty("strength").floatValue = strength;
+                e.ApplyModifiedPropertiesWithoutUndo();
+            }
             BuildBossZone();
             BuildTempleEntrance();
+            BuildTempleDecor();
             BuildKeyAndDoor();
             var mapUI = BuildMapUI(player);
             BuildShop(mapUI.shopPrompt);
             BuildTerritoryHints(mapUI.zoneTitle);
+            BuildPuzzle(mapUI.shopPrompt);
+            new GameObject("ClickToTarget").AddComponent<ClickToTarget>();
             AddGore();
             AddDarkness();
             SetZoomAndCombat();
@@ -129,7 +141,9 @@ namespace TD_Game.EditorTools
                 {
                     var cell = new Vector3Int(x, y, 0);
                     float n = PixelCanvas.Hash(x, y, 99);
-                    TileBase grass = n < 0.06f ? art.flowers : art.grass[(int)(n * 1000) % art.grass.Length];
+                    TileBase grass = n < 0.06f ? art.flowers
+                        : (art.velyGrass != null && PixelCanvas.Hash(x, y, 123) < 0.5f) ? art.velyGrass   // half the grass is Vely's
+                        : art.grass[(int)(n * 1000) % art.grass.Length];
                     switch (k[x, y])
                     {
                         case Kind.Floor: ground.SetTile(cell, grass); break;
@@ -144,7 +158,8 @@ namespace TD_Game.EditorTools
                         default:   // forest: trees (dead trees in the Valley of Serpents, the land of Mictlan)
                             ground.SetTile(cell, grass);
                             bool deadLand = x > 26 && n < 0.35f;
-                            walls.SetTile(cell, deadLand ? art.trees[2] : art.trees[(int)(n * 1000) % 2]);
+                            bool velyTree = art.velyTrees != null && art.velyTrees[0] != null && PixelCanvas.Hash(x, y, 55) < 0.35f;   // a third of the trees are Vely's
+                            walls.SetTile(cell, deadLand ? art.trees[2] : velyTree ? art.velyTrees[(int)(n * 1000) % 2] : art.trees[(int)(n * 1000) % 2]);
                             break;
                     }
                 }
@@ -227,6 +242,7 @@ namespace TD_Game.EditorTools
                     }
             }
             foreach (var c in ShopArea.allPositionsWithin) { k[c.x, c.y] = Kind.Floor; free[c.x, c.y] = true; }
+            foreach (var c in PuzzleArea.allPositionsWithin) { k[c.x, c.y] = Kind.Floor; free[c.x, c.y] = true; }
             foreach (var (_, position) in Enemies) Protect(free, position, 2);
             Protect(free, PlayerStart, 2);
 
@@ -414,13 +430,10 @@ namespace TD_Game.EditorTools
             merchant.gameObject.AddComponent<SpriteFlipbook>().Setup(null, 1f, 0.02f);   // breathes slowly
             Layer(tent.transform, "TentFront", PropArt.Sprite("tent_front"), Vector3.zero, 2);
 
-            // Solid parts: the counter and the back of the tent.
-            var counter = shop.AddComponent<BoxCollider2D>();
-            counter.offset = new Vector2(0f, 0.85f);
-            counter.size = new Vector2(3.4f, 0.9f);
-            var back = shop.AddComponent<BoxCollider2D>();
-            back.offset = new Vector2(0f, 2.5f);
-            back.size = new Vector2(4.6f, 2.2f);
+            // Solid: the whole tent (crates, barrel, counter and cloth). Nobody walks through it, player or enemy.
+            var solid = shop.AddComponent<BoxCollider2D>();
+            solid.offset = new Vector2(0f, 2f);
+            solid.size = new Vector2(5f, 3.6f);
 
             // Warm light of the two lanterns (outside the SortingGroup, above the darkness).
             foreach (float x in new[] { -1.4f, 1.4f }) Glow(shop.transform, new Vector3(x, 2.2f, 0f), 2.2f, new Color(1f, 0.7f, 0.3f, 0.4f));
@@ -483,6 +496,47 @@ namespace TD_Game.EditorTools
                 brazier.gameObject.AddComponent<SpriteFlipbook>().Setup(new[] { PropArt.Sprite("brazier_0"), PropArt.Sprite("brazier_1") }, 0.2f);
                 Glow(brazier.transform, new Vector3(0f, 0.8f, 0f), 2.6f, new Color(1f, 0.55f, 0.2f, 0.4f));
             }
+        }
+
+        /// <summary>
+        /// The inside of the Celestial Temple: serpent columns along the aisle and the great hall, the idol of
+        /// Coatlicue behind Quetzalcoatl with a chacmool in front, tzompantli racks, banners and offerings.
+        /// Nothing is placed on the aisle (rows 8-12) or in the fighting area around the boss.
+        /// </summary>
+        static void BuildTempleDecor()
+        {
+            var parent = new GameObject("TempleDecor").transform;
+            foreach (var p in new[]
+                     {
+                         new Vector2(61.5f, 13.6f), new Vector2(67.5f, 13.6f), new Vector2(61.5f, 5.6f), new Vector2(67.5f, 5.6f),   // the aisle
+                         new Vector2(66.5f, 18f), new Vector2(66.5f, 24f), new Vector2(66.5f, 30f),                                   // the great hall
+                         new Vector2(86f, 30f), new Vector2(86f, 16f), new Vector2(72f, 32f), new Vector2(85f, 6f),
+                     })
+                Prop(parent, "SerpentColumn", PropArt.Sprite("temple_column"), p, true);
+
+            var idol = Prop(parent, "Idol_Coatlicue", PropArt.Sprite("temple_idol"), new Vector2(78.5f, 30.5f), false);
+            Glow(idol.transform, new Vector3(0f, 2.4f, 0f), 2f, new Color(0.3f, 0.9f, 0.6f, 0.25f));
+            Prop(parent, "Chacmool", PropArt.Sprite("chacmool"), new Vector2(78.5f, 28.2f), false);
+            Prop(parent, "Tzompantli", PropArt.Sprite("tzompantli"), new Vector2(61.8f, 28f), false);
+            Prop(parent, "Tzompantli", PropArt.Sprite("tzompantli"), new Vector2(61.8f, 20f), false);
+
+            foreach (float x in new[] { 64f, 70f, 74f, 83f })
+                Decor(parent, "Banner", PropArt.Sprite("temple_banner"), new Vector2(x, 32.7f));
+            foreach (float x in new[] { 63f, 70f })
+                Decor(parent, "Banner", PropArt.Sprite("temple_banner"), new Vector2(x, 4.2f));
+            foreach (var p in new[] { new Vector2(75.5f, 28.5f), new Vector2(81.5f, 28.5f), new Vector2(60.5f, 6.2f), new Vector2(60.5f, 13.4f), new Vector2(84.5f, 24f) })
+                Decor(parent, "Offering", PropArt.Sprite("offering"), p);
+        }
+
+        /// <summary>Decoration you can walk past (no collider).</summary>
+        static void Decor(Transform parent, string name, Sprite sprite, Vector2 position)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.position = position;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.spriteSortPoint = SpriteSortPoint.Pivot;
         }
 
         static SpriteRenderer Prop(Transform parent, string name, Sprite sprite, Vector2 position, bool solid)
@@ -549,6 +603,143 @@ namespace TD_Game.EditorTools
                 so.FindProperty("subtitle").stringValue = subtitle;
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
+        }
+
+        // ---------------- Puzzle: the shrine of the four fires (room C) ----------------
+
+        static void BuildPuzzle(Text prompt)
+        {
+            var shrine = new GameObject("Puzzle (Four Fires)");
+            var puzzle = shrine.AddComponent<BrazierPuzzle>();
+
+            // Stela with the order (red, gold, jade, blue) and four braziers placed in a DIFFERENT order.
+            var stela = Prop(shrine.transform, "Stela", PropArt.Sprite("stela"), new Vector2(39.5f, 36f), true);
+            string[] gemsLeftToRight = { "gem_jade", "gem_red", "gem_blue", "gem_gold" };
+            var braziers = new PuzzleBrazier[4];
+            for (int i = 0; i < 4; i++)
+            {
+                var spot = new Vector2(30.5f + i * 2f, 36f);
+                var bowl = Prop(shrine.transform, "Brazier_" + gemsLeftToRight[i], PropArt.Sprite("brazier_cold"), spot, true);
+                bowl.gameObject.AddComponent<SpriteFlipbook>().Setup(new[] { PropArt.Sprite("brazier_0"), PropArt.Sprite("brazier_1") }, 0.2f);
+                var gem = new GameObject("Gem");
+                gem.transform.SetParent(bowl.transform, false);
+                gem.transform.localPosition = new Vector3(0f, -0.25f, 0f);
+                var gemSprite = gem.AddComponent<SpriteRenderer>();
+                gemSprite.sprite = PropArt.Sprite(gemsLeftToRight[i]);
+                gemSprite.sortingOrder = 502;   // bright in the dark
+                var glowHolder = new GameObject("Light");
+                glowHolder.transform.SetParent(bowl.transform, false);
+                Glow(glowHolder.transform, new Vector3(0f, 0.8f, 0f), 2.6f, new Color(1f, 0.55f, 0.2f, 0.45f));
+                var talk = new GameObject("LightArea");
+                talk.transform.SetParent(bowl.transform, false);
+                talk.transform.localPosition = new Vector3(0f, -0.8f, 0f);
+                var area = talk.AddComponent<BoxCollider2D>();
+                area.isTrigger = true;
+                area.size = new Vector2(1.6f, 1.2f);
+                var b = talk.AddComponent<PuzzleBrazier>();
+                var bs = new SerializedObject(b);
+                bs.FindProperty("bowl").objectReferenceValue = bowl;
+                bs.FindProperty("unlitSprite").objectReferenceValue = PropArt.Sprite("brazier_cold");
+                var frames = bs.FindProperty("litFrames");
+                frames.arraySize = 2;
+                frames.GetArrayElementAtIndex(0).objectReferenceValue = PropArt.Sprite("brazier_0");
+                frames.GetArrayElementAtIndex(1).objectReferenceValue = PropArt.Sprite("brazier_1");
+                bs.FindProperty("lightGlow").objectReferenceValue = glowHolder;
+                bs.ApplyModifiedPropertiesWithoutUndo();
+                braziers[i] = b;
+            }
+
+            // The treasure that appears when the puzzle is solved.
+            var chest = Prop(shrine.transform, "Treasure", PropArt.Sprite("chest"), new Vector2(34.5f, 33.6f), false);
+            var chestBox = chest.GetComponent<BoxCollider2D>();
+            chestBox.isTrigger = true;
+            var c = new SerializedObject(chest.gameObject.AddComponent<TreasureChest>());
+            c.FindProperty("puzzle").objectReferenceValue = puzzle;
+            c.ApplyModifiedPropertiesWithoutUndo();
+
+            // Correct order = the stela: red, gold, jade, blue.
+            var p = new SerializedObject(puzzle);
+            var order = p.FindProperty("correctOrder");
+            order.arraySize = 4;
+            order.GetArrayElementAtIndex(0).objectReferenceValue = braziers[1];   // red
+            order.GetArrayElementAtIndex(1).objectReferenceValue = braziers[3];   // gold
+            order.GetArrayElementAtIndex(2).objectReferenceValue = braziers[0];   // jade
+            order.GetArrayElementAtIndex(3).objectReferenceValue = braziers[2];   // blue
+            p.FindProperty("treasure").objectReferenceValue = chest.gameObject;
+            p.FindProperty("promptText").objectReferenceValue = prompt;
+            p.ApplyModifiedPropertiesWithoutUndo();
+
+            // A hint stone next to the stela.
+            var hint = new GameObject("PuzzleHint");
+            hint.transform.SetParent(shrine.transform, false);
+            hint.transform.position = new Vector2(35f, 34.5f);
+            var box = hint.AddComponent<BoxCollider2D>();
+            box.isTrigger = true;
+            box.size = new Vector2(11f, 4f);
+            var h = new SerializedObject(hint.AddComponent<TutorialZone>());
+            h.FindProperty("id").stringValue = "puzzle_hint";
+            h.FindProperty("message").stringValue = "THE SHRINE OF THE FOUR FIRES\nThe stela shows four colours. Light the braziers (E) in that order.";
+            h.ApplyModifiedPropertiesWithoutUndo();
+            _ = stela;
+        }
+
+        // ---------------- Quick time event box ("Press [A] to DODGE!") ----------------
+
+        static void BuildQuickTime(Transform root, Font font)
+        {
+            var go = new GameObject("QuickTimePrompt", typeof(RectTransform));
+            go.layer = LayerMask.NameToLayer("UI");
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(root, false);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0f, 70f);
+            rect.sizeDelta = new Vector2(420f, 70f);
+            var group = go.AddComponent<CanvasGroup>();
+            var plate = go.AddComponent<Image>();
+            plate.color = new Color(0f, 0f, 0f, 0.75f);
+
+            Text Part(string name, float x, float width, int size)
+            {
+                var t = new GameObject(name, typeof(RectTransform)).AddComponent<Text>();
+                t.transform.SetParent(rect, false);
+                var r = t.rectTransform;
+                r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
+                r.anchoredPosition = new Vector2(x, 0f);
+                r.sizeDelta = new Vector2(width, 60f);
+                t.font = font; t.fontSize = size; t.color = Color.white; t.alignment = TextAnchor.MiddleCenter;
+                t.horizontalOverflow = HorizontalWrapMode.Overflow;
+                t.gameObject.AddComponent<Outline>().effectColor = Color.black;
+                return t;
+            }
+            var before = Part("Press", -130f, 120f, 30);
+            var after = Part("ToVerb", 110f, 220f, 30);
+
+            var keyGo = new GameObject("KeyBox", typeof(RectTransform));
+            var keyRect = (RectTransform)keyGo.transform;
+            keyRect.SetParent(rect, false);
+            keyRect.anchorMin = keyRect.anchorMax = keyRect.pivot = new Vector2(0.5f, 0.5f);
+            keyRect.anchoredPosition = new Vector2(-45f, 0f);
+            keyRect.sizeDelta = new Vector2(54f, 54f);
+            var keyImage = keyGo.AddComponent<Image>();
+            var border = keyGo.AddComponent<Outline>();
+            border.effectColor = Color.white;
+            border.effectDistance = new Vector2(3f, -3f);
+            var keyLabel = new GameObject("Key", typeof(RectTransform)).AddComponent<Text>();
+            keyLabel.transform.SetParent(keyRect, false);
+            keyLabel.rectTransform.anchorMin = Vector2.zero; keyLabel.rectTransform.anchorMax = Vector2.one;
+            keyLabel.rectTransform.offsetMin = keyLabel.rectTransform.offsetMax = Vector2.zero;
+            keyLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            keyLabel.fontSize = 36; keyLabel.fontStyle = FontStyle.Bold; keyLabel.color = Color.black;
+            keyLabel.alignment = TextAnchor.MiddleCenter;
+
+            var q = new SerializedObject(go.AddComponent<QuickTimePrompt>());
+            q.FindProperty("group").objectReferenceValue = group;
+            q.FindProperty("before").objectReferenceValue = before;
+            q.FindProperty("keyBox").objectReferenceValue = keyRect;
+            q.FindProperty("keyBoxImage").objectReferenceValue = keyImage;
+            q.FindProperty("keyLabel").objectReferenceValue = keyLabel;
+            q.FindProperty("after").objectReferenceValue = after;
+            q.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // ---------------- Camera: less zoom; combat HUD with the artifact row ----------------
@@ -653,6 +844,7 @@ namespace TD_Game.EditorTools
             z.FindProperty("title").objectReferenceValue = big;
             z.FindProperty("subtitle").objectReferenceValue = small;
             z.ApplyModifiedPropertiesWithoutUndo();
+            BuildQuickTime(root, font);
             return (shopText, card);
         }
 

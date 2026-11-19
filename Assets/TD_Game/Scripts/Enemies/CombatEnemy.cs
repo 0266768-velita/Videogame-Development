@@ -15,6 +15,8 @@ namespace TD_Game
         [Tooltip("Sprite used for hit flashes and the attack warning. Empty = first one in the children.")]
         [SerializeField] SpriteRenderer sprite;
         [SerializeField, Min(0f)] float deathFadeTime = 0.4f;
+        [Tooltip("Zone difficulty: multiplies health and damage (zone 1 = 1, deeper zones are stronger).")]
+        [SerializeField, Min(0.1f)] float strength = 1f;
 
         Vector3 homePosition;
         Color baseColor = Color.white;
@@ -38,7 +40,7 @@ namespace TD_Game
                 enabled = false;
                 return;
             }
-            Health.Initialize(data.maxHealth);
+            Health.Initialize(data.maxHealth * strength);
             homePosition = transform.position;
         }
 
@@ -65,7 +67,7 @@ namespace TD_Game
         /// <summary>Guard from its last attack; lasts until its next turn.</summary>
         public float GuardMultiplier { get; private set; } = 1f;
         public bool InPhaseTwo { get; private set; }
-        public float AttackPower => data.attackPower * PowerMultiplier;
+        public float AttackPower => data.attackPower * PowerMultiplier * strength;
         /// <summary>Damage it really takes: passive thick skin x current guard.</summary>
         public float DamageTakenMultiplier => data.damageTakenMultiplier * GuardMultiplier;
 

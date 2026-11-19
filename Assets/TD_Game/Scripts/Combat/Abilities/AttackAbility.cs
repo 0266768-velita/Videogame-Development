@@ -55,8 +55,10 @@ namespace TD_Game
                 context.Run(rig.RaiseTo(swing.windAngle, windUpTime * 0.6f));
                 context.Run(rig.Glow(MexicaPalette.AgedGold, windUpTime));
             }
-            yield return ActionCommand.Run(context.Input.Attack, windUpTime, criticalWindow, perfectFraction,
-                earlyPressLockout, "NOW!    1 / A", r => result = r);
+            // Critical hit: a random key J, K or L appears in a box ("Press [K] to STRIKE!").
+            // (The number keys only choose the action, so the combo is not just mashing 1.)
+            yield return ActionCommand.RunQuickTime("STRIKE", ActionCommand.StrikeKeys, windUpTime, criticalWindow, perfectFraction,
+                earlyPressLockout, r => result = r);
 
             bool critical = result != ActionCommand.Result.Miss;
             if (critical)

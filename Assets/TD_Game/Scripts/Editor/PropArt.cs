@@ -8,7 +8,7 @@ namespace TD_Game.EditorTools
     /// Quetzalcóatl and the comic of the prologue. Saved in Art/Props and Art/Comic.
     /// Menu: TD_Game > Generate Props And Comic Art.
     /// </summary>
-    public static class PropArt
+    public static partial class PropArt
     {
         public const string Props = "Assets/TD_Game/Art/Props";
         public const string Comic = "Assets/TD_Game/Art/Comic";
@@ -18,14 +18,76 @@ namespace TD_Game.EditorTools
         [MenuItem("TD_Game/Generate Props And Comic Art")]
         public static void GenerateAll()
         {
-            MapArrow(); Quetzalcoatl();
+            MapArrow(); Quetzalcoatl(); OrbsAndPuzzle();
             TentBack(); TentFront(); Merchant(); SerpentHead(); Brazier(0); Brazier(1); TempleGate(true); TempleGate(false);
-            ComicHut(); ComicAltar(); ComicThrones(); ComicGrave(); ComicFist(); ComicFace(); ComicMictlantecuhtli(); ComicJourney();
+            TempleDecor();
+            ComicHut(); ComicFace(); ComicAltar(); ComicThrones(); ComicGrave(); ComicFist(); ComicMictlantecuhtli(); ComicGift(); ComicJourney();
         }
 
         public static Sprite Sprite(string name) => AssetDatabase.LoadAssetAtPath<Sprite>($"{Props}/{name}.png");
         public static Texture2D Picture(string name) => AssetDatabase.LoadAssetAtPath<Texture2D>($"{Comic}/{name}.png");
         static readonly Vector2 Bottom = new Vector2(0.5f, 0f);
+
+        // ================= ORBS, PUZZLE AND TREASURE =================
+
+        /// <summary>Gold coin (shiny, with a square hole like old coins) and bright gems for the orbs and the puzzle.</summary>
+        static void OrbsAndPuzzle()
+        {
+            var coin = new PixelCanvas(11, 11);
+            coin.Circle(5.5f, 5.5f, 5.3f, C(200, 150, 30));
+            coin.Circle(5.5f, 5.5f, 4.2f, C(255, 210, 70));
+            coin.Circle(4.2f, 4f, 1.6f, C(255, 250, 200));                 // shine
+            coin.Rect(5, 5, 2, 2, C(150, 100, 20));                         // square hole
+            coin.Outline(C(90, 60, 10));
+            coin.Save($"{Props}/orb_coin.png", 16, new Vector2(0.5f, 0.5f));
+
+            Gem("orb_jade", C(40, 220, 110), C(190, 255, 210));
+            Gem("orb_tonalli", C(40, 200, 240), C(200, 245, 255));
+            Gem("gem_red", C(220, 40, 40), C(255, 180, 170));
+            Gem("gem_jade", C(40, 200, 110), C(190, 255, 210));
+            Gem("gem_gold", C(240, 190, 40), C(255, 245, 190));
+            Gem("gem_blue", C(50, 110, 230), C(190, 210, 255));
+
+            // Stela: the order of the colours, top to bottom (red, gold, jade, blue).
+            var stela = new PixelCanvas(14, 26, C(110, 104, 94));
+            stela.Rect(0, 0, 14, 2, C(140, 132, 120));
+            Color32[] order = { C(220, 40, 40), C(240, 190, 40), C(40, 200, 110), C(50, 110, 230) };
+            for (int i = 0; i < 4; i++) { stela.Circle(7, 5 + i * 5.5f, 2.2f, order[i]); stela.Set(7, 4 + (int)(i * 5.5f), C(255, 255, 230)); }
+            stela.Speckle(3, C(96, 90, 80), C(126, 120, 108), 0.08f);
+            stela.Outline(Ink);
+            stela.Save($"{Props}/stela.png", 16, new Vector2(0.5f, 0.04f));
+
+            // Unlit brazier (cold stone bowl with ashes).
+            var cold = new PixelCanvas(12, 18);
+            cold.Rect(4, 12, 4, 6, C(96, 88, 78));
+            cold.Ellipse(6, 11, 6, 2.5f, C(120, 112, 100));
+            cold.Ellipse(6, 10, 4, 1.2f, C(60, 56, 54));
+            cold.Outline(Ink);
+            cold.Save($"{Props}/brazier_cold.png", 16, new Vector2(0.5f, 0f));
+
+            // Treasure chest.
+            var chest = new PixelCanvas(16, 13);
+            chest.Rect(1, 4, 14, 9, C(120, 74, 36));
+            chest.Rect(1, 1, 14, 4, C(150, 96, 46));
+            chest.Rect(1, 4, 14, 1, C(200, 160, 50));
+            chest.Rect(7, 4, 2, 4, C(230, 190, 70));
+            chest.Rect(1, 1, 1, 12, C(200, 160, 50)); chest.Rect(14, 1, 1, 12, C(200, 160, 50));
+            chest.Outline(Ink);
+            chest.Save($"{Props}/chest.png", 16, new Vector2(0.5f, 0f));
+        }
+
+        static void Gem(string name, Color32 body, Color32 shine)
+        {
+            var c = new PixelCanvas(9, 11);
+            for (int y = 0; y < 11; y++)   // a diamond shape
+            {
+                int half = y < 5 ? y : 10 - y;
+                c.Rect(4 - half, y, half * 2 + 1, 1, body);
+            }
+            c.Set(3, 3, shine); c.Set(3, 4, shine); c.Set(4, 3, shine);
+            c.Outline(C(255, 255, 255));   // white outline: it glows in the dark
+            c.Save($"{Props}/{name}.png", 16, new Vector2(0.5f, 0.5f));
+        }
 
         // ================= QUETZALCOATL (boss) =================
 
@@ -229,131 +291,6 @@ namespace TD_Game.EditorTools
             c.Set(8, 1, C(150, 40, 34));
             c.Outline(Ink);
             c.Save($"{Props}/temple_gate_{(closed ? "closed" : "open")}.png", 16, new Vector2(0.5f, 1f / 34f));
-        }
-
-        // ================= COMIC OF THE PROLOGUE (96 x 64 pictures) =================
-
-        static void Person(PixelCanvas c, int x, int feet, Color32 cloth, bool armsUp = false, bool kneeling = false)
-        {
-            var skin = C(150, 100, 70);
-            int top = kneeling ? feet - 11 : feet - 16;
-            c.Circle(x, top + 2, 2.5f, skin);
-            c.Rect(x - 3, top - 1, 7, 2, C(20, 20, 30));                  // hair
-            c.Rect(x - 2, top + 5, 5, kneeling ? 4 : 7, cloth);
-            if (kneeling) c.Rect(x - 2, feet - 3, 6, 3, cloth);
-            else { c.Rect(x - 2, top + 12, 2, 4, skin); c.Rect(x + 1, top + 12, 2, 4, skin); }
-            if (armsUp) { c.Line(x - 3, top + 6, x - 6, top, skin); c.Line(x + 3, top + 6, x + 6, top, skin); }
-            else { c.Line(x - 3, top + 6, x - 4, top + 10, skin); c.Line(x + 3, top + 6, x + 4, top + 10, skin); }
-        }
-
-        static void SaveComic(PixelCanvas c, string name) => c.Save($"{Comic}/{name}.png", 16, new Vector2(0.5f, 0.5f));
-
-        static void ComicHut()
-        {
-            var c = new PixelCanvas(96, 64, C(60, 40, 28));
-            c.Gradient(0, 0, 96, 40, C(70, 46, 30), C(96, 66, 42));       // adobe walls
-            c.Rect(0, 40, 96, 24, C(84, 62, 40));                         // floor
-            c.Rect(60, 10, 14, 12, C(30, 30, 52)); c.Circle(67, 14, 2, C(200, 200, 210));   // window with the moon
-            c.Rect(14, 44, 46, 8, C(160, 130, 70));                       // reed mat
-            for (int x = 14; x < 60; x += 3) c.Rect(x, 44, 1, 8, C(130, 104, 56));
-            c.Ellipse(36, 46, 14, 3.5f, C(150, 140, 120));               // the mother under a blanket
-            c.Circle(20, 45, 3, C(140, 96, 70)); c.Rect(17, 42, 6, 2, C(30, 30, 40));   // her face and hair
-            Person(c, 50, 54, C(40, 70, 150), kneeling: true);            // Tlahuelli kneeling beside her
-            c.Rect(80, 40, 2, 6, C(220, 200, 160)); c.Circle(81, 38, 1.5f, C(250, 200, 90));   // candle
-            SaveComic(c, "hut");
-        }
-
-        static void ComicAltar()
-        {
-            var c = new PixelCanvas(96, 64);
-            c.Gradient(0, 0, 96, 64, C(10, 12, 30), C(36, 40, 70));
-            for (int i = 0; i < 4; i++) c.Rect(56 + i * 4, 18 + i * 8, 40 - i * 8, 8, C(24, 24, 40));   // pyramid silhouette
-            c.Rect(0, 52, 96, 12, C(28, 30, 34));
-            c.Rect(36, 44, 22, 8, C(90, 84, 78)); c.Rect(38, 42, 18, 2, C(110, 104, 96));               // stone altar
-            Person(c, 26, 56, C(40, 70, 150), armsUp: true);                                            // dancing, praying
-            c.Rain(4, C(150, 170, 220), 140);
-            SaveComic(c, "altar_rain");
-        }
-
-        static void ComicThrones()
-        {
-            var c = new PixelCanvas(96, 64);
-            c.Gradient(0, 0, 96, 64, C(90, 16, 14), C(20, 6, 8));
-            for (int x = 6; x < 96; x += 22) c.Rect(x, 6, 6, 58, C(60, 20, 18));                       // columns
-            foreach (int x in new[] { 22, 48, 74 })                                                     // empty thrones, turned away
-            {
-                c.Rect(x - 7, 26, 14, 20, C(120, 104, 80)); c.Rect(x - 8, 44, 16, 6, C(100, 86, 66));
-                c.Rect(x - 5, 22, 10, 4, C(200, 160, 60));
-            }
-            SaveComic(c, "empty_thrones");
-        }
-
-        static void ComicGrave()
-        {
-            var c = new PixelCanvas(96, 64);
-            c.Gradient(0, 0, 96, 64, C(6, 8, 18), C(24, 28, 40));
-            c.Circle(78, 12, 5, C(170, 170, 180));
-            c.Rect(0, 48, 96, 16, C(26, 32, 26));
-            c.Ellipse(50, 50, 16, 4, C(70, 52, 36));                      // fresh grave
-            c.Rect(60, 34, 6, 14, C(110, 104, 96)); c.Rect(59, 33, 8, 2, C(130, 124, 114));   // stone marker
-            Person(c, 32, 54, C(30, 50, 110), kneeling: true);
-            c.Rain(11, C(140, 160, 210), 160);
-            SaveComic(c, "grave");
-        }
-
-        static void ComicFist()
-        {
-            var c = new PixelCanvas(96, 64);
-            c.Gradient(0, 0, 96, 64, C(120, 20, 16), C(30, 6, 6));
-            c.Ellipse(48, 34, 18, 16, C(150, 100, 70));                   // fist
-            for (int i = 0; i < 4; i++) c.Rect(34 + i * 8, 22, 7, 10, C(164, 112, 80));   // fingers
-            for (int i = 0; i < 4; i++) c.Rect(34 + i * 8, 31, 7, 1, C(110, 70, 50));
-            c.Rect(36, 48, 24, 16, C(40, 70, 150));                       // sleeve
-            c.Outline(Ink);
-            SaveComic(c, "fist");
-        }
-
-        static void ComicFace()
-        {
-            var c = new PixelCanvas(96, 64);
-            c.Gradient(0, 0, 96, 64, C(30, 26, 40), C(70, 50, 50));
-            c.Ellipse(48, 36, 18, 22, C(150, 100, 70));                   // face
-            c.Rect(28, 12, 40, 10, C(20, 20, 30));                        // hair
-            c.Rect(30, 20, 36, 4, C(40, 80, 170));                        // blue headband
-            c.Rect(36, 32, 8, 3, C(30, 30, 50)); c.Rect(52, 32, 8, 3, C(30, 30, 50));   // worried eyes
-            c.Line(34, 28, 44, 30, C(40, 30, 30)); c.Line(62, 28, 52, 30, C(40, 30, 30));
-            c.Rect(36, 36, 6, 2, C(60, 120, 200)); c.Rect(54, 36, 6, 2, C(60, 120, 200));   // face paint
-            c.Rect(42, 48, 12, 2, C(90, 50, 40));                         // mouth
-            c.Outline(Ink);
-            SaveComic(c, "face");
-        }
-
-        static void ComicMictlantecuhtli()
-        {
-            var c = new PixelCanvas(96, 64);
-            c.Gradient(0, 0, 96, 64, C(4, 10, 8), C(16, 30, 24));
-            for (int i = 0; i < 7; i++) c.Ellipse(36 + i * 4, 10, 2, 8, i % 2 == 0 ? C(40, 120, 90) : C(180, 150, 60));   // headdress
-            c.Circle(48, 22, 9, C(220, 214, 196));                        // skull
-            c.Circle(44, 21, 2.5f, Ink); c.Circle(52, 21, 2.5f, Ink);
-            c.Set(44, 21, C(120, 255, 180)); c.Set(52, 21, C(120, 255, 180));   // glowing eyes
-            c.Rect(44, 27, 8, 2, Ink); for (int x = 44; x < 52; x += 2) c.Set(x, 27, C(220, 214, 196));
-            for (int y = 34; y < 50; y += 3) c.Rect(40, y, 16, 1, C(200, 194, 176));   // ribs
-            c.Rect(47, 32, 2, 22, C(200, 194, 176));                      // spine
-            c.Line(56, 36, 72, 30, C(200, 194, 176)); c.Line(40, 36, 28, 46, C(200, 194, 176));   // arms
-            c.Rect(36, 50, 24, 14, C(30, 20, 24));                        // dark robe
-            SaveComic(c, "mictlantecuhtli");
-        }
-
-        static void ComicJourney()
-        {
-            var c = new PixelCanvas(96, 64);
-            c.Gradient(0, 0, 96, 40, C(60, 20, 40), C(160, 70, 50));      // red dusk
-            for (int i = 0; i < 5; i++) c.Ellipse(10 + i * 20, 40, 16, 12, C(30, 20, 34));   // dark mountains
-            c.Rect(0, 40, 96, 24, C(30, 40, 30));
-            for (int y = 40; y < 64; y++) { int w = 2 + (y - 40) / 2; c.Rect(48 - w / 2 + (y - 40) / 4, y, w, 1, C(80, 60, 40)); }   // path into the distance
-            c.Rect(0, 50, 30, 3, C(30, 60, 100));                         // river
-            Person(c, 54, 62, C(40, 70, 150));
-            SaveComic(c, "journey");
         }
     }
 }

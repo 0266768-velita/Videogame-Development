@@ -52,7 +52,7 @@ namespace TD_Game
         {
             var player = context.Player;
             player.BeginTurn();
-            context.SelectFirstAlive();
+            // The target chosen in the last turn is kept (CurrentTarget moves on by itself if it died).
             requested = null;
             endRequested = false;
             CombatFeed.SetTurnLabel("YOUR TURN");

@@ -106,7 +106,8 @@ namespace TD_Game
             }
 
             // If a wall is in the way, pick another point.
-            if (!MoveTowards(patrolTarget, data.patrolSpeed)) patrolTarget = NextPatrolPoint();
+            // Blocked: stop and rest a moment before choosing another point (no back-and-forth shaking).
+            if (!MoveTowards(patrolTarget, data.patrolSpeed)) { patrolTarget = body.position; waitTimer = data.patrolWait; }
         }
 
         void Chase()
@@ -190,7 +191,7 @@ namespace TD_Game
             {
                 if (option.sqrMagnitude < 0.01f || IsBlocked(option, step)) continue;
                 body.MovePosition(body.position + option * step);
-                Face(option.x);
+                Face(dir.x);
                 return true;
             }
             return false;
@@ -217,10 +218,17 @@ namespace TD_Game
             return (Vector2)enemy.HomePosition + Random.insideUnitCircle * data.patrolRadius;
         }
 
+        // Turning around waits a little: without this, an enemy sliding along a wall or standing on its target
+        // point turned left-right-left every frame and its picture flickered.
+        float turnTimer;
+
         void Face(float x)
         {
-            if (!flipSprite || enemy.Sprite == null || Mathf.Abs(x) < 0.01f) return;
-            enemy.Sprite.flipX = x < 0f;
+            if (!flipSprite || enemy.Sprite == null) return;
+            bool wantsLeft = x < 0f;
+            if (Mathf.Abs(x) < 0.3f || wantsLeft == enemy.Sprite.flipX) { turnTimer = 0f; return; }
+            turnTimer += Time.fixedDeltaTime;
+            if (turnTimer >= 0.25f) { enemy.Sprite.flipX = wantsLeft; turnTimer = 0f; }
         }
 
         void OnDrawGizmosSelected()

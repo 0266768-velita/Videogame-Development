@@ -92,6 +92,8 @@ namespace TD_Game
                 float side = i % 2 == 1 ? 1f : -1f;        // extra enemies alternate above and below
                 Vector3 offset = new Vector3(half + 0.5f * row, side * row * enemySpacing, 0f);
                 enemies[i].transform.position = center + offset;
+                // The enemy pictures look to the right: flip them so they face Tlahuelli (on the left).
+                if (enemies[i].Sprite != null) enemies[i].Sprite.flipX = true;
             }
 
             // Everyone takes a fighting stance: a little pop, dust, and breathing while the battle lasts.

@@ -47,6 +47,10 @@ namespace TD_Game
                     Vector3 body = sprite != null ? sprite.transform.position + Vector3.up * 0.4f : feet;
                     Vfx.Ring(body, burstColor, 1.8f, 0.2f, 0.25f);
                     Vfx.Wisps(body, 3, burstColor, -1.2f, 1.2f);
+                    // Alex: afterimages, a circle of energy on the ground and a column of light.
+                    if (sprite != null) Vfx.Afterimage(sprite, burstColor, 0.3f);
+                    Vfx.Ring(feet, burstColor, 2.2f, 0.4f, 0.3f, onGround: true, squashY: 0.4f);
+                    Vfx.Wisps(feet, 4, MexicaPalette.Bone, 3f, 0.3f);
                     nextRing += 0.14f;
                 }
                 yield return null;
@@ -62,10 +66,15 @@ namespace TD_Game
             Vfx.Ring(center, burstColor, 0.3f, 4f, 0.5f);
             Vfx.Ring(center, MexicaPalette.Bone, 0.2f, 3f, 0.4f);
             Vfx.Burst(center, 24, burstColor, new Vector2(3f, 7f), 4f, 1.6f, 0.8f, toGround: false, upward: 0f);
+            // Alex: the ground cracks and three shockwaves follow each other.
+            Vfx.Crack(feet, 2.2f, 2f);
+            context.Run(Shockwaves(center));
             foreach (var enemy in context.Enemies)
             {
                 if (enemy == null || enemy.Health.IsDead) continue;
                 Vfx.Ring(enemy.transform.position + Vector3.up * 0.5f, burstColor, 0.2f, 1.2f, 0.3f);
+                Vfx.Slash(enemy.transform.position + Vector3.up * 0.6f, -1f, burstColor, 1.6f, -25f);
+                Vfx.Burst(enemy.transform.position + Vector3.up * 0.5f, 10, MexicaPalette.Bone, new Vector2(2f, 5f), 10f);
                 context.DamageEnemy(enemy, damage, critical: true);
             }
 
@@ -80,6 +89,17 @@ namespace TD_Game
             fx.Squash(new Vector2(1.3f, 0.75f));
             Vfx.Dust(feet, 4, MexicaPalette.Ash, 0.8f);
             yield return new WaitForSeconds(0.35f);
+        }
+    
+        /// <summary>Three turquoise shockwaves, one after the other (Alex).</summary>
+        IEnumerator Shockwaves(Vector3 center)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                yield return new WaitForSeconds(0.12f);
+                Vfx.Ring(center, i % 2 == 0 ? burstColor : MexicaPalette.Bone, 0.5f, 5f + i, 0.45f);
+                CombatFeed.RequestShake(0.12f, 0.15f);
+            }
         }
     }
 }

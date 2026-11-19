@@ -30,8 +30,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4136534519238998687}
-  - {fileID: 3441279819516131552}
+  - {fileID: 7849563095756298693}
+  - {fileID: 2662329546033158862}
   m_Father: {fileID: 3874678600970442500}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &5611954551067931325
@@ -186,7 +186,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
---- !u!1 &1957856449891996174
+--- !u!1 &3697078751623450494
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -194,39 +194,40 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3441279819516131552}
-  - component: {fileID: 1780896656651444328}
-  - component: {fileID: 8758601318294771479}
+  - component: {fileID: 7849563095756298693}
+  - component: {fileID: 4239335579230052324}
+  - component: {fileID: 420939790959694860}
   m_Layer: 0
-  m_Name: Macuahuitl
+  m_Name: Torch
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3441279819516131552
+--- !u!4 &7849563095756298693
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1957856449891996174}
+  m_GameObject: {fileID: 3697078751623450494}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.15, y: 0.45, z: 0}
+  m_LocalPosition: {x: -0.42, y: 0.3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 4404063402140731727}
   m_Father: {fileID: 6350878113464905111}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &1780896656651444328
+--- !u!212 &4239335579230052324
 SpriteRenderer:
   serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1957856449891996174}
+  m_GameObject: {fileID: 3697078751623450494}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -266,36 +267,36 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: e32d0882d02eb274384d370dafd0b6e1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7909e479cc1c03a4d91f4648138dc98f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.4375, y: 1.375}
+  m_Size: {x: 0.625, y: 1.25}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
---- !u!114 &8758601318294771479
+--- !u!114 &420939790959694860
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1957856449891996174}
+  m_GameObject: {fileID: 3697078751623450494}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2e96de5ed98cbb04f97d633aaa0bdb64, type: 3}
+  m_Script: {fileID: 11500000, guid: 77319af73e53e3b4898ce8d4fab79890, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.MacuahuitlSwing
-  restAngle: 35
-  raisedAngle: 110
-  hitAngle: -80
-  swingsPerSecond: 2.5
-  stretch: 1.6
+  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.SpriteFlipbook
+  frames:
+  - {fileID: 21300000, guid: 7909e479cc1c03a4d91f4648138dc98f, type: 3}
+  - {fileID: 21300000, guid: ddb6039a490d57e409465ed01e484cce, type: 3}
+  secondsPerFrame: 0.15
+  pulse: 0
 --- !u!1 &5317769719091848023
 GameObject:
   m_ObjectHideFlags: 0
@@ -537,8 +538,8 @@ MonoBehaviour:
   - {fileID: -961045359, guid: 1622c75d16ce15649ae8d1e06ce707f8, type: 3}
   framesPerSecond: 8
   sprintSpeedUp: 1.7
-  torch: {fileID: 4136534519238998687}
-  torchFlame: {fileID: 8433413607315384118}
+  torch: {fileID: 7849563095756298693}
+  torchFlame: {fileID: 4239335579230052324}
   torchFront: {x: -0.45, y: 0.42}
   torchBack: {x: -0.45, y: 0.42}
   torchSide: {x: -0.22, y: 0.5}
@@ -562,7 +563,7 @@ MonoBehaviour:
   trailColor: {r: 0.85, g: 0.8, b: 0.7, a: 1}
   combatPose: {fileID: 2112958154, guid: 1622c75d16ce15649ae8d1e06ce707f8, type: 3}
   combatGrip: {x: 0.02, y: 0.37}
---- !u!1 &5578000853322487732
+--- !u!1 &7211946430945237448
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -570,9 +571,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5394698213227091333}
-  - component: {fileID: 5253500424762487059}
-  - component: {fileID: 8153473081470123725}
+  - component: {fileID: 4404063402140731727}
+  - component: {fileID: 6332945847064795868}
+  - component: {fileID: 200374770118197548}
   m_Layer: 0
   m_Name: Glow
   m_TagString: Untagged
@@ -580,29 +581,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5394698213227091333
+--- !u!4 &4404063402140731727
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5578000853322487732}
+  m_GameObject: {fileID: 7211946430945237448}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.9, z: 0}
   m_LocalScale: {x: 1.6, y: 1.6, z: 1.6}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4136534519238998687}
+  m_Father: {fileID: 7849563095756298693}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &5253500424762487059
+--- !u!212 &6332945847064795868
 SpriteRenderer:
   serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5578000853322487732}
+  m_GameObject: {fileID: 7211946430945237448}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -655,13 +656,13 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
---- !u!114 &8153473081470123725
+--- !u!114 &200374770118197548
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5578000853322487732}
+  m_GameObject: {fileID: 7211946430945237448}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 77319af73e53e3b4898ce8d4fab79890, type: 3}
@@ -670,7 +671,7 @@ MonoBehaviour:
   frames: []
   secondsPerFrame: 1
   pulse: 0.06
---- !u!1 &8467752758525617317
+--- !u!1 &8957938293114657734
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -678,40 +679,39 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4136534519238998687}
-  - component: {fileID: 8433413607315384118}
-  - component: {fileID: 7312316715430214205}
+  - component: {fileID: 2662329546033158862}
+  - component: {fileID: 2996395975256998236}
+  - component: {fileID: 4083358194742640213}
   m_Layer: 0
-  m_Name: Torch
+  m_Name: Macuahuitl
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4136534519238998687
+--- !u!4 &2662329546033158862
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8467752758525617317}
+  m_GameObject: {fileID: 8957938293114657734}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.42, y: 0.3, z: 0}
+  m_LocalPosition: {x: 0.15, y: 0.45, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 5394698213227091333}
+  m_Children: []
   m_Father: {fileID: 6350878113464905111}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &8433413607315384118
+--- !u!212 &2996395975256998236
 SpriteRenderer:
   serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8467752758525617317}
+  m_GameObject: {fileID: 8957938293114657734}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -751,33 +751,33 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 7909e479cc1c03a4d91f4648138dc98f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e32d0882d02eb274384d370dafd0b6e1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.625, y: 1.25}
+  m_Size: {x: 0.4375, y: 1.375}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
---- !u!114 &7312316715430214205
+--- !u!114 &4083358194742640213
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8467752758525617317}
+  m_GameObject: {fileID: 8957938293114657734}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 77319af73e53e3b4898ce8d4fab79890, type: 3}
+  m_Script: {fileID: 11500000, guid: 2e96de5ed98cbb04f97d633aaa0bdb64, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.SpriteFlipbook
-  frames:
-  - {fileID: 21300000, guid: 7909e479cc1c03a4d91f4648138dc98f, type: 3}
-  - {fileID: 21300000, guid: ddb6039a490d57e409465ed01e484cce, type: 3}
-  secondsPerFrame: 0.15
-  pulse: 0
+  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.MacuahuitlSwing
+  restAngle: 35
+  raisedAngle: 110
+  hitAngle: -80
+  swingsPerSecond: 2.5
+  stretch: 1.6

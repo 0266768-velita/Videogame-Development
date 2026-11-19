@@ -139,6 +139,7 @@ MonoBehaviour:
   data: {fileID: 11400000, guid: c4454bbe40333a846aca2ec1823be179, type: 2}
   sprite: {fileID: 8293792852715592338}
   deathFadeTime: 0.4
+  strength: 1
 --- !u!114 &7136600266794276765
 MonoBehaviour:
   m_ObjectHideFlags: 0

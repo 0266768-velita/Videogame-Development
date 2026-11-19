@@ -77,7 +77,15 @@ namespace TD_Game
             }
         }
 
-        bool IsAlive(int i) => i >= 0 && i < Enemies.Count && Enemies[i] != null && !Enemies[i].Health.IsDead;
+/// <summary>Chooses this enemy as the target (clicked with the mouse). Returns false if it is not in this battle.</summary>
+        public bool SelectTarget(CombatEnemy enemy)
+        {
+            for (int i = 0; i < Enemies.Count; i++)
+                if (Enemies[i] == enemy && IsAlive(i)) { TargetIndex = i; return true; }
+            return false;
+        }
+
+                bool IsAlive(int i) => i >= 0 && i < Enemies.Count && Enemies[i] != null && !Enemies[i].Health.IsDead;
 
         // ---------------- Damage ----------------
 

@@ -20,12 +20,12 @@ namespace TD_Game
 
         [Header("Texts")]
         [SerializeField, TextArea] string startHint = "WASD / left stick: move   ·   SHIFT: sprint   ·   SPACE: jump\nLand on an enemy from a jump to AMBUSH it.";
-        [SerializeField, TextArea] string combatHint = "1 Attack (press 1 again on NOW! for a critical)   ·   2 / 3 skills   ·   4 potion   ·   5 Tonalli Burst\nArrows: change target   ·   Q: end turn. Every action costs stamina.";
-        [SerializeField, TextArea] string dodgeHint = "The enemy glows red before it strikes.\nPress SPACE when DODGE! appears. Pressing late (but in time) is a PERFECT dodge.";
-        [SerializeField, TextArea] string interruptHint = "Spells cannot be dodged.\nPress 1 when INTERRUPT! appears to break the spell.";
+        [SerializeField, TextArea] string battleControlsHint = "1 Attack   ·   2 / 3 skills   ·   4 potion   ·   5 Tonalli Burst   ·   6 artifact   ·   Q end turn\nWhile attacking, press the key in the box (J, K or L) for a CRITICAL. Click an enemy (or TAB) to choose the target.";
+        [SerializeField, TextArea] string quickTimeDodgeHint = "The enemy glows red before it strikes.\nPress the KEY IN THE BOX (W, A, S or D) when it appears. Late but in time = PERFECT. A wrong key fails.";
+        [SerializeField, TextArea] string quickTimeInterruptHint = "Spells cannot be dodged: INTERRUPT them.\nPress the KEY IN THE BOX when INTERRUPT appears.";
         [SerializeField, TextArea] string orbsHint = "Walk over the orbs before leaving:\ngold = Macuahuitl charge   ·   green = life   ·   blue = Tonalli";
         [SerializeField, TextArea] string unlockHint = "You learned a new skill. Use it in battle with its key (2 or 3).";
-        [SerializeField, TextArea] string defeatHint = "You return to the last place where you won a battle.\nYour progress is kept and you always get potions to retry.";
+        [SerializeField, TextArea] string backToStartHint = "When you fall, you go back to the BEGINNING of the map.\nYou keep your skills, gold and growth, and you always get potions to retry.";
 
         [Header("Tips while exploring (one every few seconds, each only once)")]
         [SerializeField, Min(5f)] float secondsBetweenTips = 25f;
@@ -44,6 +44,9 @@ namespace TD_Game
 
         /// <summary>Ids of the hints already shown (for the save).</summary>
         public static IEnumerable<string> Seen => seen;
+
+        /// <summary>True if this id was already shown or done (also used to remember the solved puzzle).</summary>
+        public static bool HasSeen(string id) => seen.Contains(id);
 
         /// <summary>New game: every hint can appear again.</summary>
         public static void ResetAll() => seen.Clear();
@@ -122,16 +125,16 @@ namespace TD_Game
             }
         }
 
-        void OnCombatStarted() => ShowOnce("combat", combatHint);
+        void OnCombatStarted() => ShowOnce("combat", battleControlsHint);
         void OnCombatWon(IReadOnlyList<EnemyData> _) => ShowOnce("orbs", orbsHint);
-        void OnCombatLost() => ShowOnce("defeat", defeatHint);
+        void OnCombatLost() => ShowOnce("defeat", backToStartHint);
         void OnAbilityUnlocked(CombatAbility _) => ShowOnce("unlock", unlockHint);
 
         void OnCounterPrompt(string prompt)
         {
             if (string.IsNullOrEmpty(prompt)) return;
-            if (prompt.Contains("INTERRUPT")) ShowOnce("interrupt", interruptHint);
-            else if (prompt.Contains("DODGE")) ShowOnce("dodge", dodgeHint);
+            if (prompt.Contains("INTERRUPT")) ShowOnce("interrupt", quickTimeInterruptHint);
+            else if (prompt.Contains("DODGE")) ShowOnce("dodge", quickTimeDodgeHint);
         }
 
         IEnumerator ShowQueue()

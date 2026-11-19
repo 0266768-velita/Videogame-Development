@@ -42,6 +42,11 @@ namespace TD_Game
             Instance = this;
             Hide();
             if (retryButton != null) retryButton.onClick.AddListener(() => choice = Choice.Retry);
+            if (retryButton != null)   // a defeat sends you back to the start of the map
+            {
+                var label = retryButton.GetComponentInChildren<Text>();
+                if (label != null) label.text = "RETRY FROM THE BEGINNING   [ENTER]";
+            }
             if (menuButton != null) menuButton.onClick.AddListener(() => choice = Choice.Menu);
         }
 

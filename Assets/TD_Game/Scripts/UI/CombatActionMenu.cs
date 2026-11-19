@@ -50,7 +50,7 @@ namespace TD_Game
                 buttons[i].gameObject.SetActive(ability != null);
                 if (ability == null) continue;
 
-                string key = i < keyHints.Length ? keyHints[i] : "";
+                string key = InputPrompts.Label(i < keyHints.Length ? keyHints[i] : "");   // keyboard or Xbox, never both
                 string cost = ability is TonalliBurstAbility
                     ? $"{context.Player.Concentration:0}/{context.Player.MaxConcentration:0}"
                     : $"{ability.staminaCost:0} ST";
@@ -60,7 +60,7 @@ namespace TD_Game
 
             if (endTurnButton != null)
             {
-                endTurnButton.Setup("Q", "End turn", "", turn.RequestEndTurn);
+                endTurnButton.Setup(InputPrompts.Label("Q"), "End turn", "", turn.RequestEndTurn);
                 endTurnButton.Show(turn.AcceptingInput ? ActionButton.State.Ready : ActionButton.State.Waiting, false);
             }
 
@@ -93,7 +93,7 @@ namespace TD_Game
         static string HintText(CombatContext context, PlayerTurn turn)
         {
             if (turn.Performing != null)
-                return turn.Performing is AttackAbility ? "Press ATTACK again on  NOW!  for a critical" : turn.Performing.description;
+                return turn.Performing is AttackAbility ? "Press the key in the box (J / K / L) for a critical" : turn.Performing.description;
             var target = context.CurrentTarget;
             string combo = context.Player.ComboCount > 0 ? $"     Next hit  x{context.Player.ComboCount + 1}" : "";
             return $"◄ ►  Target:  {(target != null ? target.Data.displayName : "-")}{combo}";

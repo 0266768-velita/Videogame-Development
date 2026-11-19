@@ -66,6 +66,8 @@ namespace TD_Game
         // The plate is toggled right away (not in Update) so it never shows up empty for a frame.
         void OnPrompt(string text)
         {
+            // The quick time box ("Press [A] to DODGE!") replaces this text when it is in the scene.
+            if (QuickTimePrompt.Present && text != null && text.Contains("[")) text = null;
             prompt.text = text ?? "";
             ShowPlate(prompt, prompt.text.Length > 0);
         }

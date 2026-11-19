@@ -12,11 +12,17 @@ namespace TD_Game
         [SerializeField] CombatInput input;
         [SerializeField] Color telegraphColor = MexicaPalette.Blood;
         [Tooltip("The last part of the window (this fraction) counts as PERFECT.")]
-        [SerializeField, Range(0.1f, 0.9f)] float perfectWindowFraction = 0.5f;
+        [SerializeField, Range(0.1f, 0.9f)] float perfectWindowFraction = 0.35f;
         [Tooltip("Pressing before the window opens locks the counter for this many seconds.")]
         [SerializeField, Min(0f)] float earlyPressLockout = 0.3f;
         [SerializeField, Min(0f)] float dodgeStepDistance = 1f;
         [SerializeField, Min(0.05f)] float enemyLungeTime = 0.18f;
+        [Tooltip("Chance that an enemy attack simply misses (0.1 = 1 in 10).")]
+        [SerializeField, Range(0f, 0.5f)] float missChance = 0.05f;
+        [Tooltip("Every enemy's dodge window is multiplied by this (smaller = harder).")]
+        [SerializeField, Range(0.3f, 1.5f)] float counterWindowScale = 0.75f;
+        [Tooltip("Extra shrink for the boss's window.")]
+        [SerializeField, Range(0.3f, 1f)] float bossWindowScale = 0.75f;
 
         public IEnumerator Run(CombatContext context, CombatEnemy enemy)
         {
@@ -50,15 +56,25 @@ namespace TD_Game
             else
             {
                 bool interrupt = attack.counter == CounterType.Interrupt;
-                yield return ActionCommand.Run(interrupt ? input.Interrupt : input.Dodge, windUp, attack.counterWindow,
-                    perfectWindowFraction, earlyPressLockout, interrupt ? "INTERRUPT!    1 / A" : "DODGE!    SPACE / B", r => result = r);
+                // Quick time event: a random key (W A S D) appears in a box: "Press [A] to DODGE!"
+                float window = attack.counterWindow * counterWindowScale * (enemy.Data.isBoss ? bossWindowScale : 1f);
+                yield return ActionCommand.RunQuickTime(interrupt ? "INTERRUPT" : "DODGE", windUp, window,
+                    perfectWindowFraction, earlyPressLockout, r => result = r);
             }
 
             bool success = result != ActionCommand.Result.Miss;
+            // Sometimes the enemy just misses (only real hits, not howls or guards).
+            bool missed = !success && attack.damageMultiplier > 0f && Random.value < missChance;
             if (success) yield return Countered(context, enemy, attack, result == ActionCommand.Result.Perfect);
+            else if (missed)
+            {
+                CombatFeed.ShowPopup(context.Player.transform.position + Vector3.up * 1.3f, "MISS", MexicaPalette.Bone);
+                CombatFeed.ShowBanner(enemy.Data.displayName + " missed!", 0.8f);
+                yield return new WaitForSeconds(0.5f);
+            }
             else yield return Land(context, enemy, attack);
 
-            if (!success || attack.effectIgnoresCounter) ApplyEffect(context, enemy, attack);
+            if ((!success && !missed) || attack.effectIgnoresCounter) ApplyEffect(context, enemy, attack);
         }
 
         IEnumerator Countered(CombatContext context, CombatEnemy enemy, EnemyAttack attack, bool perfect)

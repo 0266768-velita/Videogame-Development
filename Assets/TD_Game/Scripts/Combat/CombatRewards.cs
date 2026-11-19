@@ -68,7 +68,9 @@ namespace TD_Game
             if (DefeatScreen.Instance != null) yield return DefeatScreen.Instance.Show();
 
             var player = context.Player;
-            player.Teleport(player.Progression.Checkpoint);
+            // A defeat sends you back to the very beginning of the map (you keep your skills, gold and growth).
+            player.Teleport(player.Progression.StartPoint);
+            player.Progression.SetCheckpoint(player.Progression.StartPoint);
             player.FullRestore();
             player.EnsureRetryPotions();
             foreach (var enemy in context.Enemies)

@@ -104,7 +104,10 @@ namespace TD_Game
                     if (context.PlayerDead || context.AllEnemiesDead) break;
                     if (enemy == null || enemy.Health.IsDead) continue;
                     CurrentEnemy = enemy;
-                    yield return enemyTurn.Run(context, enemy);
+                    // The boss acts twice per round, three times once it changes form.
+                    int actions = enemy.Data.isBoss ? (enemy.InPhaseTwo ? 3 : 2) : 1;
+                    for (int a = 0; a < actions && !context.PlayerDead && !enemy.Health.IsDead; a++)
+                        yield return enemyTurn.Run(context, enemy);
                     CurrentEnemy = null;
                 }
             }

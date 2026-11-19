@@ -5,6 +5,19 @@ Planificación: `DEVELOPMENT_CALENDAR.md` · Reglas y decisiones técnicas: `CLA
 
 ---
 
+## 2026-11-19 — Sesión 21 (Alex): QTE, mando, dificultad, templo, cómic y outro
+
+- **Esquivar / interrumpir con QTE:** aparece una tecla al azar (W A S D) en un recuadro de color; tecla equivocada = falla. El **crítico** del ataque ahora es J / K / L (el 1 queda solo para elegir la acción).
+- **Botones de Xbox** (`UI/InputPrompts.cs`): opción en el menú principal y en pausa. Solo se muestran si están activados **y** hay un mando conectado; por defecto, teclado. Nunca salen los dos a la vez.
+- **Smoking Mirror** con animación (humo, espejo, rayos y almas que regresan) y **Tonalli Burst** con grietas, ondas y estelas. Orbes más chicos (`SoulOrb.size`).
+- **Más difícil:** ventanas de esquiva ×0.75 (el jefe ×0.56), PERFECT más corto, menos fallos enemigos, zonas ×1.2 / ×1.6 / ×2. **Quetzalcóatl:** 760 de vida, ataque 22, cambia de forma al 60 % y actúa **2 veces por ronda (3 en la segunda forma)**.
+- **Al morir vuelves al inicio del mapa** (`PlayerProgression.StartPoint`); conservas habilidades, oro y crecimiento.
+- **Puerta del templo:** cinemática (`KeyDoor`): la llave responde, la cámara va a la puerta, los glifos se encienden, tiembla, la losa sube soltando polvo y una ola de luz entra al templo.
+- **Interior del templo:** columnas con serpiente, ídolo de Coatlicue, chacmool, tzompantlis, estandartes y ofrendas (`PropArt.Temple.cs`, `MainMapBuilder.BuildTempleDecor`).
+- **Cómic del prólogo** repintado a 144×96 con luz y sombra (`PropArt.Paint.cs`, `PropArt.Comic.cs`); nuevo panel `gift` (la mano de Mictlantecuhtli entrega el macuahuitl). El puño de "I will make them answer" tiene contorno, nudillos y pintura de guerra.
+- **Outro** (`CreditsScreen`): fuente Pirata One, epílogo en tarjetas, fondo con paneo, brasas, grecas doradas, créditos con roles y "THANK YOU FOR PLAYING" que late.
+- Se regeneraron `MainMap` y `TD_Prologue` con el menú Mictlan, se probó en Play Mode (consola limpia) y se rehízo el `.exe` (`Mictlan (juego).zip` en el escritorio). Sin commits.
+
 ## 2026-11-17 — Sesión 20 (Toño): traer las animaciones a la rama v0.6
 
 **Tipo:** integración. La rama del equipo pasó de `integrar-version-v5` a **`v0.6`**, la versión 0.6 de Alex.

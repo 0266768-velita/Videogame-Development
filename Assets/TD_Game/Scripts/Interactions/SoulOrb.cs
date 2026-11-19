@@ -25,6 +25,15 @@ namespace TD_Game
         [Tooltip("Slow breathing glow, like a soul, not a toy.")]
         [SerializeField, Range(0f, 1f)] float glowPulse = 0.3f;
 
+        [Header("Look of each orb (easy to see in the dark)")]
+        [SerializeField] Sprite goldCoin;      // Soul: a shiny gold coin that spins
+        [SerializeField] Sprite jadeGem;       // health
+        [SerializeField] Sprite tonalliGem;    // concentration
+        [Tooltip("Soft light under the orb, drawn above the darkness of the map.")]
+        [SerializeField] SpriteRenderer halo;
+        [Tooltip("Size of the coin / gems (1 = their real pixel size).")]
+        [SerializeField, Range(0.2f, 1.5f)] float size = 0.55f;
+
         OrbType type;
         float value;
         Vector3 restPosition;
@@ -43,6 +52,18 @@ namespace TD_Game
             value = orbValue;
             baseColor = color;
             if (sprite != null) sprite.color = color;
+            // If the bright pictures are assigned, use them (white = their own colours) and a halo of the same colour.
+            Sprite look = orbType == OrbType.Soul ? goldCoin : orbType == OrbType.Jade ? jadeGem : tonalliGem;
+            if (sprite != null && look != null)
+            {
+                sprite.sprite = look;
+                baseColor = Color.white;
+                sprite.color = Color.white;
+                sprite.sortingOrder = 502;   // above the darkness of the map
+            }
+            if (halo != null)
+                halo.color = orbType == OrbType.Soul ? new Color(1f, 0.85f, 0.3f, 0.55f)
+                           : orbType == OrbType.Jade ? new Color(0.3f, 1f, 0.5f, 0.5f) : new Color(0.3f, 0.9f, 1f, 0.5f);
             popFrom = from;
             restPosition = to;
             popElapsed = 0f;
@@ -69,6 +90,12 @@ namespace TD_Game
             transform.position = restPosition + Vector3.up * (Mathf.Sin((Time.time + phase) * bobSpeed) * bobHeight);
             if (sprite != null)
                 sprite.color = MexicaPalette.WithAlpha(baseColor, 1f - glowPulse * (0.5f + 0.5f * Mathf.Sin((Time.time + phase) * 2.2f)));
+            if (type == OrbType.Soul && goldCoin != null && sprite != null)   // the coin spins
+                sprite.transform.localScale = new Vector3(Mathf.Max(0.15f, Mathf.Abs(Mathf.Cos((Time.time + phase) * 4f))) * size, size, 1f);
+            else if (goldCoin != null && sprite != null)
+                sprite.transform.localScale = Vector3.one * size;
+            if (halo != null)   // the halo breathes
+                halo.transform.localScale = Vector3.one * (1.1f + 0.25f * Mathf.Sin((Time.time + phase) * 5f));
         }
 
         bool TryFindPlayer()

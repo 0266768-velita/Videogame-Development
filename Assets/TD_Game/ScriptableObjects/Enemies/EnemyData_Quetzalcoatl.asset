@@ -22,8 +22,8 @@ MonoBehaviour:
   patrolRadius: 1.5
   patrolWait: 3
   alertAlliesRadius: 0
-  maxHealth: 520
-  attackPower: 18
+  maxHealth: 760
+  attackPower: 22
   damageTakenMultiplier: 1
   startsBattleFirst: 1
   bodyRadius: 2.4
@@ -76,9 +76,9 @@ MonoBehaviour:
     effect: 6
     effectAmount: 0
     effectIgnoresCounter: 0
-  phaseTwoAtHealth: 0.5
+  phaseTwoAtHealth: 0.6
   phaseTwoName: FEATHERED SERPENT
-  phaseTwoPowerMultiplier: 1.25
+  phaseTwoPowerMultiplier: 1.4
   phaseTwoAttacks:
   - attackName: Plumed Dive
     damageMultiplier: 1.4

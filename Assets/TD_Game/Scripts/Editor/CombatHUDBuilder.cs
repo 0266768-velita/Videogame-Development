@@ -131,7 +131,7 @@ namespace TD_Game.EditorTools
 
             // What to do during the enemy's turn (replaces the menu).
             var enemyBar = Plate("EnemyTurnBar", parent, new Vector2(0.5f, 0f), new Vector2(0, 22), 16, out var enemyText);
-            enemyText.text = "◆  DEFEND  ◆        SPACE / B   dodge        ·        1 / A   interrupt spells        ·        late press = PERFECT";
+            enemyText.text = "◆  DEFEND  ◆        press the key shown in the box  (W  A  S  D)        ·        late press = PERFECT";
             enemyText.color = Bone;
             enemyBar.gameObject.SetActive(true);
             var enemyGroup = enemyBar.gameObject.AddComponent<CanvasGroup>();

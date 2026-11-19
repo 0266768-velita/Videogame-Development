@@ -36,6 +36,7 @@ namespace TD_Game.EditorTools
         {
             ArtGenerator.GenerateAll();
             PropArt.GenerateAll();
+            UpdateOrbPrefab();
             LegacyArtImporter.ImportAll();
             EnemyContentBuilder.Build();
             ApplyLegacyCharacterArt();
@@ -127,6 +128,14 @@ namespace TD_Game.EditorTools
             foreach (var pause in Object.FindObjectsByType<PauseScreen>()) SetStyle(pause, font, frame);
             foreach (var boot in Object.FindObjectsByType<BootScreens>()) SetStyle(boot, font, null);
             foreach (var comic in Object.FindObjectsByType<PrologueComic>()) SetStyle(comic, font, null);
+            foreach (var credits in Object.FindObjectsByType<CreditsScreen>())
+            {
+                SetStyle(credits, font, null);
+                var so = new SerializedObject(credits);
+                so.FindProperty("background").objectReferenceValue = PropArt.Picture("journey");
+                so.FindProperty("greca").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/TD_Game/Art/UI/Greca_Almenas.png");
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
         }
 
         static void SetStyle(Object component, Font font, Sprite frame)
@@ -241,7 +250,6 @@ namespace TD_Game.EditorTools
 
             var city = AssetDatabase.LoadAssetAtPath<Texture2D>(LegacyArtImporter.MenuFolder + "/MenuBackground.png");
             var hero = AssetDatabase.LoadAssetAtPath<Texture2D>(LegacyArtImporter.CharacterFolder + "/tlahuelli.png");
-            var weapon = AssetDatabase.LoadAssetAtPath<Texture2D>(ArtGenerator.EffectsFolder + "/macuahuitl.png");
             var giant = AssetDatabase.LoadAssetAtPath<Texture2D>(LegacyArtImporter.CharacterFolder + "/giant.png");
             Rect front = new Rect(0f, 52f / 78f, 18f / 72f, 26f / 78f);   // Tlahuelli looking at us (first frame)
             Rect whole = new Rect(0, 0, 1, 1);
@@ -263,7 +271,7 @@ namespace TD_Game.EditorTools
                         P(Art("grave"), whole, Color.white, "That night, grief became something else.") },
                 new[] { P(Art("fist"), whole, Color.white, "\"I will make them answer.\"") },
                 new[] { P(Art("mictlantecuhtli"), whole, Color.white, "MICTLANTECUHTLI:\n\"The gods forgot you.\nThey forgot me too.\""),
-                        P(weapon, whole, new Color(0.8f, 0.8f, 0.85f), "\"Take this Macuahuitl. It grows hungry with every servant of the gods you strike down.\""),
+                        P(Art("gift"), whole, Color.white, "\"Take this Macuahuitl. It grows hungry with every servant of the gods you strike down.\""),
                         P(Art("journey"), whole, Color.white, "And so his journey began.") },
             };
             pages.arraySize = content.Length;
@@ -342,6 +350,33 @@ namespace TD_Game.EditorTools
             SetCharacter("Boss_Quetzalcoatl", "quetzal", new Vector2(3.2f, 1.2f), true, 2f);
             SetBossArt();
             SetCharacter("Player", "tlahuelli", Vector2.zero, false, 0f);
+        }
+
+        /// <summary>Orbs easy to see: a shiny spinning gold coin, bright gems and a halo above the darkness.</summary>
+        static void UpdateOrbPrefab()
+        {
+            const string path = "Assets/TD_Game/Prefabs/Interactables/Orb.prefab";
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) return;
+            var root = PrefabUtility.LoadPrefabContents(path);
+            var orb = root.GetComponent<SoulOrb>();
+            var halo = root.transform.Find("Halo");
+            if (halo == null)
+            {
+                halo = new GameObject("Halo").transform;
+                halo.SetParent(root.transform, false);
+                var sr = halo.gameObject.AddComponent<SpriteRenderer>();
+                sr.sprite = ArtGenerator.Effect("glow");
+                sr.sortingOrder = 501;
+                halo.localScale = Vector3.one * 1.2f;
+            }
+            var so = new SerializedObject(orb);
+            so.FindProperty("goldCoin").objectReferenceValue = PropArt.Sprite("orb_coin");
+            so.FindProperty("jadeGem").objectReferenceValue = PropArt.Sprite("orb_jade");
+            so.FindProperty("tonalliGem").objectReferenceValue = PropArt.Sprite("orb_tonalli");
+            so.FindProperty("halo").objectReferenceValue = halo.GetComponent<SpriteRenderer>();
+            so.ApplyModifiedPropertiesWithoutUndo();
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+            PrefabUtility.UnloadPrefabContents(root);
         }
 
         /// <summary>The new, more intimidating Quetzalcoatl (PropArt), with its 4 swaying frames.</summary>

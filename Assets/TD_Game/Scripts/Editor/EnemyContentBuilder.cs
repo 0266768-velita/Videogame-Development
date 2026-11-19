@@ -34,6 +34,7 @@ namespace TD_Game.EditorTools
             EnsurePrefab(boss, "Boss_Quetzalcoatl", new Color(0.2f, 0.55f, 0.45f), 2.2f, new Vector2(1.4f, 0.7f));
 
             EnsurePlayerPrefab();
+            ToughenBoss(boss);
             AssetDatabase.SaveAssets();
             Debug.Log("[TD_Game] Enemy data and prefabs ready in " + DataFolder + " and " + PrefabFolder);
         }
@@ -134,6 +135,19 @@ namespace TD_Game.EditorTools
                 Support("Rite of the Feathered Serpent", AttackEffect.EmpowerSelf, 1.2f, weight: 0.7f),
             };
             d.soulsOnDefeat = 0f; d.healthOnDefeat = 0f; d.concentrationOnDefeat = 0f;
+        }
+
+        /// <summary>
+        /// Harder final fight (also applied to an EnemyData that already exists): more health and damage,
+        /// it changes form earlier and hits much harder in its second form. It also acts twice per round (CombatManager).
+        /// </summary>
+        static void ToughenBoss(EnemyData d)
+        {
+            d.maxHealth = 760f;
+            d.attackPower = 22f;
+            d.phaseTwoAtHealth = 0.6f;
+            d.phaseTwoPowerMultiplier = 1.4f;
+            EditorUtility.SetDirty(d);
         }
 
         // ---------------- Helpers ----------------

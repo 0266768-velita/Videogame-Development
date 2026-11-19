@@ -28,6 +28,10 @@ namespace TD_Game
         public static void ShowBanner(string text, float seconds) => Banner?.Invoke(text, seconds);
         public static void SetTurnLabel(string text) => TurnLabel?.Invoke(text);
         public static void SetCounterPrompt(string text) => CounterPrompt?.Invoke(text);
+
+        /// <summary>Quick time event: verb ("DODGE"/"INTERRUPT") and key ("A"); verb null = hide it.</summary>
+        public static event Action<string, string> QuickTime;
+        public static void SetQuickTime(string verb, string key) => QuickTime?.Invoke(verb, key);
         public static void ShowPopup(Vector3 worldPosition, string text, Color color) => Popup?.Invoke(worldPosition, text, color);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -36,6 +40,7 @@ namespace TD_Game
             Banner = null;
             TurnLabel = null;
             CounterPrompt = null;
+            QuickTime = null;
             Popup = null;
             Shake = null;
             HitStop = null;

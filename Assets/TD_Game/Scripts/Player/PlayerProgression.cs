@@ -21,7 +21,14 @@ namespace TD_Game
 
         public event Action<CombatAbility> AbilityUnlocked;
 
-        void Awake() => Checkpoint = transform.position;
+        /// <summary>Where the game starts. After a defeat you go back HERE, not to the last checkpoint.</summary>
+        public Vector3 StartPoint { get; private set; }
+
+        void Awake()
+        {
+            StartPoint = transform.position;
+            Checkpoint = transform.position;
+        }
 
         public bool IsUnlocked(CombatAbility ability) =>
             ability != null && (ability.unlockedByDefault || unlockedAbilities.Contains(ability));

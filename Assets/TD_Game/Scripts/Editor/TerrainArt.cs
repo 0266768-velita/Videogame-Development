@@ -21,6 +21,8 @@ namespace TD_Game.EditorTools
         {
             public TileBase[] grass, water, pits, trees, rocks;
             public TileBase flowers, dirt, bridgeVertical, bridgeHorizontal, templeFloor, templeWall;
+            public TileBase velyGrass;          // Vely's grass (mixed with the generated one)
+            public TileBase[] velyTrees;        // Vely's trees
         }
 
         [MenuItem("TD_Game/Generate Map Tiles")]
@@ -42,6 +44,8 @@ namespace TD_Game.EditorTools
                 rocks = new[] { Rock(1, false), Rock(2, true) },
                 templeFloor = TempleFloor(),
                 templeWall = TempleWall(),
+                velyGrass = VelyTile("grass", 64, new Vector2(0.5f, 0.5f), false),
+                velyTrees = new[] { VelyTile("tree", 32, new Vector2(0.5f, 0.28f), true), VelyTile("tree2", 32, new Vector2(0.5f, 0.12f), true) },
             };
             for (int mask = 0; mask < 16; mask++)
             {
@@ -87,6 +91,39 @@ namespace TD_Game.EditorTools
             if ((mask & 6) == 6 && px > T - r && py > T - r) d = Mathf.Min(d, r - Vector2.Distance(new Vector2(px, py), new Vector2(T - r, T - r)));
             if ((mask & 12) == 12 && px < r && py > T - r) d = Mathf.Min(d, r - Vector2.Distance(new Vector2(px, py), new Vector2(r, T - r)));
             return d;
+        }
+
+        // ---------------- Vely's art (Art/Tilesets/Vely, 64 x 64 pictures) ----------------
+
+        public const string VelyFolder = "Assets/TD_Game/Art/Tilesets/Vely";
+
+        /// <summary>Imports one of Vely's pictures (Point filter, no blur) and makes its Tile.
+        /// Grass: 64 px per tile. Trees: 32 px per tile so they are 2 tiles big, like the forest.</summary>
+        static TileBase VelyTile(string name, int pixelsPerUnit, Vector2 pivot, bool solid)
+        {
+            string png = $"{VelyFolder}/{name}.png";
+            var importer = (TextureImporter)AssetImporter.GetAtPath(png);
+            if (importer == null) { Debug.LogWarning("[TD_Game] Missing Vely sprite " + png); return null; }
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = pixelsPerUnit;
+            importer.filterMode = FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.mipmapEnabled = false;
+            var settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            settings.spriteAlignment = (int)SpriteAlignment.Custom;
+            settings.spritePivot = pivot;
+            importer.SetTextureSettings(settings);
+            importer.SaveAndReimport();
+
+            string path = $"{VelyFolder}/{name}.asset";
+            var tile = AssetDatabase.LoadAssetAtPath<Tile>(path);
+            if (tile == null) { tile = ScriptableObject.CreateInstance<Tile>(); AssetDatabase.CreateAsset(tile, path); }
+            tile.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(png);
+            tile.colliderType = solid ? Tile.ColliderType.Grid : Tile.ColliderType.None;
+            EditorUtility.SetDirty(tile);
+            return tile;
         }
 
         // ---------------- ground ----------------
