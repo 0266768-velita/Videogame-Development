@@ -10,9 +10,10 @@ namespace TD_Game
     /// </summary>
     public static class Vfx
     {
-        // Sorting: ground marks under the characters, everything else above them.
+        // Sorting: ground marks under the characters, everything else above them. In combat the fighters are
+        // drawn at CombatArena.FighterOrder (510, above the darkness of the map), so the front effects go above that.
         public const int GroundOrder = -5;
-        public const int FrontOrder = 20;
+        public const int FrontOrder = 520;
 
         /// <summary>Expanding ring. radius in tiles. onGround = drawn under the characters (shockwaves).</summary>
         public static VfxPiece Ring(Vector3 position, Color color, float fromRadius, float toRadius, float time, bool onGround = false, float squashY = 1f)
@@ -87,11 +88,18 @@ namespace TD_Game
             p.ScaleTo = new Vector3(size, size * 0.5f, 1f);
         }
 
+        /// <summary>The order a sprite is really drawn at: its SortingGroup's if it is inside one (fighters in combat).</summary>
+        static int DrawnOrder(SpriteRenderer sprite)
+        {
+            var group = sprite.GetComponentInParent<UnityEngine.Rendering.SortingGroup>();
+            return group != null ? group.sortingOrder : sprite.sortingOrder;
+        }
+
         /// <summary>Faded copy of a sprite at its current pose (motion trails).</summary>
         public static void Afterimage(SpriteRenderer source, Color tint, float life = 0.22f)
         {
             if (source == null || source.sprite == null) return;
-            var p = VfxPiece.Create(source.sprite, source.transform.position, new Color(tint.r, tint.g, tint.b, 0.45f), source.sortingOrder - 1);
+            var p = VfxPiece.Create(source.sprite, source.transform.position, new Color(tint.r, tint.g, tint.b, 0.45f), DrawnOrder(source) - 1);
             p.Sprite.flipX = source.flipX;
             p.Sprite.flipY = source.flipY;
             p.transform.rotation = source.transform.rotation;

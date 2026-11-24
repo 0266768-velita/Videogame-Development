@@ -155,7 +155,7 @@ MonoBehaviour:
   title: "MICTL\xC1N"
   studio: Micta Forge
   version: v.04
-  gameScene: MainMap
+  gameScene: MainMap_CSV
   prologueScene: TD_Prologue
 --- !u!4 &1050357894
 Transform:

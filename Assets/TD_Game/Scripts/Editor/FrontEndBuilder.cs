@@ -52,7 +52,7 @@ namespace TD_Game.EditorTools
             AddLevelServices(TestLevelPath, library);
             SetBuildScenes();
             AssetDatabase.SaveAssets();
-            Debug.Log("[TD_Game] Front end ready: TD_Boot -> TD_MainMenu -> MainMap.");
+            Debug.Log("[TD_Game] Front end ready: TD_Boot -> TD_MainMenu -> MainMap_CSV (build it with TD_Game > Build CSV Map).");
         }
 
         // ---------------- Audio ----------------
@@ -335,6 +335,7 @@ namespace TD_Game.EditorTools
                 new EditorBuildSettingsScene(MenuPath, true),
                 new EditorBuildSettingsScene(ProloguePath, true),
                 new EditorBuildSettingsScene(MainMapBuilder.MainMapPath, true),
+                new EditorBuildSettingsScene(CsvMapBuilder.ScenePath, true),   // the map the menu loads (SceneIds.MainMap)
                 new EditorBuildSettingsScene(TestLevelPath, true),
             };
         }

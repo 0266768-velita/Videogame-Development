@@ -4,8 +4,10 @@ using UnityEngine;
 namespace TD_Game
 {
     /// <summary>
-    /// One enemy's turn: red warning, a window to dodge or interrupt (with anti-spam lock),
-    /// PERFECT timing (+stamina, +Tonalli and an automatic counter-attack), the hit and the attack's unique effect.
+    /// One enemy's turn: red warning, then ONE button (Dodge: Space / B) pressed right before the impact
+    /// (in the spirit of Clair Obscur: Expedition 33). In time = no damage and an automatic counter-attack;
+    /// PERFECT = a stronger counter, +stamina and +Tonalli. Too early or too late = full damage, and pressing out of
+    /// time locks the button (anti-spam). Spells use the same button to INTERRUPT. Then the attack's unique effect.
     /// </summary>
     public class EnemyTurn : MonoBehaviour
     {
@@ -13,7 +15,7 @@ namespace TD_Game
         [SerializeField] Color telegraphColor = MexicaPalette.Blood;
         [Tooltip("The last part of the window (this fraction) counts as PERFECT.")]
         [SerializeField, Range(0.1f, 0.9f)] float perfectWindowFraction = 0.35f;
-        [Tooltip("Pressing before the window opens locks the counter for this many seconds.")]
+        [Tooltip("Pressing out of time locks the button for this many seconds (x1.5 for every extra press: mashing never works).")]
         [SerializeField, Min(0f)] float earlyPressLockout = 0.3f;
         [SerializeField, Min(0f)] float dodgeStepDistance = 1f;
         [SerializeField, Min(0.05f)] float enemyLungeTime = 0.18f;
@@ -23,6 +25,8 @@ namespace TD_Game
         [SerializeField, Range(0.3f, 1.5f)] float counterWindowScale = 0.75f;
         [Tooltip("Extra shrink for the boss's window.")]
         [SerializeField, Range(0.3f, 1f)] float bossWindowScale = 0.75f;
+        [Tooltip("The counter-attack of a normal (not PERFECT) dodge hits this fraction of the PERFECT one.")]
+        [SerializeField, Range(0.1f, 1f)] float goodCounterFraction = 0.6f;
 
         public IEnumerator Run(CombatContext context, CombatEnemy enemy)
         {
@@ -56,10 +60,10 @@ namespace TD_Game
             else
             {
                 bool interrupt = attack.counter == CounterType.Interrupt;
-                // Quick time event: a random key (W A S D) appears in a box: "Press [A] to DODGE!"
+                // One button for every defence: "Press [SPACE] to DODGE!" right before the impact.
                 float window = attack.counterWindow * counterWindowScale * (enemy.Data.isBoss ? bossWindowScale : 1f);
-                yield return ActionCommand.RunQuickTime(interrupt ? "INTERRUPT" : "DODGE", windUp, window,
-                    perfectWindowFraction, earlyPressLockout, r => result = r);
+                yield return ActionCommand.Run(input.Dodge, interrupt ? "INTERRUPT" : "DODGE", windUp, window,
+                    perfectWindowFraction, earlyPressLockout, context.Player.transform, r => result = r);
             }
 
             bool success = result != ActionCommand.Result.Miss;
@@ -81,7 +85,8 @@ namespace TD_Game
         {
             var player = context.Player;
             bool interrupt = attack.counter == CounterType.Interrupt;
-            CombatFeed.ShowBanner(perfect ? "PERFECT!" : interrupt ? "Interrupted!" : "Dodged!", 0.9f);
+            CombatFeed.ShowBanner(perfect ? "PERFECT!" : interrupt ? "Interrupted!" : "Dodged!", 0.9f);   // GameplayAudio plays the sound of each banner
+            CombatFeed.RequestShake(perfect ? 0.08f : 0.04f, 0.15f);
             if (interrupt)
             {
                 // The spell breaks: a flash on the caster, who staggers.
@@ -89,26 +94,32 @@ namespace TD_Game
                 Vfx.Burst(enemy.transform.position + Vector3.up * 0.5f, 10, MexicaPalette.Bone, new Vector2(2f, 4f), 8f, 1.2f, 0.4f, toGround: false, upward: 0.2f);
                 CombatMotion.HitReaction(enemy.transform, player.transform.position, 0.8f);
             }
-            if (perfect) Vfx.Ring(player.transform.position + Vector3.up * 0.4f, MexicaPalette.Turquoise, 0.2f, 1.3f, 0.35f);
+            Vfx.Ring(player.transform.position + Vector3.up * 0.4f, perfect ? MexicaPalette.Turquoise : MexicaPalette.Bone, 0.2f, perfect ? 1.3f : 0.9f, 0.35f);
+            if (!interrupt) Vfx.Afterimage(context.PlayerSprite, perfect ? MexicaPalette.Turquoise : MexicaPalette.Bone, 0.3f);
 
             if (!interrupt)
                 yield return CombatMotion.Step(player.transform, new Vector3(-dodgeStepDistance, 0.4f, 0f), 0.12f);
             else
                 yield return new WaitForSeconds(0.2f);
 
-            if (!perfect) yield break;
+            if (enemy.Health.IsDead) yield break;
 
-            // PERFECT: stamina, Tonalli and a quick counter-attack.
-            player.AddStamina(player.Stats.perfectCounterStaminaBonus);
-            player.AddConcentration(player.Stats.concentrationPerPerfect);
-            float damage = player.AttackDamage(player.Stats.counterAttackMultiplier);
+            // Every successful defence answers with an automatic counter-attack; PERFECT hits harder and also
+            // gives stamina and Tonalli.
+            if (perfect)
+            {
+                player.AddStamina(player.Stats.perfectCounterStaminaBonus);
+                player.AddConcentration(player.Stats.concentrationPerPerfect);
+            }
+            float damage = player.AttackDamage(player.Stats.counterAttackMultiplier * (perfect ? 1f : goodCounterFraction));
+            GameAudio.PlaySfx("swing");
             var weapon = MacuahuitlRig.Active(player);
             if (weapon != null) context.Run(weapon.RaiseTo(MacuahuitlTechnique.Backhand.windAngle, 0.08f));
             yield return CombatMotion.Lunge(player.transform, enemy.transform.position, context.StopDistance(enemy), 0.12f,
                 () =>
                 {
-                    Vfx.Slash(enemy.transform.position + Vector3.up * 0.5f, 1f, MexicaPalette.Turquoise, 1.1f, MacuahuitlTechnique.Backhand.slashAngle);
-                    context.DamageEnemy(enemy, damage, critical: true, label: "COUNTER");
+                    Vfx.Slash(enemy.transform.position + Vector3.up * 0.5f, 1f, perfect ? MexicaPalette.Turquoise : MexicaPalette.Bone, perfect ? 1.3f : 1f, MacuahuitlTechnique.Backhand.slashAngle);
+                    context.DamageEnemy(enemy, damage, critical: perfect, label: "COUNTER");
                 },
                 weapon != null ? impact => weapon.Strike(MacuahuitlTechnique.Backhand, impact) : null);
         }

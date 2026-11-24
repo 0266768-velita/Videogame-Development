@@ -277,6 +277,10 @@ El repositorio contiene un juego **top-down 2D anterior** (documentado en `ARQUI
 | 2026-11-13 | **Paleta mexica seria** (`Scripts/UI/MexicaPalette.cs`), para un juego serio para adolescentes con temática mexica, como lo griego en God of War. Materiales del mundo azteca en lugar de colores saturados: obsidiana, hueso y ceniza (Mictlán), oro viejo y ocre, cinabrio y tezontle (rojo de los códices), jade (vida) y turquesa/xiuhuitl (tonalli). **Todo color nuevo de UI o combate se toma de `MexicaPalette`.** |
 | 2026-11-13 | **Más oscuro y con mitología mexica** (petición del equipo: un juego serio, no para niños). Paleta más oscura; grecas de almenas escalonadas (Templo Mayor) en paneles, avisos y sobre el menú; insignias de tecla en rombo de piedra; viñeta que oscurece la arena al empezar el combate. **Las barras se nombran con las tres fuerzas anímicas mexicas:** TEYOLIA · LIFE, IHIYOTL · BREATH y TONALLI · SPIRIT. Los textos de turno van en mayúsculas. |
 | 2026-11-17 | **Animación procedural del combate** (`ActorFx` + `Vfx`) mientras no exista el arte animado: todo efecto vive en `Scripts/Combat/Fx/` y usa `MexicaPalette`. Al llegar el Animator se sustituye `CombatMotion` sin tocar turnos ni habilidades. |
+| 2026-11-24 | **Mapa del CSV del equipo** (`Settings/Maps/mapa_juego_150x70.csv`) en la escena nueva **`MainMap_CSV`** (copia de `MainMap`, que no se toca), a **1 celda = 2 × 2 tiles**, pintado tal cual (sin suavizar caminos). **El menú y el prólogo cargan `MainMap_CSV`** (`SceneIds.MainMap`); está en Build Settings y en la build del .exe. |
+| 2026-11-24 | **Esquiva de una sola tecla** (estilo Clair Obscur): Espacio / B esquiva **e** interrumpe, justo antes del impacto. Éxito = 0 daño + contraataque automático; pronto o tarde = daño completo; pulsar fuera de tiempo bloquea la tecla (anti-spam). El crítico vuelve a ser 1 / A. Se quitan las teclas al azar W A S D / J K L. |
+| 2026-11-24 | **En combate, los luchadores se dibujan en un `SortingGroup` de orden 510** (encima del mapa, los puestos y la oscuridad de 500) y la pelea se mueve a un claro libre; los efectos de delante usan 520. |
+| 2026-11-24 | **Iconos de botones según el último dispositivo** (teclado / ratón, Xbox o PlayStation): los avisos piden **acciones** (`{Dodge}`, `{Interact}`, `{Next}`…) a `InputPrompts`; los iconos son `ButtonGlyph` (pixel art generado en `ButtonGlyphs`, con colores de `MexicaPalette`). **Nunca escribir teclas fijas en la UI**: usar `InputPrompts.Label`, `Localize` o `ButtonGlyph`. Opción «Button icons» (Auto por defecto). |
 
 ### Convención de importación del arte de TD_Game
 
@@ -305,6 +309,12 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
   - `TallOutline_64x128`: pivote en (0.5, 0.25), de modo que su base ocupa una celda y sobresale una hacia arriba.
 - **Tiles placeholder:** `Assets/TD_Game/Art/Tilesets/Placeholder/Tiles/`. Son primitivas teñidas con el color del Tile: `Ground_Grass`, `Ground_Dirt`, `Water`, `Wall_Stone`, `Deco_Pillar_Tall`.
 - **Tile Palette:** `Assets/TD_Game/Art/Tilesets/Palettes/TD_Placeholder.prefab` (Rectangle, celda 1 × 1).
+- **Iconos de botones** (`Scripts/UI/`):
+  - `InputDevices` detecta el último dispositivo; `InputPrompts` traduce acciones a SPACE / B / CIRCLE (tabla de acciones dentro);
+  - `ButtonGlyph.Create(parent, "Dodge", altura)` crea un icono que cambia solo; `GlyphText.Set(text, "{Interact}  Talk")` pone el icono delante de un aviso;
+  - en frases, `InputPrompts.Localize("Press {Dodge}")` da «Press [SPACE]».
+- **Historieta** (`PrologueComic`): Siguiente = Espacio / Enter / clic / A; Omitir = mantener ESC / B. La ayuda de la esquina aparece con cualquier tecla y se oculta tras 3 s.
+- **Mapa del CSV:** `Scenes/Levels/MainMap_CSV.unity`, creado con **TD_Game > Build CSV Map (MainMap_CSV)** (`Editor/CsvMapBuilder.cs`, `CsvMap.cs`, `CsvMapPainter.cs`) desde `Settings/Maps/mapa_juego_150x70.csv`. Es una copia de `MainMap` con todos sus sistemas recolocados: jugador en `S`, enemigos en `E`, cofres `LootChest` en `K`, jefe en la pirámide (`M`/`I`) con una `KeyDoor` y una reja en cada entrada, casa de la espada en `H` con el santuario de Alex al lado. 1 celda = 2 × 2 tiles; arena `Sand_1/2`; el puente está en la fila 22, columnas 16–18. Para reconstruirlo, borrar la escena y volver a usar el menú.
 - **Escena de pruebas:** `Assets/TD_Game/Scenes/Testing/TestLevel.unity`.
   - `Grid` con tres Tilemaps:
     - `Ground`: orden -10, modo Chunk.
@@ -336,11 +346,14 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
     - el jugador va a la izquierda y los enemigos a la derecha sobre el mismo mapa; la cámara hace zoom a 2.8125 (×3);
     - aplica el temblor de cámara y el *hit stop* (`Time.timeScale` a 0.05 un instante);
     - `cameraOffset` (0.6, -0.3), junto con el menú de comandos compacto (escala 0.82), deja a los enemigos a la izquierda del menú. Si la cámara no puede llegar por los límites del mapa, los luchadores se desplazan hacia dentro (`CameraFollow.ClampPosition`);
-    - activa la respiración de todos los luchadores mientras dura la pelea.
+    - activa la respiración de todos los luchadores mientras dura la pelea;
+    - pone a cada luchador en un `SortingGroup` de orden **510** (`fighterOrder`) mientras dura la pelea, para que ni árboles, ni puestos, ni la oscuridad (500) lo tapen; al terminar lo quita;
+    - antes de colocar a nadie busca el claro más cercano (`clearSearchRadius`): nadie pelea encima de un árbol, el río o un prop.
   - `PlayerTurn`: 5 ranuras (attack, skill1, skill2, potion, ultimate) expuestas en `Slots`; `Performing` indica la acción en curso.
   - `EnemyTurn`:
-    - telegrafía, ventana de esquivar o interrumpir y anti-spam;
-    - PERFECT: +estamina, +Tonalli y **contraataque automático**.
+    - telegrafía y **una sola tecla** (Dodge: Espacio / B) justo antes del impacto, tanto para esquivar como para interrumpir (`ActionCommand.Run`);
+    - éxito: 0 daño y **contraataque automático** (el normal pega `goodCounterFraction`); PERFECT: contraataque completo, +estamina y +Tonalli;
+    - pronto: TOO EARLY y la tecla se bloquea (×1,5 por pulsación extra, LOCKED); sin pulsar o tarde: daño completo.
   - `ActionCommand`: pulsación con *timing*, usada para los críticos y los contraataques del jugador.
   - `CombatRewards`: victoria (crecimiento, desbloqueos, poción y checkpoint; **no** rellena la vida ni da almas: eso lo dan los orbes) y derrota.
   - `CombatInput`: lee el mapa `Combat`.
@@ -350,7 +363,7 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
   - **Animación procedural** (`Scripts/Combat/Fx/`):
     - `ActorFx` anima solo el hijo `Visual`; el root y la sombra se quedan en el suelo. Incluye squash & stretch con muelle, altura, inclinación alrededor del centro del cuerpo, retroceso, temblor y respiración en combate. Se añade solo con `ActorFx.Of(actor)`.
     - `Vfx` (con `VfxPiece` y `VfxSprites`, texturas generadas en código): anillos y ondas, polvo, escombros, chispas, cortes en media luna, grietas en el suelo, estelas (afterimages), almas y proyectiles.
-    - Orden de dibujo de los efectos: -5 los del suelo y 20 los de delante.
+    - Orden de dibujo de los efectos: -5 los del suelo y **520** los de delante (encima de los luchadores, que en combate van a 510).
     - **`MacuahuitlRig`** (en el `Player` de `TestLevel`, en el de `MainMap` —que no es instancia del prefab— y en `Prefabs/Characters/Player.prefab`): el macuahuitl de Tlahuelli en combate.
       - Es un sprite aparte, pixel art de 7×17 px a 16 PPU generado por `WeaponSprites`: madera, navajas de obsidiana, mango y borla roja. Se puede sustituir por arte de Aseprite en **Weapon Sprite**.
       - Sigue a la mano (`grip` / `combatGrip`) y al cuerpo (`ActorFx`), sin deformarse.
@@ -370,7 +383,7 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
 - **Input de combate:** mapa `Combat` en `PlayerControls.inputactions`:
   - Attack 1/A, Skill1 2/X, Skill2 3/Y, Potion 4/D-pad arriba y Ultimate 5/LB;
   - EndTurn Q/RB y TargetPrev/Next con flechas o D-pad;
-  - Dodge con Espacio, D o B, e Interrupt con 1/A.
+  - **Dodge (Espacio / B) es la única tecla de defensa**: esquiva e interrumpe. `Interrupt` (1/A) sigue en el asset, pero el combate ya no la lee.
 - **Habilidades:** ScriptableObjects que heredan de `CombatAbility` (`Scripts/Combat/Abilities/`), con assets en `ScriptableObjects/Abilities/`:
   - Attack, Potion y Tonalli Burst están desbloqueadas desde el inicio;
   - Mictlan Fury (una vez por combate) y Seismic Jump se desbloquean.

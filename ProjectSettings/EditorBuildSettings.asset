@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/TD_Game/Scenes/Testing/TestLevel.unity
     guid: 7a5e5fbd764b19a4a83889eae431ddab
+  - enabled: 1
+    path: Assets/TD_Game/Scenes/Levels/MainMap_CSV.unity
+    guid: 4922cace5ba8f48498e9ec97390a3395
   m_configObjects: {}

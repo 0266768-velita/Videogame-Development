@@ -39,7 +39,7 @@ namespace TD_Game
         {
             if (isNear) near = brazier;
             else if (near == brazier) near = null;
-            Prompt(near != null && !near.Lit && next < correctOrder.Length ? "[E]  Light the brazier" : "");
+            Prompt(near != null && !near.Lit && next < correctOrder.Length ? "{Interact}  Light the brazier" : "");
         }
 
         void Update()
@@ -92,8 +92,8 @@ namespace TD_Game
         void Prompt(string message)
         {
             if (promptText == null) return;
-            promptText.text = message;
             promptText.transform.parent.gameObject.SetActive(message != "");
+            GlyphText.Set(promptText, message);   // "{Interact}" becomes the E / Y / triangle icon
         }
     }
 }

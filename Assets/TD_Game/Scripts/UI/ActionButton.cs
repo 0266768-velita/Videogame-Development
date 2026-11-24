@@ -32,6 +32,8 @@ namespace TD_Game
         [SerializeField] Color shortage = MexicaPalette.Shortage;
         [SerializeField] Color tonalli = MexicaPalette.Turquoise;
 
+        ButtonGlyph glyph;
+        string keyAction;
         Action onClick;
         RectTransform rect;
         Vector2 basePosition;
@@ -50,10 +52,34 @@ namespace TD_Game
 
         public void Setup(string key, string displayName, string cost, Action clicked)
         {
-            if (keyLabel != null) keyLabel.text = key;
+            keyAction = key;
+            UpdateKeyIcon();
             if (nameLabel != null) nameLabel.text = displayName.ToUpperInvariant();
             if (costLabel != null) costLabel.text = cost;
             onClick = clicked;
+        }
+
+        /// <summary>
+        /// Keyboard: the stone rhombus with the key (as designed). Controller: the Xbox button or PlayStation symbol
+        /// (ButtonGlyph) in the same place. key = a keyboard key ("1", "Q") or an action name.
+        /// </summary>
+        void UpdateKeyIcon()
+        {
+            bool pad = InputPrompts.UseGamepad;
+            if (keyLabel != null) { keyLabel.enabled = !pad; keyLabel.text = InputPrompts.LabelFor(keyAction, InputScheme.Keyboard); }
+            if (keyBadge != null) keyBadge.enabled = !pad;
+            if (!pad) { if (glyph != null) glyph.gameObject.SetActive(false); return; }
+            if (glyph == null && keyBadge != null)
+            {
+                var badge = keyBadge.rectTransform;
+                glyph = ButtonGlyph.Create(badge.parent, keyAction, Mathf.Round(badge.rect.height * 0.9f));
+                var r = (RectTransform)glyph.transform;
+                r.anchorMin = badge.anchorMin; r.anchorMax = badge.anchorMax; r.pivot = new Vector2(0.5f, 0.5f);
+                r.anchoredPosition = badge.anchoredPosition + (new Vector2(0.5f, 0.5f) - badge.pivot) * badge.rect.size;
+            }
+            if (glyph == null) return;
+            glyph.gameObject.SetActive(true);
+            glyph.SetAction(keyAction);
         }
 
         /// <summary>highlight = pulse in the Tonalli colour (ultimate ready).</summary>
@@ -64,6 +90,7 @@ namespace TD_Game
 
             if (background != null) background.color = state == State.Active ? activePlate : plate;
             if (keyBadge != null) keyBadge.color = usable ? accent : new Color(accent.r, accent.g, accent.b, 0.35f);
+            if (glyph != null && glyph.gameObject.activeSelf) glyph.GetComponent<Image>().color = new Color(1f, 1f, 1f, usable ? 1f : 0.4f);
             if (underline != null) underline.color = usable ? accent : new Color(muted.r, muted.g, muted.b, 0.3f);
             if (nameLabel != null)
             {

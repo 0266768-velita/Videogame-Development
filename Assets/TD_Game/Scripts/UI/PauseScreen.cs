@@ -33,7 +33,7 @@ namespace TD_Game
             resumeButton = MenuWidgets.Button(t, "Resume", new Vector2(0, 70), size, Resume);
             musicButton = MenuWidgets.Button(t, "", new Vector2(0, -10), size, () => { GameAudio.MusicVolume = Cycle(GameAudio.MusicVolume); Refresh(); }, 28);
             sfxButton = MenuWidgets.Button(t, "", new Vector2(0, -90), size, () => { GameAudio.SfxVolume = Cycle(GameAudio.SfxVolume); Refresh(); }, 28);
-            controllerButton = MenuWidgets.Button(t, "", new Vector2(0, -170), size, () => { InputPrompts.GamepadEnabled = !InputPrompts.GamepadEnabled; Refresh(); }, 26);
+            controllerButton = MenuWidgets.Button(t, "", new Vector2(0, -170), size, () => { InputPrompts.CycleMode(); Refresh(); }, 26);
             MenuWidgets.Button(t, "Main Menu", new Vector2(0, -250), size, ToMainMenu);
             var note = MenuWidgets.Label("Note", t, "Your progress is saved after every victory.", 24, MexicaPalette.Ash);
             MenuWidgets.Center(note.rectTransform, new Vector2(0, -330), new Vector2(900, 40));
@@ -87,7 +87,7 @@ namespace TD_Game
         {
             MenuWidgets.SetLabel(musicButton, $"Music Volume: {Mathf.RoundToInt(GameAudio.MusicVolume * 100f)}%");
             MenuWidgets.SetLabel(sfxButton, $"Effects Volume: {Mathf.RoundToInt(GameAudio.SfxVolume * 100f)}%");
-            MenuWidgets.SetLabel(controllerButton, "Controller buttons: " + (!InputPrompts.GamepadEnabled ? "Off (keyboard)" : UnityEngine.InputSystem.Gamepad.current != null ? "On (Xbox)" : "On (no controller found)"));
+            MenuWidgets.SetLabel(controllerButton, "Button icons: " + InputPrompts.ModeLabel);   // Auto follows the last device used
         }
 
         void OnDestroy()

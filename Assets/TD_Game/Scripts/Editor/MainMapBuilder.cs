@@ -678,7 +678,7 @@ namespace TD_Game.EditorTools
             box.size = new Vector2(11f, 4f);
             var h = new SerializedObject(hint.AddComponent<TutorialZone>());
             h.FindProperty("id").stringValue = "puzzle_hint";
-            h.FindProperty("message").stringValue = "THE SHRINE OF THE FOUR FIRES\nThe stela shows four colours. Light the braziers (E) in that order.";
+            h.FindProperty("message").stringValue = "THE SHRINE OF THE FOUR FIRES\nThe stela shows four colours. Light the braziers ({Interact}) in that order.";
             h.ApplyModifiedPropertiesWithoutUndo();
             _ = stela;
         }

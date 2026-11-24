@@ -45,7 +45,7 @@ namespace TD_Game.EditorTools
             PlayerSettings.runInBackground = true;
             var options = new BuildPlayerOptions
             {
-                scenes = new[] { FrontEndBuilder.BootPath, FrontEndBuilder.MenuPath, FrontEndBuilder.ProloguePath, MainMapBuilder.MainMapPath },
+                scenes = new[] { FrontEndBuilder.BootPath, FrontEndBuilder.MenuPath, FrontEndBuilder.ProloguePath, MainMapBuilder.MainMapPath, CsvMapBuilder.ScenePath },
                 locationPathName = BuildFolder + "/Mictlan.exe",
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,

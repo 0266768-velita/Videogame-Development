@@ -41,7 +41,7 @@ namespace TD_Game
             var who = other.GetComponentInParent<PlayerCombatant>();
             if (who == null) return;
             player = who;
-            ShowPrompt("[E]  Talk to the merchant");
+            ShowPrompt("{Interact}  Talk to the merchant");
             ContextTutorial.ShowOnce("shop", "The merchant sells potions and a powerful artifact. Defeat enemies to earn gold.");
         }
 
@@ -88,7 +88,7 @@ namespace TD_Game
             window.SetActive(false);
             StartCoroutine(ResumeNextFrame());   // next frame, so the same ESC does not also open the pause menu
             GameAudio.PlaySfx("ui_back", 1f, 0f);
-            if (player != null) ShowPrompt("[E]  Talk to the merchant");
+            if (player != null) ShowPrompt("{Interact}  Talk to the merchant");
         }
 
         IEnumerator ResumeNextFrame()
@@ -197,8 +197,8 @@ namespace TD_Game
         void ShowPrompt(string message)
         {
             if (promptText == null) return;
-            promptText.text = message;
             promptText.transform.parent.gameObject.SetActive(message != "");
+            GlyphText.Set(promptText, message);   // "{Interact}" becomes the E / Y / triangle icon
         }
     }
 }

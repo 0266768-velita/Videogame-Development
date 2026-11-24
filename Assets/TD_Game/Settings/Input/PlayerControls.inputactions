@@ -499,17 +499,6 @@
                 },
                 {
                     "name": "",
-                    "id": "bc66b659-7e3c-40fe-8c3d-a07eb3ca29f4",
-                    "path": "<Keyboard>/d",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard",
-                    "action": "Dodge",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "213ed2a6-5f0d-4c64-857d-c3a221da6051",
                     "path": "<Gamepad>/buttonEast",
                     "interactions": "",

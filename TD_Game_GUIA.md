@@ -294,12 +294,14 @@ Lo hacen posible tres ajustes:
 ### Cómo se juega una pelea
 1. Toca a un enemigo para empezar. Si caes encima tras un salto, es una **emboscada**: STOMP y atacas primero.
 2. **Tu turno:** gastas **estamina** (barra dorada) en acciones, 1–5; cuando termines, pulsa **Q**.
-   - **Attack (1):** el personaje se carga. Si pulsas **1 otra vez cuando aparece NOW!**, haces un **crítico**.
+   - **Attack (1):** el personaje se carga. Si pulsas **1 otra vez justo antes del golpe** (cuando aparece la caja), haces un **crítico**.
    - Los ataques seguidos en el mismo turno hacen **combo**: +15 % por golpe.
    - ← → cambian de objetivo (la flecha ▼ marca a cuál atacas).
-3. **Turno enemigo:** el enemigo parpadea en rojo. Cuando aparece **DODGE!**, pulsa **Espacio**; con **INTERRUPT!**, pulsa **1**.
-   - Si lo haces al final de la ventana es un **PERFECT**: recuperas estamina, ganas Tonalli y contraatacas solo.
-   - Si pulsas antes de tiempo, el botón se bloquea un momento, así que machacar la tecla no sirve.
+3. **Turno enemigo:** el enemigo parpadea en rojo. **Una sola tecla: Espacio (B en el mando)**, justo antes del impacto. Sirve para **DODGE!** y para **INTERRUPT!** (hechizos).
+   - **A tiempo:** no recibes daño y **contraatacas solo**.
+   - **Al final de la ventana (PERFECT):** el contraataque pega más fuerte, recuperas estamina y ganas Tonalli.
+   - **Demasiado pronto:** sale **TOO EARLY** y la tecla se bloquea; cada pulsación de más la bloquea más tiempo (**LOCKED**). Machacar hace que el golpe te entre completo.
+   - **Sin pulsar o tarde:** daño completo.
 4. **Tonalli** (barra azul): cuando está llena, **5 = Tonalli Burst**, un golpe enorme a todos.
 5. **Al ganar:** los enemigos sueltan **orbes**. Ve **caminando (o saltando) encima** para recogerlos:
    - **dorados:** carga del Macuahuitl, que aumenta tu daño;
@@ -324,7 +326,11 @@ Lo hacen posible tres ajustes:
 | Valor de cada orbe y sus colores | objeto `Combat` → `OrbSpawner` |
 | Imán y flotación de los orbes | `Prefabs/Interactables/Orb.prefab` → `SoulOrb` |
 | Distancia de la arena, zoom de combate | objeto `Combat` → `CombatArena` |
-| Ventana PERFECT y anti-spam de la esquiva | objeto `Combat` → `EnemyTurn` |
+| Ventana PERFECT, bloqueo anti-spam y fuerza del contraataque normal de la esquiva | objeto `Combat` → `EnemyTurn` (**Perfect Window Fraction**, **Early Press Lockout**, **Good Counter Fraction**) |
+| Orden de dibujo de los luchadores en combate y cuánto se mueve la pelea para buscar un claro | objeto `Combat` → `CombatArena` (**Fighter Order**, **Clear Search Radius**) |
+| Mapa del CSV (escena `MainMap_CSV`) | editar `Settings/Maps/mapa_juego_150x70.csv`, borrar `MainMap_CSV.unity` y usar **TD_Game > Build CSV Map (MainMap_CSV)** |
+| Iconos de botones (Auto / teclado / Xbox / PlayStation) | Opciones del menú principal o de pausa → **Button icons** |
+| Tiempo que la ayuda de la historieta sigue visible, y cuánto hay que mantener Omitir | escena `TD_Prologue` → `PrologueComic` (**Hint Idle Seconds**, **Skip Hold Seconds**) |
 | Qué habilidad va en cada tecla 1–5 | objeto `Combat` → `PlayerTurn` → *Action slots* |
 | Paleta de colores de todo el juego (cambia un color y se cambia en todas partes al reconstruir el HUD) | `Scripts/UI/MexicaPalette.cs` |
 | Colores, tamaños y textos del HUD | objeto `CombatHUD` en la jerarquía (colores de cada fila: `CommandMenu/Action*` → `ActionButton`; orden de turnos: `TurnOrder`) |

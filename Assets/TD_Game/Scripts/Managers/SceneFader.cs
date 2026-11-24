@@ -12,7 +12,7 @@ namespace TD_Game
         public const string Boot = "TD_Boot";
         public const string MainMenu = "TD_MainMenu";
         public const string Prologue = "TD_Prologue";
-        public const string MainMap = "MainMap";
+        public const string MainMap = "MainMap_CSV";   // the team's CSV map (2026-11-24). Alex's map is "MainMap".
     }
 
     /// <summary>

@@ -19,10 +19,13 @@ namespace TD_Game
         /// <summary>True while there is one in the scene (the old text prompt then stays hidden).</summary>
         public static bool Present { get; private set; }
 
+        ButtonGlyph glyph;
+
         void OnEnable()
         {
             Present = true;
             CombatFeed.QuickTime += Show;
+            InputPrompts.Changed += Refit;
             Show(null, null);
         }
 
@@ -30,20 +33,61 @@ namespace TD_Game
         {
             Present = false;
             CombatFeed.QuickTime -= Show;
+            InputPrompts.Changed -= Refit;
         }
 
+        /// <summary>key = the ACTION ("Dodge", "Attack"): the box shows its keyboard key, Xbox or PlayStation button.</summary>
         void Show(string verb, string key)
         {
             bool visible = !string.IsNullOrEmpty(verb);
             group.alpha = visible ? 1f : 0f;
             if (!visible) return;
             before.text = "Press";
-            keyLabel.text = key;
             after.text = "to " + verb + "!";
-            // Dodge = gold box, interrupt = turquoise box.
-            Color keyboardColor = verb == "INTERRUPT" ? new Color(0.2f, 0.75f, 0.85f)
-                                : verb == "STRIKE" ? new Color(0.9f, 0.3f, 0.25f) : new Color(0.95f, 0.75f, 0.2f);
-            keyBoxImage.color = InputPrompts.BoxColor(key, keyboardColor);   // Xbox colours when using a controller
+            if (glyph == null)
+            {
+                glyph = ButtonGlyph.Create(keyBox, key, Mathf.Round(keyBox.sizeDelta.y - 12f));
+                keyLabel.enabled = false;
+            }
+            glyph.SetAction(key);
+            // The icon sits in a coloured frame: gold = dodge, turquoise = interrupt, red = strike.
+            keyBoxImage.color = verb == "INTERRUPT" ? new Color(0.2f, 0.75f, 0.85f)
+                              : verb == "STRIKE" ? new Color(0.9f, 0.3f, 0.25f) : new Color(0.95f, 0.75f, 0.2f);
+            FitKey();
+        }
+
+        // The player switched device while the prompt is up: the icon changed size.
+        void Refit()
+        {
+            if (glyph == null || group.alpha <= 0f) return;
+            glyph.Refresh();
+            FitKey();
+        }
+
+        // The box was made for one letter: a wide icon ("SPACE") gets a wider box, and "to DODGE!" moves right.
+        bool measured;
+        float keyLeft, keyHeight, gap, plateHeight;
+
+        void FitKey()
+        {
+            var after = this.after.rectTransform;
+            var plate = (RectTransform)transform;
+            if (!measured)
+            {
+                measured = true;
+                keyLeft = keyBox.anchoredPosition.x - keyBox.sizeDelta.x / 2f;
+                keyHeight = keyBox.sizeDelta.y;
+                gap = after.anchoredPosition.x - after.sizeDelta.x / 2f - (keyBox.anchoredPosition.x + keyBox.sizeDelta.x / 2f);
+                plateHeight = plate.sizeDelta.y;
+            }
+            float width = Mathf.Max(keyHeight, glyph.Width + 12f);
+            keyBox.sizeDelta = new Vector2(width, keyHeight);
+            keyBox.anchoredPosition = new Vector2(keyLeft + width / 2f, keyBox.anchoredPosition.y);
+            this.after.alignment = TextAnchor.MiddleLeft;    // the words start right after the icon
+            before.alignment = TextAnchor.MiddleRight;
+            float afterX = keyLeft + width + gap + after.sizeDelta.x / 2f;
+            after.anchoredPosition = new Vector2(afterX, after.anchoredPosition.y);
+            plate.sizeDelta = new Vector2(Mathf.Max(420f, 2f * (afterX + after.sizeDelta.x / 2f)), plateHeight);
         }
 
         void Update()

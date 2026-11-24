@@ -14954,6 +14954,7 @@ MonoBehaviour:
   missChance: 0.1
   counterWindowScale: 0.75
   bossWindowScale: 0.75
+  goodCounterFraction: 0.6
 --- !u!114 &368934189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14988,6 +14989,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TD_Game.CombatArena
   battleDistance: 5
   enemySpacing: 1.6
+  clearSearchRadius: 6
+  fighterOrder: 510
   cameraFollow: {fileID: 405483837}
   combatOrthographicSize: 4.21875
   zoomTime: 0.4
@@ -17492,7 +17495,7 @@ MonoBehaviour:
   message: 'THE SHRINE OF THE FOUR FIRES
 
     The stela shows four colours. Light
-    the braziers (E) in that order.'
+    the braziers ({Interact}) in that order.'
 --- !u!61 &631679045
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -21805,7 +21808,7 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 46
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -23114,7 +23117,7 @@ MonoBehaviour:
     m_FontSize: 9
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 9
     m_MaxSize: 40
     m_Alignment: 3
     m_AlignByGeometry: 0
@@ -63252,8 +63255,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u25C6  DEFEND  \u25C6        press the key shown in the box  (W  A  S 
-    D)        \xB7        late press = PERFECT"
+  m_Text: "\u25C6  DEFEND  \u25C6        SPACE right before the hit = dodge + counter       
+    \xB7        too early locks the key"
 --- !u!222 &1519599519
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -69225,24 +69228,25 @@ MonoBehaviour:
   text: {fileID: 1948657171}
   secondsPerHint: 5
   fadeTime: 0.25
-  startHint: "WASD / left stick: move   \xB7   SHIFT: sprint   \xB7   SPACE: jump\nLand
-    on an enemy from a jump to AMBUSH it."
-  battleControlsHint: "1 Attack   \xB7   2 / 3 skills   \xB7   4 potion   \xB7  
-    5 Tonalli Burst   \xB7   6 artifact   \xB7   Q end turn\nWhile attacking, press
-    the key in the box (J, K or L) for a CRITICAL. Click an enemy (or TAB) to choose
-    the target."
+  battlePosition: {x: -120, y: 62}
+  startHint: "{Move} move   \xB7   {Sprint} sprint   \xB7   {Jump} jump\nLand on
+    an enemy from a jump to AMBUSH it."
+  battleControlsHint: "{Attack} attack   \xB7   {Skill1} {Skill2} skills   \xB7  
+    {Potion} potion   \xB7   {Ultimate} Tonalli Burst   \xB7   {Artifact} artifact  
+    \xB7   {EndTurn} end turn\nWhile attacking, press {Attack} again right before
+    the blow for a CRITICAL. {Target} (or click an enemy) chooses the target."
   quickTimeDodgeHint: 'The enemy glows red before it strikes.
 
-    Press the KEY
-    IN THE BOX (W, A, S or D) when it appears. Late but in time = PERFECT. A wrong
-    key fails.'
+    Press {Dodge}
+    right before the hit: no damage and a counter-attack. Too early = the button
+    locks.'
   quickTimeInterruptHint: 'Spells cannot be dodged: INTERRUPT them.
 
-    Press the
-    KEY IN THE BOX when INTERRUPT appears.'
+    Press {Interrupt}
+    right before the spell is cast.'
   orbsHint: "Walk over the orbs before leaving:\ngold = Macuahuitl charge   \xB7  
     green = life   \xB7   blue = Tonalli"
-  unlockHint: You learned a new skill. Use it in battle with its key (2 or 3).
+  unlockHint: You learned a new skill. Use it in battle with {Skill1} or {Skill2}.
   backToStartHint: 'When you fall, you go back to the BEGINNING of the map.
 
     You
@@ -69255,7 +69259,7 @@ MonoBehaviour:
     and an artifact.
   - Green orbs heal you, blue orbs fill your Tonalli. Collect them after every battle.
   - 'Defeat every servant of the gods: the obsidian key opens the door to Quetzalcoatl.'
-  - Press ESC to pause the game and change the volume.
+  - Press {Pause} to pause the game and change the volume.
 --- !u!225 &2075258880
 CanvasGroup:
   m_ObjectHideFlags: 0

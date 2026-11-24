@@ -42,11 +42,6 @@ namespace TD_Game
             Instance = this;
             Hide();
             if (retryButton != null) retryButton.onClick.AddListener(() => choice = Choice.Retry);
-            if (retryButton != null)   // a defeat sends you back to the start of the map
-            {
-                var label = retryButton.GetComponentInChildren<Text>();
-                if (label != null) label.text = "RETRY FROM THE BEGINNING   [ENTER]";
-            }
             if (menuButton != null) menuButton.onClick.AddListener(() => choice = Choice.Menu);
         }
 
@@ -59,6 +54,9 @@ namespace TD_Game
         public IEnumerator Show()
         {
             choice = Choice.None;
+            // The keys follow the device in use: [ENTER] / [A] / [CROSS] and [ESC] / [B] / [CIRCLE].
+            SetLabel(retryButton, "RETRY FROM THE BEGINNING   {Confirm}");   // a defeat sends you back to the start of the map
+            SetLabel(menuButton, "MAIN MENU   {Back}");
             GameAudio.PlaySfx("defeat");
             GameAudio.PlayMusic(MusicTrack.GameOver);
             if (tipText != null && tips.Length > 0) tipText.text = "TIP: " + tips[Random.Range(0, tips.Length)];
@@ -96,6 +94,12 @@ namespace TD_Game
                 choice = Choice.Retry;
             else if ((keyboard != null && keyboard.escapeKey.wasPressedThisFrame) || (pad != null && pad.buttonEast.wasPressedThisFrame))
                 choice = Choice.Menu;
+        }
+
+        static void SetLabel(Button button, string text)
+        {
+            var label = button != null ? button.GetComponentInChildren<Text>() : null;
+            if (label != null) label.text = InputPrompts.Localize(text);
         }
 
         void Hide()

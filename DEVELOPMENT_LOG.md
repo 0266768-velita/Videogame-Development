@@ -5,6 +5,102 @@ Planificación: `DEVELOPMENT_CALENDAR.md` · Reglas y decisiones técnicas: `CLA
 
 ---
 
+## 2026-11-24 — Sesión 23 (Toño): iconos por dispositivo, historieta moderna y auditoría
+
+Siguiendo `auditor_a_de_juego_historieta_y_detecci_n_de_mando.md`.
+
+**Detección de dispositivo**
+- `UI/InputDevices.cs`: detecta el último dispositivo usado (teclado / ratón, mando Xbox o PlayStation) en tiempo real.
+  - PlayStation = DualShock o DualSense, o un mando de Sony; cualquier otro mando cuenta como Xbox.
+  - Los sticks y gatillos solo cuentan por encima de 0,5 (la deriva no cambia los iconos).
+- `UI/InputPrompts.cs` (reescrito):
+  - los avisos piden **acciones** (`Dodge`, `Interact`, `Next`, `Skip`, `Attack`…) y no teclas, porque Espacio salta en exploración (A) pero esquiva en combate (B);
+  - `Label()` da SPACE / B / CIRCLE, y `Localize()` cambia `{Acción}` por `[BOTÓN]` dentro de una frase.
+- **Opción «Button icons»** (menú principal y pausa): Auto / Keyboard / Xbox / PlayStation; por defecto, Auto. Sustituye a «Controller buttons».
+
+**Glifos**
+- `UI/ButtonGlyphs.cs`: sprites en pixel art de 20 px generados en código, con escala entera:
+  - tecla de obsidiana con filo de oro viejo (se estira para SPACE);
+  - placa de piedra para LB, R1, START…;
+  - botones redondos de Xbox con colores de `MexicaPalette`;
+  - ✕ ○ □ △ dibujados como formas;
+  - ratón.
+- `UI/ButtonGlyph.cs` (un icono que cambia solo) y `UI/GlyphText.cs` (un aviso que empieza con `{Acción}`).
+- Dónde se usan:
+  - caja de esquiva / crítico (`QuickTimePrompt`);
+  - filas del menú de combate: con teclado se queda el rombo de piedra y con mando sale el botón (`ActionButton`);
+  - barra DEFEND, pista del menú y consejos (`ContextTutorial`, con marcadores `{Acción}`, también en las escenas);
+  - avisos de la tienda y de los braseros;
+  - casa de la espada;
+  - pantalla de derrota (antes tenía [ENTER] / [ESC] fijos).
+
+**Historieta (`PrologueComic`)**
+- **Siguiente:** Espacio / Enter / clic / A (✕). **Omitir:** *mantener* ESC / B (○) 1 s, con una línea dorada que se llena.
+- La ayuda ya no está fija: aparece al empezar y con cualquier tecla, y se desvanece tras 3 s sin tocar nada. Placa de obsidiana con filo dorado y glifos.
+- Una pulsación = un avance. Pulsar mientras aparece una viñeta solo la completa; probado con 2 pulsaciones rápidas = 1 viñeta + completar la siguiente.
+
+**Auditoría (Play Mode, con mandos virtuales Xbox y Sony y teclas simuladas)**
+- Flujo completo: Boot → menú → historieta (Siguiente y mantener ESC) → `MainMap_CSV`.
+- Combate con poción, Tonalli Burst, ataque, turno enemigo y victoria: sin congelarse. Al terminar solo queda visible el minimapa.
+- Llave → puerta de obsidiana (cinemática) → arena → jefe → derrota → Retry: vuelves a `S` con la vida llena y las rejas abiertas.
+- Colisiones: relleno con la cápsula real de Tlahuelli y física 2D en todo el mapa. Se llega a los 25 objetivos (enemigos, cofres, braseros, tienda, casa y puertas); el jefe, solo con las puertas abiertas.
+- Consola sin errores ni avisos en todas las pruebas.
+- **Bugs arreglados:**
+  1. La arena del jefe era más pequeña que su campo de visión: Quetzalcóatl empezaba la pelea antes de que cerraran las rejas. Ahora el disparador cubre el gran salón, 3 celdas antes de las puertas (`CsvMapBuilder.FitBossArena`).
+  2. La barra DEFEND quedaba encima de la pantalla de derrota: el menú de combate se oculta cuando Tlahuelli cae.
+  3. El glifo «D-PAD ▲» tapaba POTION: ahora es compacto.
+  4. Había un hueco grande entre la tecla y «to DODGE!».
+  5. El cuadro de consejos rozaba el menú de comandos: se mueve un poco a la izquierda.
+
+## 2026-11-24 — Sesión 22 (Toño): mapa del CSV, Tlahuelli visible en combate y esquiva de una tecla
+
+Siguiendo `instrucciones_de_mapa_y_combate_para_claude.md`.
+
+**1. Versión.** Local en `origin/v0.6` (`82faf32`, Sesión 21 de Alex). El ruido de Unity (EOL / fileIDs) se guardó en un `git stash` antes de bajar.
+
+**2. Mapa desde el CSV** (`Settings/Maps/mapa_juego_150x70.csv`, 150 × 70 celdas).
+- Escena nueva **`Scenes/Levels/MainMap_CSV.unity`**: copia de `MainMap` con todos sus sistemas. `MainMap` de Alex **no se toca**. **El menú y el prólogo cargan `MainMap_CSV`** (decidido por Toño): `SceneIds.MainMap = "MainMap_CSV"`, `gameScene` de `TD_MainMenu` y `nextScene` de `TD_Prologue`; también está en Build Settings y en la build del .exe (`OneClickPlay`, `FrontEndBuilder`). Probado: New Game → prólogo → MainMap_CSV.
+- **1 celda = 2 × 2 tiles** (mundo de 300 × 140 tiles). Tlahuelli no se reescala.
+- Se pinta **tal cual el CSV**: no se suavizan ni enderezan caminos ni bordes.
+- Leyenda: `.` pasto, `C` tierra, `D` arena (tile nuevo `Sand_1/2`), `W` agua, `V` barranco, `T` árbol, `P` / `M` muro de la pirámide, `I` pasillo, la `M` de la cueva SE es roca. `S`, `E`, `K` y `H` toman el suelo de sus vecinos.
+- El CSV no trae ninguna `B`: el puente va donde el camino de la fila 22 cruza el río (columnas 16–18, sector oeste).
+- **Colocación:**
+  - jugador en `S`;
+  - un enemigo por grupo de `E` (dos en los grupos de 4 celdas): lobos en el bosque NO, brujas en el SO y gigante / bruja / lobo en el desierto; más fuertes cuanto más lejos de `S`;
+  - cofres `LootChest` en las `K` (el de la cueva es el mayor);
+  - Quetzalcóatl en el punto más abierto del gran salón de la pirámide; puerta de obsidiana (`KeyDoor`) y reja del jefe en **cada entrada** (2: este y sur);
+  - casa de la espada en la `H` (sprite generado `Art/Props/house_sword.png`), con el santuario de los cuatro fuegos de Alex al lado;
+  - tienda en un claro cerca del inicio;
+  - territorios reubicados y muros invisibles en el borde.
+- Comprobación del builder: desde `S` se alcanzan los 11 grupos de `E`, los 5 de `K` y la casa. El jefe solo es alcanzable cruzando una puerta.
+- Scripts: `Editor/CsvMap.cs` (lee el CSV), `Editor/CsvMapPainter.cs` (tiles), `Editor/CsvMapBuilder.cs` (menú **TD_Game > Build CSV Map (MainMap_CSV)**; no sobrescribe: borrar la escena para reconstruir), `Interactions/LootChest.cs`.
+
+**3. Tlahuelli invisible en combate.**
+- **Causa:** la arena coloca a los luchadores sin mirar qué hay debajo (la bruja quedaba sobre el río). Además, árboles, puestos y props se dibujan con el mismo orden que los personajes, así que uno más abajo en pantalla tapaba a Tlahuelli. La oscuridad (orden 500) también lo tapaba si la cámara chocaba con el borde.
+- **Arreglo (`CombatArena`):**
+  - durante la pelea cada luchador va en un `SortingGroup` con orden **510** (por encima del mapa y de la oscuridad), que se quita al terminar;
+  - la pelea se mueve al claro libre más cercano (`clearSearchRadius`);
+  - los efectos de delante pasan a **520** (`Vfx.FrontOrder`), y las estelas usan el orden del grupo.
+- **UI:** el cuadro de consejos (`ContextTutorial`) baja al centro inferior durante el combate; ya no tapa el orden de turnos ni el nombre del ataque.
+- Verificado con Shadow Wolf + Mictlan Witch, también pegados al puesto del mercader: un solo `Player`, se ve en todos los turnos y el `SortingGroup` desaparece al acabar.
+
+**4. Esquiva de una sola tecla** (estilo Clair Obscur: Expedition 33).
+- **Espacio / B** para esquivar **y** para interrumpir hechizos. Se quitan las teclas al azar W A S D y la `D` de la acción Dodge.
+- El crítico del ataque vuelve a ser **1 / A** (sin J / K / L).
+- `ActionCommand.Run`:
+  - pulsar dentro de la ventana antes del impacto = éxito (al final = PERFECT);
+  - antes de tiempo = **TOO EARLY** y la tecla se bloquea, ×1,5 por cada pulsación extra (**LOCKED**, y la caja de la tecla se oculta);
+  - sin pulsar o tarde = daño completo.
+- **Éxito = 0 daño + contraataque automático** (`EnemyTurn`): estela, anillo, temblor, sonido y «COUNTER». Con PERFECT pega más fuerte y da estamina y Tonalli; el normal pega `goodCounterFraction` (0,6).
+- `QuickTimePrompt` ensancha la caja para «SPACE».
+- Textos actualizados: barra DEFEND, consejos y pista del menú. Los textos guardados se cambiaron en `MainMap_CSV`, `MainMap` y `TestLevel` (solo esos textos).
+- Probado en Play Mode con pulsaciones simuladas:
+  - a tiempo: 3/3 esquivas, 0 daño y 3 contraataques;
+  - sin pulsar: daño completo;
+  - machacando: TOO EARLY → LOCKED y daño completo.
+
+**Pendiente:** los cofres no se guardan en la partida todavía; el título de zona puede aparecer al empezar una pelea si la arena cruza un territorio.
+
 ## 2026-11-19 — Sesión 21 (Alex): QTE, mando, dificultad, templo, cómic y outro
 
 - **Esquivar / interrumpir con QTE:** aparece una tecla al azar (W A S D) en un recuadro de color; tecla equivocada = falla. El **crítico** del ataque ahora es J / K / L (el 1 queda solo para elegir la acción).

@@ -26,6 +26,7 @@ namespace TD_Game
         RectTransform menuRect;
         Vector2 menuBase;
         float shown;   // 0 = hidden, 1 = visible
+        Text defendText;
 
         void Awake()
         {
@@ -34,12 +35,29 @@ namespace TD_Game
                 menuRect = (RectTransform)menuGroup.transform;
                 menuBase = menuRect.anchoredPosition;
             }
+            if (enemyTurnBar != null) defendText = enemyTurnBar.GetComponentInChildren<Text>(true);
+        }
+
+        void OnEnable()
+        {
+            InputPrompts.Changed += RefreshDefendText;
+            RefreshDefendText();
+        }
+
+        void OnDisable() => InputPrompts.Changed -= RefreshDefendText;
+
+        /// <summary>The enemy-turn bar names the ONE defence button of the device in use (SPACE, B, CIRCLE).</summary>
+        void RefreshDefendText()
+        {
+            if (defendText == null) return;
+            defendText.text = $"◆  DEFEND  ◆        [{InputPrompts.Label("Dodge")}]  right before the hit = dodge + counter        ·        too early locks it";
         }
 
         void Update()
         {
             var context = combat != null ? combat.Context : null;
-            if (context == null) { Slide(false, false); return; }
+            // No battle, or Tlahuelli fell: nothing of the menu stays over the defeat screen.
+            if (context == null || context.PlayerDead) { Slide(false, false); return; }
             var turn = combat.PlayerTurn;
             var slots = turn.Slots;
             bool playerTurn = turn.AcceptingInput || turn.Performing != null;
@@ -50,7 +68,7 @@ namespace TD_Game
                 buttons[i].gameObject.SetActive(ability != null);
                 if (ability == null) continue;
 
-                string key = InputPrompts.Label(i < keyHints.Length ? keyHints[i] : "");   // keyboard or Xbox, never both
+                string key = i < keyHints.Length ? keyHints[i] : "";   // ActionButton shows the key or the controller button
                 string cost = ability is TonalliBurstAbility
                     ? $"{context.Player.Concentration:0}/{context.Player.MaxConcentration:0}"
                     : $"{ability.staminaCost:0} ST";
@@ -60,7 +78,7 @@ namespace TD_Game
 
             if (endTurnButton != null)
             {
-                endTurnButton.Setup(InputPrompts.Label("Q"), "End turn", "", turn.RequestEndTurn);
+                endTurnButton.Setup("Q", "End turn", "", turn.RequestEndTurn);
                 endTurnButton.Show(turn.AcceptingInput ? ActionButton.State.Ready : ActionButton.State.Waiting, false);
             }
 
@@ -93,7 +111,7 @@ namespace TD_Game
         static string HintText(CombatContext context, PlayerTurn turn)
         {
             if (turn.Performing != null)
-                return turn.Performing is AttackAbility ? "Press the key in the box (J / K / L) for a critical" : turn.Performing.description;
+                return turn.Performing is AttackAbility ? $"Press {InputPrompts.Label("1")} again right before the blow for a CRITICAL" : turn.Performing.description;
             var target = context.CurrentTarget;
             string combo = context.Player.ComboCount > 0 ? $"     Next hit  x{context.Player.ComboCount + 1}" : "";
             return $"◄ ►  Target:  {(target != null ? target.Data.displayName : "-")}{combo}";

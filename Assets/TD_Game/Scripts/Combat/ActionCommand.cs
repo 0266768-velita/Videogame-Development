@@ -6,107 +6,74 @@ using UnityEngine.InputSystem;
 namespace TD_Game
 {
     /// <summary>
-    /// A timed button press ("action command"): the prompt appears during the last part of a wind-up
-    /// and the player must press the button inside that window. Pressing too early locks the button
-    /// for a moment, so mashing never works. Used for critical hits; the enemy counters use the same idea.
+    /// A timed press of ONE button (in the spirit of Clair Obscur: Expedition 33): the prompt appears during the last
+    /// part of a wind-up and the player presses the button inside that window, right before the impact.
+    ///   - inside the window = Good; in its last part = Perfect;
+    ///   - too early = "TOO EARLY" and the button is LOCKED for a moment; every extra early press locks it longer,
+    ///     so mashing leaves you locked when the real hit arrives;
+    ///   - no press (or too late) = Miss.
+    /// Used by the enemy turn (dodge / interrupt, Space or B) and by the critical of the Attack (1 or A).
     /// </summary>
     public static class ActionCommand
     {
         public enum Result { Miss, Good, Perfect }
 
-        /// <param name="duration">Total wind-up time.</param>
-        /// <param name="window">Seconds at the end of the wind-up in which the press counts.</param>
+        /// <param name="action">The only button that counts.</param>
+        /// <param name="verb">DODGE, INTERRUPT or STRIKE: shown in the prompt.</param>
+        /// <param name="duration">Total wind-up time; the impact is at its end.</param>
+        /// <param name="window">Seconds before the impact in which the press counts.</param>
         /// <param name="perfectFraction">Last part of the window (fraction) that counts as Perfect.</param>
-        public static IEnumerator Run(InputAction action, float duration, float window, float perfectFraction,
-                                      float earlyLockout, string prompt, Action<Result> onDone)
+        /// <param name="lockout">Seconds the button is locked after a press out of time (x1.5 for each extra one).</param>
+        /// <param name="anchor">Where the "TOO EARLY" / "LOCKED" feedback appears (the player).</param>
+        public static IEnumerator Run(InputAction action, string verb, float duration, float window, float perfectFraction,
+                                      float lockout, Transform anchor, Action<Result> onDone)
         {
+            string label = action != null ? action.name : "Dodge";   // the ACTION: the UI shows its key, Xbox or PlayStation button
             float windowStart = duration - Mathf.Clamp(window, 0.05f, duration);
             float perfectFrom = windowStart + (duration - windowStart) * (1f - perfectFraction);
-            float lockedUntil = 0f;
+            float lockedUntil = -1f;
+            float lockLength = lockout;
             var result = Result.Miss;
+            int shown = -1;   // 0 hidden, 1 key box, 2 locked (only tell the UI when it changes)
 
             for (float t = 0f; t < duration; t += Time.deltaTime)
             {
-                bool open = t >= windowStart;
-                CombatFeed.SetCounterPrompt(open && result == Result.Miss ? prompt : null);
-
-                if (result == Result.Miss && action != null && action.WasPressedThisFrame())
+                bool open = t >= windowStart && result == Result.Miss;
+                bool locked = t < lockedUntil;
+                int state = !open ? 0 : locked ? 2 : 1;
+                if (state != shown)
                 {
-                    if (open && t >= lockedUntil) result = t >= perfectFrom ? Result.Perfect : Result.Good;
-                    else lockedUntil = t + earlyLockout;
+                    // Locked: the key box hides, so it is clear that pressing now does nothing.
+                    CombatFeed.SetQuickTime(state == 1 ? verb : null, label);
+                    if (shown <= 0 || state == 0) CombatFeed.SetCounterPrompt(state > 0 ? $"{verb}!    [{InputPrompts.Label(label)}]" : null);
+                    shown = state;
+                }
+
+                if (t > 0f && result == Result.Miss && action != null && action.WasPressedThisFrame())   // t > 0: not the press that chose the action
+                {
+                    if (t >= windowStart && !locked)
+                    {
+                        result = t >= perfectFrom ? Result.Perfect : Result.Good;
+                        CombatFeed.SetQuickTime(null, null);
+                        CombatFeed.SetCounterPrompt(null);
+                        shown = 0;
+                    }
+                    else
+                    {
+                        // Out of time: locked, and longer for every extra press (anti-spam).
+                        lockedUntil = t + lockLength;
+                        lockLength *= 1.5f;
+                        GameAudio.PlaySfx("error", 0.5f);
+                        if (anchor != null)
+                            CombatFeed.ShowPopup(anchor.position + Vector3.up * 1.4f, locked ? "LOCKED" : "TOO EARLY", MexicaPalette.Ash);
+                    }
                 }
                 yield return null;
             }
 
-            CombatFeed.SetCounterPrompt(null);
-            onDone?.Invoke(result);
-        }
-
-        // ---------------- Quick time event: a RANDOM key each time (harder than always the same button) ----------------
-
-        /// <summary>Keys to defend (dodge / interrupt): W A S D. Gamepad: Y X A B.</summary>
-        public static readonly Key[] DefendKeys = { Key.W, Key.A, Key.S, Key.D };
-        /// <summary>Keys for the critical hit of an attack (combo): J K L. Gamepad: X Y B.</summary>
-        public static readonly Key[] StrikeKeys = { Key.J, Key.K, Key.L };
-
-        public static IEnumerator RunQuickTime(string verb, float duration, float window, float perfectFraction,
-                                               float earlyLockout, Action<Result> onDone) =>
-            RunQuickTime(verb, DefendKeys, duration, window, perfectFraction, earlyLockout, onDone);
-
-        /// <summary>
-        /// Like Run, but the key changes every time (one of `keys`). The prompt shows "Press [A] to DODGE!",
-        /// with the Xbox button instead when the controller prompts are on. Pressing a wrong key counts as a failure.
-        /// </summary>
-        public static IEnumerator RunQuickTime(string verb, Key[] keys, float duration, float window, float perfectFraction,
-                                               float earlyLockout, Action<Result> onDone)
-        {
-            int k = UnityEngine.Random.Range(0, keys.Length);
-            string label = InputPrompts.Label(keys[k].ToString());
-            float windowStart = duration - Mathf.Clamp(window, 0.05f, duration);
-            float perfectFrom = windowStart + (duration - windowStart) * (1f - perfectFraction);
-            float lockedUntil = 0f;
-            var result = Result.Miss;
-            bool failed = false;
-            for (float t = 0f; t < duration; t += Time.deltaTime)
-            {
-                bool open = t >= windowStart && !failed && result == Result.Miss;
-                CombatFeed.SetQuickTime(open ? verb : null, label);
-                CombatFeed.SetCounterPrompt(open ? $"{verb}!    [{label}]" : null);
-
-                int pressed = PressedKey(keys);
-                if (result == Result.Miss && !failed && pressed >= 0)
-                {
-                    if (pressed != k) { failed = t >= windowStart; lockedUntil = t + earlyLockout; }   // wrong key
-                    else if (t >= windowStart && t >= lockedUntil) result = t >= perfectFrom ? Result.Perfect : Result.Good;
-                    else lockedUntil = t + earlyLockout;                                               // too early
-                }
-                yield return null;
-            }
             CombatFeed.SetQuickTime(null, null);
             CombatFeed.SetCounterPrompt(null);
             onDone?.Invoke(result);
-        }
-
-        /// <summary>Which of the keys (or its gamepad button) was pressed this frame, or -1.</summary>
-        static int PressedKey(Key[] keys)
-        {
-            var keyboard = Keyboard.current;
-            if (keyboard != null)
-                for (int i = 0; i < keys.Length; i++)
-                    if (keyboard[keys[i]].wasPressedThisFrame) return i;
-            var pad = Gamepad.current;
-            if (pad == null) return -1;
-            for (int i = 0; i < keys.Length; i++)
-            {
-                switch (InputPrompts.LabelForGamepad(keys[i].ToString()))
-                {
-                    case "Y": if (pad.buttonNorth.wasPressedThisFrame) return i; break;
-                    case "X": if (pad.buttonWest.wasPressedThisFrame) return i; break;
-                    case "A": if (pad.buttonSouth.wasPressedThisFrame) return i; break;
-                    case "B": if (pad.buttonEast.wasPressedThisFrame) return i; break;
-                }
-            }
-            return -1;
         }
     }
 }

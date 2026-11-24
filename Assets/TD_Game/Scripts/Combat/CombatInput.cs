@@ -6,7 +6,8 @@ namespace TD_Game
     /// <summary>
     /// Reads the "Combat" action map of PlayerControls.inputactions. It is only enabled during battles.
     /// Keyboard / Gamepad: Attack 1/A · Skill1 2/X · Skill2 3/Y · Potion 4/D-pad up · Ultimate 5/LB · EndTurn Q/RB
-    /// · TargetPrev/Next left/right arrows or D-pad · Dodge Space,D/B · Interrupt 1/A.
+    /// · TargetPrev/Next left/right arrows or D-pad · Dodge Space/B: the ONE defence button (it also interrupts spells).
+    /// Interrupt (1/A) stays in the asset but the combat no longer reads it.
     /// </summary>
     public class CombatInput : MonoBehaviour
     {
