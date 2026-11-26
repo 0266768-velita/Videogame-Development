@@ -50,7 +50,8 @@ namespace TD_Game
             $"<color={Gold}>Antonio Enríquez Velasco</color>\n<size=26><color={Ash}>combat · animation · effects</color></size>\n\n" +
             $"<color={Gold}>Alejandro Cornejo Pérez</color>\n<size=26><color={Ash}>enemies · menus · audio · saving</color></size>\n\n" +
             $"<color={Gold}>Adrián Gallardo Medina</color>\n<size=26><color={Ash}>map · level design</color></size>\n\n" +
-            $"<color={Gold}>Jetzuvely del Carmen González Gutiérrez</color>\n<size=26><color={Ash}>art · sprites</color></size>\n\n\n\n" +
+            $"<color={Gold}>Jetzuvely del Carmen González Gutiérrez</color>\n<size=26><color={Ash}>art · sprites</color></size>\n\n" +
+            $"<color={Gold}>Claude</color>\n<size=26><color={Ash}>AI assistant by Anthropic · programming · procedural art · sound</color></size>\n\n\n\n" +
             $"<size=40><color={Jade}>IN MEMORY OF THE MEXICA WORLD</color></size>\n" +
             $"<size=26><color={Ash}>Mictlantecuhtli · Quetzalcóatl · Tezcatlipoca · Coatlicue\nEhécatl · Tlazoltéotl · Xólotl</color></size>\n\n\n\n" +
             $"<size=34><color={Red}>MADE WITH</color></size>\n" +

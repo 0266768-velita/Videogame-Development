@@ -216,6 +216,8 @@ MonoBehaviour:
   sceneMusic: 0
   crossFadeSeconds: 0.8
   sfxVoices: 10
+  minRepeatSeconds: 0.06
+  voiceVolume: 0.95
 --- !u!4 &1467921724
 Transform:
   m_ObjectHideFlags: 0

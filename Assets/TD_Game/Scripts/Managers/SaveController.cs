@@ -81,6 +81,12 @@ namespace TD_Game
             };
             foreach (var ability in progression.UnlockedAbilities)
                 if (ability != null) data.abilities.Add(ability.name);
+            var skin = player.GetComponent<PlayerSkin>();
+            if (skin != null)
+            {
+                data.ownedSkins = new List<string>(skin.Owned);
+                data.equippedSkin = skin.Equipped;
+            }
             GameSave.Write(data);
         }
 
@@ -115,6 +121,10 @@ namespace TD_Game
                 if (defeated.Contains(enemy.SaveId)) enemy.gameObject.SetActive(false);
 
             ContextTutorial.MarkSeen(data.seenTutorials);
+            var skin = player.GetComponent<PlayerSkin>();
+            if (skin != null) skin.Load(data.ownedSkins, data.equippedSkin);
+            var hazards = player.GetComponent<PlayerHazards>();
+            if (hazards != null) hazards.ResetSafeSpot();
             var follow = FindAnyObjectByType<CameraFollow>();
             if (follow != null) follow.SnapToTarget();
         }

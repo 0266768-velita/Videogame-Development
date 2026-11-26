@@ -5,6 +5,183 @@ Planificación: `DEVELOPMENT_CALENDAR.md` · Reglas y decisiones técnicas: `CLA
 
 ---
 
+## 2026-11-25 — Sesión 24b: correcciones de v0.9 tras jugarla
+
+**Sonido**
+- Golpes nuevos (`SfxSynth.Impact`), hechos por capas: chasquido, golpe grave que cae, crujido, saturación y una sala pequeña. 3 variantes para `enemy_hit` y 3 para `hurt`.
+- La voz del comerciante ya **no usa el texto a voz de Windows**, que sonaba robótico:
+  - ahora es una voz de personaje sintetizada: grave, áspera y murmurada, sigue las vocales y el ritmo del subtítulo y tiene la risa «heh heh»;
+  - si alguien del equipo graba las líneas en `Audio/VoiceRecordings/merchant_*.wav`, se usan esas (más graves y ásperas).
+
+**Salto y orden de dibujo**
+- El `Player` tiene un `SortingGroup`:
+  - en el aire sube 4 órdenes y se ve por **encima** de troncos y rocas;
+  - la antorcha ya no atraviesa los techos.
+
+**Arte del equipo** (`PropArt.V09Team`), usado tal como está dibujado, a 40 PPU:
+- roca y guijarro de la compañera, separados del PNG;
+- 2 árboles (28 colocados en las orillas de los bosques; el que brilla, más en Tlazoltéotl);
+- niebla de 12 cuadros (31 manchas junto al agua y en el valle de las brujas);
+- arena de 64 px, en manchas.
+- Se siguen usando las rocas y los árboles que ya había.
+- Las rocas ya no se reparten al azar: van en familias de 2–4 bajo los árboles, en las orillas y en los barrancos, cada una con su sombra y una base sólida. Los guijarros se saltan.
+
+**Casa de las brujas**
+- Pared norte de dos filas:
+  - la pintura y las cadenas cuelgan **en** la pared;
+  - Painal está encadenado a ella y es sólido;
+  - velas, cráneos y estantes con colisión.
+- Las brujas de la casa se llaman **Cihuateotl** (`EnemyData_Cihuateotl`).
+
+**Puzzle de los cuatro fuegos**
+- Los braseros con joyas y el cofre tienen una base sólida.
+
+**Nombres aztecas**
+- Cuetlachtli (lobo), Tlahuelpuchi (bruja) y Quinametzin (gigante).
+
+**Dificultad**
+- Fuerza 1,35–2,4 según la distancia al inicio.
+- Ya no se regala una poción por victoria.
+
+**Economía**
+- Lobo 2, bruja 4 y gigante 8 de oro.
+- Cofres de 8 + 4·i (cueva 30).
+- Poción 40, artefacto 200, apuestas de 15 / 40 con un 40 % de ganar.
+- Skins de 120 a 300.
+
+**Otros**
+- Orbes: pequeños desde el primer cuadro y como máximo 4 por tipo.
+- El *hit stop* al matar baja de 0,12 a 0,05 s: era el «se traba».
+- Letrero de «Enemies Left» más ancho y con ajuste de tamaño.
+- Créditos: Claude (asistente de IA de Anthropic) aparece al final y en el menú.
+
+**Pruebas**
+- Self-test 49/49, sin excepciones.
+- .exe reconstruido.
+
+## 2026-11-25 — Sesión 24: versión 0.9 (mapa, pirámide, saltos, NPC, tiendas, misión de las brujas)
+
+Todo se aplica **sobre** `MainMap_CSV` con **TD_Game > v0.9 > Upgrade MainMap_CSV** (`Editor/V09/V09WorldUpgrade*.cs`). El mapa del equipo se conserva y lo nuevo cuelga de objetos `V09_*`. Se puede volver a ejecutar sin duplicar nada.
+
+**UI**
+- Pantalla «Rated M»: cada texto tiene su caja dentro del marco y se encoge si no cabe.
+- Versión **v0.9** (menú y `bundleVersion` 0.9.0).
+- **Mapa de pantalla completa** (`UI/WorldMapScreen.cs`), con M / Tab / View:
+  - jugador, enemigos vivos y jefe;
+  - tiendas, NPC, misión secundaria y lugares importantes (`World/MapMarker.cs`);
+  - nombres de las regiones, leyenda y enemigos restantes.
+- **Enemies Left: X** abajo a la derecha (`UI/EnemiesLeftCounter.cs`). Se oculta en combate, en diálogos y con el mapa abierto.
+
+**Mapa y arte** (todo generado en código, en el estilo de 16 px del juego)
+- **Terreno:**
+  - pasto en zigzag mezclado en manchas suaves con el pasto de Vely;
+  - arena con ondas continuas;
+  - cempasúchil en Tláloc.
+- **Hoyos con profundidad:** pared de tierra en capas, oscuridad, bordes redondeados y borde iluminado.
+- **5 puentes nuevos y 4 cruces de piedras para saltar.** Se colocan donde más camino ahorran.
+- Los **bloques de templo sueltos (P)** se cambian por troncos caídos para saltar sobre los caminos, y por rocas y arbustos.
+- Los **cuadritos de tierra sueltos** de las líneas punteadas se convierten en un sendero de piedra.
+- **La roca de la compañera** se recorta del JPG (fondo quitado, escala real de 48 px) y se **mezcla** con las rocas que ya había: grupos, tamaños y espejos. Hay 135 rocas y 209 detalles por región:
+  - hongos, helechos y arbustos;
+  - árboles secos, cráneos y cuervos;
+  - cactus, agaves y cerámica rota.
+- **Puntos de referencia:**
+  - la Ceiba sagrada, la Roca Calavera, la Cabeza del Dios Caído y la Estatua de Xólotl;
+  - estelas con antorcha en los cruces.
+- **Pirámide nueva** (`PropArt.V09Pyramid`, 40 × 26 tiles):
+  - 5 cuerpos en talud-tablero, friso de cráneos, cabezas de serpiente, grecas, grietas, musgo y enredaderas;
+  - escalinata con alfardas que terminan en serpientes emplumadas;
+  - santuario en la cima con puerta en forma de boca de serpiente.
+  - **Se puede subir:** glifos que se leen y una ofrenda.
+  - Alrededor: braseros, antorchas, columnas, chacmool, tzompantli, estandartes y estelas.
+
+**Salto y caídas**
+- `PlayerJump`: en el aire ignora la capa **LowObstacle** (troncos, arbustos, muros bajos) y salta un poco más lejos (0,55 s).
+- `PlayerHazards` (nuevo): el agua y los hoyos van en los Tilemaps `Water` y `Pits`, en la capa **Hazard**. Los enemigos chocan con ellos; el jugador **cae**.
+  - Animación distinta para cada caída:
+    - hoyo: tambaleo, giro y oscuridad;
+    - agua: chapoteo, ondas y hundimiento.
+  - Sonidos propios; la caída cuesta un 8 % de la vida y nunca mata.
+  - Reaparece en el último suelo firme, con parpadeo.
+- Capas nuevas: Player (8), Hazard (9), LowObstacle (10).
+
+**Combate**
+- **20 encuentros** y 40 enemigos: 15 campamentos de 2–3 enemigos mezclados y 5 solitarios. La fuerza crece con la distancia.
+- `CombatEnemy.encounter`: el campamento entero entra a la pelea y se avisa entre sí (`EnemyAI`). `CombatManager.maxEnemies` = 4.
+- `CombatEnemy.optional` (enemigos de misión): no cuentan para la llave ni para el contador.
+
+**Tiendas y economía**
+- Un comerciante en cada región (4).
+- **Voces:** saludo, compra, apuesta ganada y perdida, despedida, con varias líneas para cada momento. Son líneas originales en el estilo del comerciante de RE4 (incluido «What do you want, stranger?»).
+  - Se generaron con la voz de texto a voz de Windows (`Audio/VoiceRaw~`) y se procesaron con `SfxSynth` (más grave, con aspereza y una sala pequeña).
+- **Economía:**
+  - lobo 3, bruja 5 y gigante 10 de oro;
+  - cofres más pobres;
+  - poción 25, artefacto 120;
+  - apuestas de 10 / 30 con un 45 % de ganar.
+- **Skins de Tlahuelli** (`SkinCatalog`, shader `TD_Game/SpriteSkin`): recolorean solo su ropa azul.
+  - Jaguar 60, Quetzal 75, Tezontle 90, Hueso de Águila 110, Obsidiana 150.
+  - Vista previa animada antes de comprar; las compradas se equipan gratis.
+  - Se guardan en el save (`ownedSkins`, `equippedSkin`).
+
+**Sonido** (`Editor/V09/SfxSynth.cs`, sonidos originales hechos con código)
+- Se reemplazan el aviso de ataque enemigo (`telegraph`, antes estridente) y el golpe al jugador (`hurt`). Cada uno tiene 3 variantes.
+- `swing` y `enemy_hit` reciben variantes nuevas.
+- Sonidos nuevos: caída al hoyo, chapoteo, cadenas y campanas del rompecabezas.
+- `GameAudio`:
+  - escoge variantes al azar;
+  - no repite el mismo efecto en menos de 60 ms;
+  - tiene un canal de voz propio.
+- **Ambiente** (`AmbientSoundscape`): bosque, río, viento del desierto e interior. Depende de dónde está el jugador.
+
+**NPC** (`DialogueNPC`, `DialogueBox`, `InteractPrompt`, `InteractSpot`)
+- 9 NPC con personalidad y un motivo para estar donde están:
+  - Xochitl, la barquera: saltos y caídas;
+  - Cuauhtli, fantasma de guerrero águila: consejos de combate;
+  - Itzel: pista de la casa de las brujas;
+  - Tecolotl: la pirámide;
+  - Tzontli: gigantes y barrancos;
+  - Atl: el río y Xólotl;
+  - un xoloitzcuintle: las piedras del río;
+  - Yaotl: la cueva y la llave;
+  - Citlali: las Cihuateteo.
+- Sobre cada uno, «!» dorado si tiene algo nuevo y «…» si ya hablaste con él.
+
+**Misión: El prisionero de las cuatro brujas** (`World/WitchHouseQuest.cs`, `UI/PaintingPuzzle.cs`, `World/HouseDoor.cs`)
+- La casa está escondida al oeste del Valle de Tlazoltéotl, con velas moradas, árboles secos y cuervos.
+- El interior es un cuarto aparte con su propia cuadrícula: círculo ritual, velas, caldero, estantes, cadenas y la pintura rota.
+- Pasos de la misión:
+  1. combate contra las 4 brujas juntas;
+  2. el prisionero explica que las cadenas están atadas a la pintura;
+  3. rompecabezas 3 × 3 en una pantalla propia (intercambiar piezas con ratón o teclado / mando, brillo y campanita en cada pieza correcta);
+  4. liberación con efectos;
+  5. historia de Painal, el corredor de los dioses;
+  6. **Amuleto de Painal:** velocidad × 1,3 y estela de viento al correr.
+- Se guarda con los ids `witch_puzzle_solved` y `painal_freed`, así que no se repite.
+
+**Pruebas**
+- `Testing/V09SelfTest.cs` + **TD_Game > v0.9 > Run Self Test** juega solo en Play Mode con un teclado virtual. Informe y capturas en `Logs/SelfTest`.
+- Resultado: **49/49 comprobaciones bien** y sin excepciones en el log:
+  - contador y mapa;
+  - salto sobre tronco;
+  - caída al agua y al hoyo con recuperación;
+  - campamento de 3;
+  - tienda con skins y apuesta;
+  - diálogo;
+  - misión completa con 4 brujas, rompecabezas y amuleto;
+  - guardado.
+- `V09BootShots`: capturas de «Rated M» y del menú (v0.9).
+- Errores encontrados y corregidos:
+  - el mapa y los diálogos salían al doble de tamaño (eran hijos del Canvas del minimapa);
+  - el cartel de interacción vacío se quedaba visible;
+  - la pintura se encimaba con el estante;
+  - los hoyos se veían como cuadros negros.
+
+**Pendiente / limitaciones**
+- Las voces son de texto a voz (Windows), no de un actor.
+- El protagonista sigue llamándose **Tlahuelli** en el juego. «Tonalli» es la barra de espíritu.
+- No se jugó todo el mapa a mano de principio a fin; las pruebas cubren cada sistema.
+
 ## 2026-11-24 — Sesión 23 (Toño): iconos por dispositivo, historieta moderna y auditoría
 
 Siguiendo `auditor_a_de_juego_historieta_y_detecci_n_de_mando.md`.

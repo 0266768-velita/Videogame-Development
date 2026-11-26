@@ -29,8 +29,7 @@ namespace TD_Game
             var player = FindAnyObjectByType<PlayerCombatant>();
             if (player == null || player.Progression.HasKey || sprite.enabled) return;
 
-            foreach (var enemy in FindObjectsByType<CombatEnemy>())   // only active enemies are found
-                if (!enemy.Data.isBoss && !enemy.Health.IsDead) return;   // someone is still alive
+            if (CombatEnemy.Remaining() > 0) return;   // someone is still alive (side-quest enemies do not count)
 
             // Everyone is defeated: the key appears next to the player.
             transform.position = player.transform.position + new Vector3(1.2f, 0.4f, 0f);

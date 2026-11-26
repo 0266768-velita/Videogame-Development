@@ -20,8 +20,15 @@ MonoBehaviour:
   baseDamage: 14
   maxCharge: 100
   chargeDamageBonus: 1
+  maxConcentration: 100
+  concentrationPerPerfect: 15
+  concentrationPerCritical: 8
+  criticalMultiplier: 1.6
+  comboBonusPerHit: 0.15
+  counterAttackMultiplier: 0.6
+  ambushMultiplier: 1.2
   startingPotions: 3
   maxPotions: 5
-  potionsOnVictory: 1
+  potionsOnVictory: 0
   minPotionsOnRetry: 2
   bodyRadius: 0.4

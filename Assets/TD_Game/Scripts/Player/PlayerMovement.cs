@@ -38,6 +38,9 @@ namespace TD_Game
         /// <summary>Current velocity in units per second.</summary>
         public Vector2 Velocity => body.linearVelocity;
 
+        /// <summary>Permanent speed bonus (1 = none). The Amulet of Painal raises it.</summary>
+        public float SpeedBonus { get; set; } = 1f;
+
         public float MoveSpeed
         {
             get => moveSpeed;
@@ -62,7 +65,7 @@ namespace TD_Game
             MoveDirection = GameState.IsExploring ? ToMoveDirection(input.Move) : Vector2.zero;
 
             IsSprinting = input.SprintHeld && MoveDirection != Vector2.zero;
-            float targetSpeed = moveSpeed * (IsSprinting ? sprintMultiplier : 1f);
+            float targetSpeed = moveSpeed * SpeedBonus * (IsSprinting ? sprintMultiplier : 1f);
             currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, speedChangeRate * Time.fixedDeltaTime);
 
             body.linearVelocity = MoveDirection * currentSpeed;

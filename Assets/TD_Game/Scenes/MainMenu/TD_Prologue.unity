@@ -152,6 +152,8 @@ MonoBehaviour:
   sceneMusic: 1
   crossFadeSeconds: 0.8
   sfxVoices: 10
+  minRepeatSeconds: 0.06
+  voiceVolume: 0.95
 --- !u!4 &128926680
 Transform:
   m_ObjectHideFlags: 0
@@ -305,6 +307,9 @@ MonoBehaviour:
       tint: {r: 1, g: 1, b: 1, a: 1}
       caption: And so his journey began.
   nextScene: MainMap_CSV
+  hintIdleSeconds: 3
+  skipHoldSeconds: 1
+  panelFadeSeconds: 0.5
 --- !u!4 &1405357674
 Transform:
   m_ObjectHideFlags: 0

@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 879771ce6e3d18f4eb0cd73eb3bac5d8, type: 3}
+  m_Name: SkinCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.SkinCatalog
+  material: {fileID: 2100000, guid: 31a552fec746fab49a9713afca09aa72, type: 2}
+  skins:
+  - id: default
+    displayName: "Warrior of Mictl\xE1n"
+    description: The blue of the night sky over Tenochtitlan.
+    price: 0
+    hueShift: 0
+    saturation: 1
+    brightness: 1
+  - id: jaguar
+    displayName: Jaguar Knight
+    description: Gold and ochre of the jaguar warriors.
+    price: 120
+    hueShift: -0.52
+    saturation: 0.95
+    brightness: 1.05
+  - id: quetzal
+    displayName: Quetzal Jade
+    description: Green as the feathers of the quetzal.
+    price: 150
+    hueShift: -0.19
+    saturation: 0.9
+    brightness: 0.95
+  - id: tezontle
+    displayName: Tezontle Red
+    description: 'Dyed with cochineal: the colour of sacrifice.'
+    price: 180
+    hueShift: 0.39
+    saturation: 0.85
+    brightness: 0.9
+  - id: eagle
+    displayName: Eagle Bone
+    description: White of eagle down and old bone.
+    price: 220
+    hueShift: 0
+    saturation: 0.12
+    brightness: 1.45
+  - id: obsidian
+    displayName: Obsidian Night
+    description: Black glass and smoke, like Tezcatlipoca.
+    price: 300
+    hueShift: 0.12
+    saturation: 0.5
+    brightness: 0.45

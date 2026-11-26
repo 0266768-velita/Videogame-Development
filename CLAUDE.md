@@ -282,6 +282,13 @@ El repositorio contiene un juego **top-down 2D anterior** (documentado en `ARQUI
 | 2026-11-24 | **En combate, los luchadores se dibujan en un `SortingGroup` de orden 510** (encima del mapa, los puestos y la oscuridad de 500) y la pelea se mueve a un claro libre; los efectos de delante usan 520. |
 | 2026-11-24 | **Iconos de botones según el último dispositivo** (teclado / ratón, Xbox o PlayStation): los avisos piden **acciones** (`{Dodge}`, `{Interact}`, `{Next}`…) a `InputPrompts`; los iconos son `ButtonGlyph` (pixel art generado en `ButtonGlyphs`, con colores de `MexicaPalette`). **Nunca escribir teclas fijas en la UI**: usar `InputPrompts.Label`, `Localize` o `ButtonGlyph`. Opción «Button icons» (Auto por defecto). |
 
+| 2026-11-25 | **v0.9 sobre `MainMap_CSV`:**<br>• los cambios se aplican con **TD_Game > v0.9 > Upgrade MainMap_CSV** (`Editor/V09/`);<br>• todo lo que crea cuelga de raíces `V09_*`, que se borran y se rehacen al volver a ejecutarlo;<br>• para cambiar algo de v0.9, editar el builder y volver a ejecutarlo; no editar a mano esos objetos. |
+| 2026-11-25 | **Agua y hoyos son peligros, no paredes:**<br>• van en los Tilemaps `Water` y `Pits`, en la capa **Hazard** (9);<br>• el jugador está en la capa **Player** (8) y no choca con Hazard: si entra, cae (`PlayerHazards`);<br>• los enemigos sí chocan con Hazard;<br>• lo que se puede saltar va en la capa **LowObstacle** (10). |
+| 2026-11-25 | **Grupos de enemigos:**<br>• `CombatEnemy.encounter` une un campamento (pelean juntos, máximo 4);<br>• `CombatEnemy.optional` = enemigo de misión: no cuenta para la llave ni para «Enemies Left». |
+| 2026-11-25 | **Interacciones con {Interact}:**<br>• todas usan `InteractPrompt` (un solo aviso compartido);<br>• diálogos: `DialogueBox.Play(lines)`;<br>• NPC: `DialogueNPC`;<br>• objetos: `InteractSpot`. |
+| 2026-11-25 | **Canvas de pantallas completas:** el mapa, los diálogos y el rompecabezas crean su Canvas **en un objeto raíz**. Si quedan dentro de otro Canvas, heredan su escala y su orden de dibujo. |
+| 2026-11-25 | **Audio original generado en código** (`SfxSynth`). Las voces del comerciante salen del texto a voz de Windows (`Audio/VoiceRaw~`, ignorada por Unity) y se procesan en `Audio/Voice`. |
+
 ### Convención de importación del arte de TD_Game
 
 | Ajuste | Tiles | Personajes / objetos (spritesheets) |

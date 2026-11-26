@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75d9402e48c7a594ca678c53dd1f1150, type: 3}
   m_Name: EnemyData_Giant
   m_EditorClassIdentifier: Assembly-CSharp::TD_Game.EnemyData
-  displayName: Quinametzin Giant
+  displayName: Quinametzin
   isBoss: 0
   patrolSpeed: 1
   chaseSpeed: 2.2
@@ -83,7 +83,7 @@ MonoBehaviour:
   soulsOnDefeat: 25
   healthOnDefeat: 20
   concentrationOnDefeat: 20
-  goldOnDefeat: 30
+  goldOnDefeat: 8
   bonusMaxHealth: 15
   bonusMaxStamina: 0
   unlocksOnDefeat:

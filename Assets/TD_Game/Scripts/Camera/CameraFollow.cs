@@ -89,6 +89,17 @@ namespace TD_Game
             transform.position = snapToPixelGrid ? SnapToPixels(smoothedPosition) : smoothedPosition;
         }
 
+        /// <summary>The Tilemap whose edges the camera never passes (the map, or the inside of a house).</summary>
+        public Tilemap BoundsTilemap => boundsTilemap;
+
+        /// <summary>Changes the area the camera stays in (entering or leaving a house) and jumps to the target.</summary>
+        public void SetBounds(Tilemap tilemap)
+        {
+            boundsTilemap = tilemap;
+            RefreshBounds();
+            SnapToTarget();
+        }
+
         /// <summary>Recomputes the bounds after the Tilemap changes size.</summary>
         public void RefreshBounds()
         {

@@ -43,7 +43,7 @@ namespace TD_Game.EditorTools
 
         static void SetupWolf(EnemyData d)
         {
-            d.displayName = "Shadow Wolf";
+            d.displayName = "Cuetlachtli";
             d.maxHealth = 45f; d.attackPower = 9f; d.startsBattleFirst = true; d.bodyRadius = 0.4f;
             d.patrolSpeed = 2f; d.chaseSpeed = 4f; d.detectRadius = 5.5f; d.loseRadius = 9f; d.leashRadius = 12f;
             d.patrolRadius = 3f; d.patrolWait = 1f; d.alertAlliesRadius = 5f;
@@ -61,7 +61,7 @@ namespace TD_Game.EditorTools
 
         static void SetupWitch(EnemyData d)
         {
-            d.displayName = "Mictlan Witch";
+            d.displayName = "Tlahuelpuchi";
             d.maxHealth = 60f; d.attackPower = 12f; d.bodyRadius = 0.4f;
             d.patrolSpeed = 1.2f; d.chaseSpeed = 2.6f; d.detectRadius = 6f; d.loseRadius = 9f; d.leashRadius = 10f;
             d.patrolRadius = 2f; d.patrolWait = 2f;
@@ -84,7 +84,7 @@ namespace TD_Game.EditorTools
 
         static void SetupGiant(EnemyData d)
         {
-            d.displayName = "Quinametzin Giant";
+            d.displayName = "Quinametzin";
             d.maxHealth = 150f; d.attackPower = 16f; d.damageTakenMultiplier = 0.8f; d.bodyRadius = 0.6f;
             d.patrolSpeed = 1f; d.chaseSpeed = 2.2f; d.detectRadius = 4.5f; d.loseRadius = 7f; d.leashRadius = 8f;
             d.patrolRadius = 1.5f; d.patrolWait = 2.5f;

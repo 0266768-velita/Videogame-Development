@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Videogame-Development.slnx"
+    "dotnet.defaultSolution": "Mictlan-v5.slnx"
 }

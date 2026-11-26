@@ -22,7 +22,7 @@ namespace TD_Game
         [SerializeField] Texture2D gameLogo;
         [SerializeField] string title = "MICTLÁN";
         [SerializeField] string studio = "Micta Forge";
-        [SerializeField] string version = "v.04";
+        [SerializeField] string version = "v0.9";
 
         [Header("Scenes")]
         [SerializeField] string gameScene = SceneIds.MainMap;
@@ -36,7 +36,8 @@ namespace TD_Game
             "Antonio Enríquez Velasco\n" +
             "Alejandro Cornejo Pérez\n" +
             "Adrián Gallardo Medina\n" +
-            "Jetzuvely del Carmen González Gutiérrez";
+            "Jetzuvely del Carmen González Gutiérrez\n\n" +
+            "<size=26>With the help of Claude, an AI assistant by Anthropic</size>";
 
         enum Stage { Title, Menu, Options, Credits }
         Stage stage = Stage.Title;

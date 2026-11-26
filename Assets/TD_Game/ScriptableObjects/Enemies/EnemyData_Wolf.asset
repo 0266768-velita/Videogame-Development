@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75d9402e48c7a594ca678c53dd1f1150, type: 3}
   m_Name: EnemyData_Wolf
   m_EditorClassIdentifier: Assembly-CSharp::TD_Game.EnemyData
-  displayName: Shadow Wolf
+  displayName: Cuetlachtli
   isBoss: 0
   patrolSpeed: 2
   chaseSpeed: 4
@@ -71,7 +71,7 @@ MonoBehaviour:
   soulsOnDefeat: 10
   healthOnDefeat: 12
   concentrationOnDefeat: 15
-  goldOnDefeat: 8
+  goldOnDefeat: 2
   bonusMaxHealth: 5
   bonusMaxStamina: 0
   unlocksOnDefeat: []

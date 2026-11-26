@@ -95,26 +95,30 @@ namespace TD_Game
             // the age bar, and next to it a framed list of content descriptors. Plain bold font (like the real ones).
             var plain = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var label = MenuWidgets.Rect("RatingLabel", slide);
-            MenuWidgets.Center(label, new Vector2(0, 30), new Vector2(620, 340));
+            // Every text has its own box INSIDE its frame (with a margin), and shrinks by itself if it does not fit.
+            MenuWidgets.Center(label, new Vector2(0, 40), new Vector2(660, 380));
 
-            var box = Frame("LetterBox", label, new Vector2(-170, 0), new Vector2(240, 330), 8);
-            var letter = Plain(MenuWidgets.Label("Letter", box, ratingLetter, 230, Color.white), plain);
-            MenuWidgets.Center(letter.rectTransform, new Vector2(0, 40), new Vector2(220, 240));
+            var box = Frame("LetterBox", label, new Vector2(-180, 0), new Vector2(260, 370), 8);
+            var letter = Plain(MenuWidgets.Label("Letter", box, ratingLetter, 210, Color.white), plain);
+            MenuWidgets.Center(letter.rectTransform, new Vector2(0, 60), new Vector2(230, 220));
             var bar = MenuWidgets.Image("AgeBar", box, Color.white);
-            MenuWidgets.Center(bar.rectTransform, new Vector2(0, -118), new Vector2(214, 62));
+            MenuWidgets.Center(bar.rectTransform, new Vector2(0, -92), new Vector2(226, 58));
             var age = Plain(MenuWidgets.Label("Age", bar.transform, ratingLabel, 30, Color.black), plain);
             MenuWidgets.Stretch(age.rectTransform);
-            var side = Plain(MenuWidgets.Label("Side", box, "CONTENT RATED", 13, Color.white), plain);
-            MenuWidgets.Center(side.rectTransform, new Vector2(0, -158), new Vector2(220, 18));
+            age.rectTransform.offsetMin = new Vector2(8, 4);
+            age.rectTransform.offsetMax = new Vector2(-8, -4);
+            var side = Plain(MenuWidgets.Label("Side", box, "CONTENT RATED", 16, Color.white), plain);
+            MenuWidgets.Center(side.rectTransform, new Vector2(0, -145), new Vector2(226, 26));
 
-            var info = Frame("Descriptors", label, new Vector2(130, 0), new Vector2(330, 330), 4);
-            var descriptors = Plain(MenuWidgets.Label("Text", info, contentDescriptors, 30, Color.white, TextAnchor.UpperLeft), plain);
+            var info = Frame("Descriptors", label, new Vector2(140, 0), new Vector2(360, 370), 4);
+            var descriptors = Plain(MenuWidgets.Label("Text", info, contentDescriptors, 28, Color.white, TextAnchor.MiddleLeft), plain);
             MenuWidgets.Stretch(descriptors.rectTransform);
-            descriptors.rectTransform.offsetMin = new Vector2(22, 22);
-            descriptors.rectTransform.offsetMax = new Vector2(-18, -22);
+            descriptors.rectTransform.offsetMin = new Vector2(24, 24);
+            descriptors.rectTransform.offsetMax = new Vector2(-20, -24);
+            descriptors.lineSpacing = 1.15f;
 
             var note = Fit(MenuWidgets.Label("Note", slide, "This game contains intense violence, blood and gore.", 26, MexicaPalette.Ash));
-            MenuWidgets.Center(note.rectTransform, new Vector2(0, -230), new Vector2(1100, 40));
+            MenuWidgets.Center(note.rectTransform, new Vector2(0, -230), new Vector2(1300, 60));
         }
 
         /// <summary>A white frame with a black inside (returns the inside).</summary>

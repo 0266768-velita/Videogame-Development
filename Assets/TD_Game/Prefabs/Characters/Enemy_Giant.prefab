@@ -140,6 +140,8 @@ MonoBehaviour:
   sprite: {fileID: 4039129751037698530}
   deathFadeTime: 0.4
   strength: 1
+  encounter: 
+  optional: 0
 --- !u!114 &511369653961193941
 MonoBehaviour:
   m_ObjectHideFlags: 0

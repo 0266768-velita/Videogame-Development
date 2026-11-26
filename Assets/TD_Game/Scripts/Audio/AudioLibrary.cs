@@ -19,6 +19,16 @@ namespace TD_Game
             public string name;
             public AudioClip clip;
             [Range(0f, 1f)] public float volume = 1f;
+            [Tooltip("Other versions of the same sound: one is picked at random each time, so repeated sounds do not tire the ear.")]
+            public AudioClip[] variants;
+
+            public AudioClip Pick()
+            {
+                int count = variants == null ? 0 : variants.Length;
+                int i = Random.Range(-1, count);
+                var chosen = i < 0 ? clip : variants[i];
+                return chosen != null ? chosen : clip;
+            }
         }
 
         [Header("Music")]

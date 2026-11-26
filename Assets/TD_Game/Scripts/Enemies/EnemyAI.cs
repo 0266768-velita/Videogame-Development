@@ -143,6 +143,15 @@ namespace TD_Game
         {
             state = State.Chase;
             if (data.alertAlliesRadius > 0f) AlertAllies();
+            AlertEncounter();
+        }
+
+        /// <summary>A camp fights as one: when one of its members sees Tlahuelli, the others come too.</summary>
+        void AlertEncounter()
+        {
+            if (string.IsNullOrEmpty(enemy.Encounter)) return;
+            foreach (var ally in FindObjectsByType<EnemyAI>())
+                if (ally != this && ally.state != State.Chase && ally.enemy.Encounter == enemy.Encounter) ally.Alert();
         }
 
         /// <summary>Wolf howl: nearby enemies that are calm also start chasing.</summary>

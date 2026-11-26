@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75d9402e48c7a594ca678c53dd1f1150, type: 3}
+  m_Name: EnemyData_Cihuateotl
+  m_EditorClassIdentifier: Assembly-CSharp::TD_Game.EnemyData
+  displayName: Cihuateotl
+  isBoss: 0
+  patrolSpeed: 1.2
+  chaseSpeed: 2.6
+  detectRadius: 6
+  loseRadius: 9
+  leashRadius: 10
+  patrolRadius: 2
+  patrolWait: 2
+  alertAlliesRadius: 0
+  maxHealth: 60
+  attackPower: 12
+  damageTakenMultiplier: 1
+  startsBattleFirst: 0
+  bodyRadius: 0.5
+  attacks:
+  - attackName: Soul Siphon
+    damageMultiplier: 1
+    hits: 1
+    windUpTime: 1.4
+    counterWindow: 0.45
+    timeBetweenHits: 0.6
+    counter: 1
+    lungeAtTarget: 0
+    weight: 2
+    effect: 5
+    effectAmount: 0.5
+    effectIgnoresCounter: 0
+  - attackName: Draining Curse
+    damageMultiplier: 0.6
+    hits: 1
+    windUpTime: 1.3
+    counterWindow: 0.45
+    timeBetweenHits: 0.6
+    counter: 1
+    lungeAtTarget: 0
+    weight: 2
+    effect: 1
+    effectAmount: 20
+    effectIgnoresCounter: 0
+  - attackName: Hex of Weakness
+    damageMultiplier: 0.4
+    hits: 1
+    windUpTime: 1.2
+    counterWindow: 0.4
+    timeBetweenHits: 0.6
+    counter: 1
+    lungeAtTarget: 0
+    weight: 1.5
+    effect: 3
+    effectAmount: 0.6
+    effectIgnoresCounter: 0
+  - attackName: Bone Shard
+    damageMultiplier: 0.8
+    hits: 1
+    windUpTime: 1.2
+    counterWindow: 0.4
+    timeBetweenHits: 0.6
+    counter: 0
+    lungeAtTarget: 0
+    weight: 1
+    effect: 0
+    effectAmount: 0
+    effectIgnoresCounter: 0
+  phaseTwoAtHealth: 0.5
+  phaseTwoName: 
+  phaseTwoPowerMultiplier: 1.25
+  phaseTwoAttacks: []
+  soulsOnDefeat: 15
+  healthOnDefeat: 10
+  concentrationOnDefeat: 30
+  goldOnDefeat: 6
+  bonusMaxHealth: 0
+  bonusMaxStamina: 10
+  unlocksOnDefeat:
+  - {fileID: 11400000, guid: 6f201b4981ebd2b488d09d46ffffd97e, type: 2}
+  lastStandAbility: {fileID: 0}

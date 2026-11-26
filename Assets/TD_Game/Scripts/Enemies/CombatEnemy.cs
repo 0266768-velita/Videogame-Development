@@ -17,8 +17,36 @@ namespace TD_Game
         [SerializeField, Min(0f)] float deathFadeTime = 0.4f;
         [Tooltip("Zone difficulty: multiplies health and damage (zone 1 = 1, deeper zones are stronger).")]
         [SerializeField, Min(0.1f)] float strength = 1f;
+        [Tooltip("Enemies with the same encounter id fight together: when one starts a battle, the others join it " +
+                 "(even if they wandered a bit away). Empty = alone.")]
+        [SerializeField] string encounter = "";
+        [Tooltip("Optional enemies (side quests) do not count for the obsidian key nor for the Enemies Left counter.")]
+        [SerializeField] bool optional;
 
         Vector3 homePosition;
+
+        public string Encounter => encounter;
+        public bool Optional => optional;
+
+        /// <summary>True while it still has to be defeated to get the obsidian key (not boss, not optional, alive).</summary>
+        public bool CountsAsRemaining
+        {
+            get
+            {
+                if (optional || data == null || data.isBoss || !gameObject.activeInHierarchy) return false;
+                var health = Health != null ? Health : GetComponent<Health>();
+                return health == null || !health.IsDead;
+            }
+        }
+
+        /// <summary>How many enemies are still in the way of the obsidian key (the Enemies Left counter).</summary>
+        public static int Remaining()
+        {
+            int count = 0;
+            foreach (var enemy in FindObjectsByType<CombatEnemy>())
+                if (enemy.CountsAsRemaining) count++;
+            return count;
+        }
         Color baseColor = Color.white;
 
         public EnemyData Data => data;

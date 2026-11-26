@@ -19,6 +19,8 @@ namespace TD_Game
         public List<string> abilities = new List<string>();
         public List<string> defeatedEnemies = new List<string>();
         public List<string> seenTutorials = new List<string>();
+        public List<string> ownedSkins = new List<string>();
+        public string equippedSkin;
     }
 
     /// <summary>

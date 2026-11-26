@@ -19,11 +19,17 @@ namespace TD_Game
         [SerializeField] MusicTrack sceneMusic = MusicTrack.Explore;
         [SerializeField, Min(0f)] float crossFadeSeconds = 0.8f;
         [SerializeField, Range(1, 24)] int sfxVoices = 10;
+        [Tooltip("The same effect is not repeated closer than this (seconds): stacked copies only sound louder and harsher.")]
+        [SerializeField, Range(0f, 0.2f)] float minRepeatSeconds = 0.06f;
+        [Tooltip("Spoken lines (the merchant), relative to the effects volume.")]
+        [SerializeField, Range(0f, 1f)] float voiceVolume = 0.95f;
 
         public static GameAudio Instance { get; private set; }
 
         AudioSource musicA, musicB;    // two sources so songs can cross-fade
         AudioSource[] voices;
+        AudioSource voiceSource;
+        readonly System.Collections.Generic.Dictionary<string, float> lastPlayed = new System.Collections.Generic.Dictionary<string, float>();
         int nextVoice;
         MusicTrack current = MusicTrack.None;
         Coroutine fade;
@@ -67,6 +73,7 @@ namespace TD_Game
             musicB = NewSource(true);
             voices = new AudioSource[sfxVoices];
             for (int i = 0; i < voices.Length; i++) voices[i] = NewSource(false);
+            voiceSource = NewSource(false);
         }
 
         void Start()
@@ -106,10 +113,39 @@ namespace TD_Game
         {
             var entry = library != null ? library.GetSfx(clipName) : null;
             if (entry == null || entry.clip == null) return;
+
+            // The same sound fired again in the same instant (several enemies hit, many orbs) is played once.
+            float now = Time.unscaledTime;
+            if (lastPlayed.TryGetValue(clipName, out float last) && now - last < minRepeatSeconds) return;
+            lastPlayed[clipName] = now;
+
             var voice = voices[nextVoice];
             nextVoice = (nextVoice + 1) % voices.Length;
             voice.pitch = 1f + Random.Range(-pitchJitter, pitchJitter);
-            voice.PlayOneShot(entry.clip, entry.volume * volume * SfxVolume);
+            voice.PlayOneShot(entry.Pick(), entry.volume * volume * SfxVolume);
+        }
+
+        /// <summary>A spoken line (the merchant). Only one voice at a time: a new line cuts the previous one.</summary>
+        public static void PlayVoice(AudioClip clip, float volume = 1f, float pitch = 1f)
+        {
+            if (Instance == null || clip == null) return;
+            var source = Instance.voiceSource;
+            source.Stop();
+            source.clip = clip;
+            source.pitch = pitch;
+            source.volume = Mathf.Clamp01(volume * Instance.voiceVolume * SfxVolume);
+            source.Play();
+        }
+
+        /// <summary>A new looping source for an ambient sound (wind, river, forest). The caller fades its volume.</summary>
+        public static AudioSource LoopSource(AudioClip clip)
+        {
+            if (Instance == null || clip == null) return null;
+            var source = Instance.NewSource(true);
+            source.clip = clip;
+            source.volume = 0f;
+            source.Play();
+            return source;
         }
 
         public void PlayTrack(MusicTrack track)

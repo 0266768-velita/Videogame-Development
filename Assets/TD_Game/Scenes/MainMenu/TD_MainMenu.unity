@@ -154,7 +154,7 @@ MonoBehaviour:
   gameLogo: {fileID: 0}
   title: "MICTL\xC1N"
   studio: Micta Forge
-  version: v.04
+  version: v0.9
   gameScene: MainMap_CSV
   prologueScene: TD_Prologue
 --- !u!4 &1050357894
@@ -205,6 +205,8 @@ MonoBehaviour:
   sceneMusic: 1
   crossFadeSeconds: 0.8
   sfxVoices: 10
+  minRepeatSeconds: 0.06
+  voiceVolume: 0.95
 --- !u!4 &1467921724
 Transform:
   m_ObjectHideFlags: 0

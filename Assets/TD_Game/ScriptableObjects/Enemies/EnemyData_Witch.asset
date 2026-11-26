@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75d9402e48c7a594ca678c53dd1f1150, type: 3}
   m_Name: EnemyData_Witch
   m_EditorClassIdentifier: Assembly-CSharp::TD_Game.EnemyData
-  displayName: Mictlan Witch
+  displayName: Tlahuelpuchi
   isBoss: 0
   patrolSpeed: 1.2
   chaseSpeed: 2.6
@@ -83,7 +83,7 @@ MonoBehaviour:
   soulsOnDefeat: 15
   healthOnDefeat: 10
   concentrationOnDefeat: 30
-  goldOnDefeat: 15
+  goldOnDefeat: 4
   bonusMaxHealth: 0
   bonusMaxStamina: 10
   unlocksOnDefeat:

@@ -64,6 +64,9 @@ namespace TD_Game
             if (halo != null)
                 halo.color = orbType == OrbType.Soul ? new Color(1f, 0.85f, 0.3f, 0.55f)
                            : orbType == OrbType.Jade ? new Color(0.3f, 1f, 0.5f, 0.5f) : new Color(0.3f, 0.9f, 1f, 0.5f);
+            // Small from the very first frame (the size used to be applied only after the pop, so orbs flashed huge).
+            if (sprite != null) sprite.transform.localScale = Vector3.one * size;
+            if (halo != null) halo.transform.localScale = Vector3.one * 1.1f;
             popFrom = from;
             restPosition = to;
             popElapsed = 0f;

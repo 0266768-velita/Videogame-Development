@@ -151,9 +151,9 @@ namespace TD_Game.EditorTools
 
         static void SetEnemyGold()
         {
-            Gold("EnemyData_Wolf", 8);
-            Gold("EnemyData_Witch", 15);
-            Gold("EnemyData_Giant", 30);
+            Gold("EnemyData_Wolf", 2);
+            Gold("EnemyData_Witch", 4);
+            Gold("EnemyData_Giant", 8);
             Gold("EnemyData_Quetzalcoatl", 0);
         }
 

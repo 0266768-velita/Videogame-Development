@@ -118,7 +118,7 @@ namespace TD_Game
             if (enemy.Health.IsDead)
             {
                 Defeated.Add(enemy.Data);
-                CombatFeed.RequestHitStop(0.12f);
+                CombatFeed.RequestHitStop(0.05f);   // short: a long freeze on every kill felt like the game got stuck
                 enemy.OnDefeated();
             }
         }

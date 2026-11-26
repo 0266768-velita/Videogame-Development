@@ -69,10 +69,18 @@ namespace TD_Game
         List<CombatEnemy> GatherEnemies(CombatEnemy lead)
         {
             var list = new List<CombatEnemy> { lead };
-            foreach (var e in FindObjectsByType<CombatEnemy>())
+            var all = FindObjectsByType<CombatEnemy>();
+            // The rest of its group (camp, pack, coven) always joins, even if they wandered away from each other.
+            if (!string.IsNullOrEmpty(lead.Encounter))
+                foreach (var e in all)
+                {
+                    if (list.Count >= maxEnemies) break;
+                    if (e != lead && e.IsAvailable && e.Encounter == lead.Encounter) list.Add(e);
+                }
+            foreach (var e in all)
             {
                 if (list.Count >= maxEnemies) break;
-                if (e == lead || !e.IsAvailable) continue;
+                if (e == lead || !e.IsAvailable || list.Contains(e)) continue;
                 if (Vector2.Distance(e.transform.position, lead.transform.position) <= joinRadius) list.Add(e);
             }
             return list;

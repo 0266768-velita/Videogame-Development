@@ -20,88 +20,142 @@ MonoBehaviour:
   sfx:
   - name: alert
     clip: {fileID: 8300000, guid: eb768490159cff7478f867a8ca2832ff, type: 3}
-    volume: 1
+    volume: 0.6
+    variants: []
   - name: defeat
     clip: {fileID: 8300000, guid: c8a94d04b494838439f0a4cede90deb6, type: 3}
-    volume: 1
+    volume: 0.75
+    variants: []
   - name: dodge
     clip: {fileID: 8300000, guid: 7f0bb28f1386a9a44ac526f7d610450b, type: 3}
     volume: 1
+    variants: []
   - name: door
     clip: {fileID: 8300000, guid: 2aa8021fb996e5840a079d6d39a9df2a, type: 3}
     volume: 1
+    variants: []
   - name: enemy_die
     clip: {fileID: 8300000, guid: 95a0c754e9238374486f989b6e8e86d3, type: 3}
     volume: 1
+    variants: []
   - name: enemy_hit
-    clip: {fileID: 8300000, guid: b332852f0d17a1545a4b99c0fbd6a9ca, type: 3}
-    volume: 1
+    clip: {fileID: 8300000, guid: 5b23905c02e6fd648b3a8d7f5c6d197a, type: 3}
+    volume: 0.85
+    variants:
+    - {fileID: 8300000, guid: 52392dfea647556469d286d0e0c8e215, type: 3}
+    - {fileID: 8300000, guid: e5809b6ba162a2b45be9b1f715f31f27, type: 3}
   - name: error
     clip: {fileID: 8300000, guid: 0c4b27521a168164dac877a20a6bd5ba, type: 3}
     volume: 1
+    variants: []
   - name: fall
     clip: {fileID: 8300000, guid: 4638f057a3eb1df46a9b4bad2a42346f, type: 3}
     volume: 1
+    variants: []
   - name: fury
     clip: {fileID: 8300000, guid: 901d5bda99494864eb1846d990ebd1d5, type: 3}
     volume: 1
+    variants: []
   - name: gib
     clip: {fileID: 8300000, guid: 0af8bd80ac664264580f3d5ae63c0ead, type: 3}
     volume: 1
+    variants: []
   - name: hurt
-    clip: {fileID: 8300000, guid: 6ae2cbda974d3ae42b27dbc9bdd72e89, type: 3}
-    volume: 1
+    clip: {fileID: 8300000, guid: f5fa27a5eabcf634cb46a8f02299d92b, type: 3}
+    volume: 0.85
+    variants:
+    - {fileID: 8300000, guid: b6a9ee1abc25b434089e7be565727a2b, type: 3}
+    - {fileID: 8300000, guid: 15762855f363c474c8ea91735dda003a, type: 3}
   - name: interrupt
     clip: {fileID: 8300000, guid: 2dbabf3751985d649b1e241194cd2550, type: 3}
     volume: 1
+    variants: []
   - name: jump
     clip: {fileID: 8300000, guid: c23dfa05908758147af79e26ee1f27e7, type: 3}
     volume: 1
+    variants: []
   - name: key
     clip: {fileID: 8300000, guid: 0d8261ad40936f84d82fdb0f89e566cb, type: 3}
     volume: 1
+    variants: []
   - name: land
     clip: {fileID: 8300000, guid: 3eefffd6283f3b841ba1f3e2fd868be1, type: 3}
     volume: 1
+    variants: []
   - name: logo
     clip: {fileID: 8300000, guid: c2ac0dca82ea2fc4c81e8486840c9b7a, type: 3}
     volume: 1
+    variants: []
   - name: perfect
     clip: {fileID: 8300000, guid: acfdf9372d1c49f4eb39e40dec98862d, type: 3}
     volume: 1
+    variants: []
   - name: potion
     clip: {fileID: 8300000, guid: a2cc8d5f04c2fbf45bbd9bbfdfed1bde, type: 3}
     volume: 1
+    variants: []
   - name: roar
     clip: {fileID: 8300000, guid: 2bfd1132c2cdb4347b62ce6f6e3b6447, type: 3}
-    volume: 1
+    volume: 0.8
+    variants: []
   - name: seismic
     clip: {fileID: 8300000, guid: 202e21a591d0aec449cbccdf916b1516, type: 3}
     volume: 1
+    variants: []
   - name: splash
-    clip: {fileID: 8300000, guid: e70b50dacd588b349b81394af46d1581, type: 3}
-    volume: 1
+    clip: {fileID: 8300000, guid: edd12a88a33a2aa4380246ef84c57d03, type: 3}
+    volume: 0.85
+    variants: []
   - name: swing
     clip: {fileID: 8300000, guid: b6d2817d462fcb5448cfab9de7fa62e5, type: 3}
-    volume: 1
+    volume: 0.6
+    variants:
+    - {fileID: 8300000, guid: 9d92a6a1e122dc943b250b3d3f1010be, type: 3}
+    - {fileID: 8300000, guid: 060caf3dd75be7a4ba8a8dac8b4f1dd9, type: 3}
+    - {fileID: 8300000, guid: e2882f00475967f4a892da5510247ca3, type: 3}
   - name: telegraph
-    clip: {fileID: 8300000, guid: 614c6fcecf4e6b4468ac791034e597cd, type: 3}
-    volume: 1
+    clip: {fileID: 8300000, guid: ee07be7e8b8a5c54e9e49f6dde6cdb3c, type: 3}
+    volume: 0.5
+    variants:
+    - {fileID: 8300000, guid: 8540deaab97913d4a95a402878479645, type: 3}
+    - {fileID: 8300000, guid: 351f0524a77e6e64da4c986455db3fce, type: 3}
   - name: tip
     clip: {fileID: 8300000, guid: 4c0bf1d5fd828584d9ff9907051a1f05, type: 3}
     volume: 1
+    variants: []
   - name: turn_start
     clip: {fileID: 8300000, guid: a6c39e72bf1ea1a498dea8384df1e924, type: 3}
     volume: 1
+    variants: []
   - name: ui_back
     clip: {fileID: 8300000, guid: cde8d346ba27ff845b6fb726e9822a00, type: 3}
     volume: 1
+    variants: []
   - name: ui_move
     clip: {fileID: 8300000, guid: 52e6de65934cd114ba58ad16ab130de9, type: 3}
-    volume: 1
+    volume: 0.6
+    variants: []
   - name: ui_select
     clip: {fileID: 8300000, guid: fa880d64a9971b54ca7cdd4f204fe62d, type: 3}
     volume: 1
+    variants: []
   - name: victory
     clip: {fileID: 8300000, guid: 70feacf8ac1c93c4e978c9a2e95b2537, type: 3}
-    volume: 1
+    volume: 0.75
+    variants: []
+  - name: fall_pit
+    clip: {fileID: 8300000, guid: 13275d26658179c469f1e211208cd248, type: 3}
+    volume: 0.85
+    variants: []
+  - name: chains_break
+    clip: {fileID: 8300000, guid: 4683ed3d7ae3e27468ead4adcd85bb04, type: 3}
+    volume: 0.9
+    variants: []
+  - name: puzzle_place
+    clip: {fileID: 8300000, guid: 5c130626b33afca46bb191c12a19e557, type: 3}
+    volume: 0.8
+    variants: []
+  - name: puzzle_done
+    clip: {fileID: 8300000, guid: c1abd632a2c19da429af9768ecef8687, type: 3}
+    volume: 0.85
+    variants: []

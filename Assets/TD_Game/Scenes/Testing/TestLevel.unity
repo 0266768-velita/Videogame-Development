@@ -7209,6 +7209,7 @@ MonoBehaviour:
   airTime: 0.5
   cooldown: 0.1
   ambushWindow: 0.2
+  airborneOrder: 4
 --- !u!114 &677092917
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7612,6 +7613,8 @@ MonoBehaviour:
   sprite: {fileID: 83356540}
   deathFadeTime: 0.4
   strength: 1
+  encounter: 
+  optional: 0
 --- !u!114 &806886276
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8685,6 +8688,8 @@ MonoBehaviour:
   sprite: {fileID: 1390248598}
   deathFadeTime: 0.4
   strength: 1
+  encounter: 
+  optional: 0
 --- !u!114 &972361154
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9354,6 +9359,8 @@ MonoBehaviour:
   sceneMusic: 2
   crossFadeSeconds: 0.8
   sfxVoices: 10
+  minRepeatSeconds: 0.06
+  voiceVolume: 0.95
 --- !u!4 &1050357895
 Transform:
   m_ObjectHideFlags: 0
@@ -10114,6 +10121,8 @@ MonoBehaviour:
   sprite: {fileID: 410359256}
   deathFadeTime: 0.4
   strength: 1
+  encounter: 
+  optional: 0
 --- !u!114 &1157952634
 MonoBehaviour:
   m_ObjectHideFlags: 0

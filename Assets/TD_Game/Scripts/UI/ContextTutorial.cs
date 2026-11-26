@@ -54,6 +54,9 @@ namespace TD_Game
         /// <summary>New game: every hint can appear again.</summary>
         public static void ResetAll() => seen.Clear();
 
+        /// <summary>Forgets one id (a villager with something new to say).</summary>
+        public static void Forget(string id) => seen.Remove(id);
+
         public static void MarkSeen(IEnumerable<string> ids)
         {
             foreach (string id in ids) seen.Add(id);

@@ -21,7 +21,7 @@ namespace TD_Game
         static readonly Dictionary<string, (string keyboard, string xbox)> Actions = new Dictionary<string, (string, string)>
         {
             { "Move", ("WASD", "L-STICK") }, { "Sprint", ("SHIFT", "RT") }, { "Jump", ("SPACE", "A") },
-            { "Interact", ("E", "Y") }, { "Pause", ("ESC", "START") },
+            { "Interact", ("E", "Y") }, { "Pause", ("ESC", "START") }, { "Map", ("M", "VIEW") },
             { "Attack", ("1", "A") }, { "Skill1", ("2", "X") }, { "Skill2", ("3", "Y") }, { "Potion", ("4", "D-PAD ▲") },
             { "Ultimate", ("5", "LB") }, { "Artifact", ("6", "RT") }, { "EndTurn", ("Q", "RB") },
             { "Target", ("◄ ►", "D-PAD ◄ ►") }, { "Dodge", ("SPACE", "B") }, { "Interrupt", ("SPACE", "B") },
