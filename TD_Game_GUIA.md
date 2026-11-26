@@ -1,348 +1,564 @@
-# TD_Game — Guía: qué hay y cómo modificarlo
+# Mictlán — Guía para cambiar, personalizar y arreglar el juego
 
-> Estado al **13 de noviembre de 2026**. Cómo está organizado por dentro: [TD_Game_ARQUITECTURA.md](TD_Game_ARQUITECTURA.md).
-> Todo se modifica **dentro de Unity** (Inspector, Tile Palette, Input Actions Editor). No hace falta ninguna herramienta externa.
+> **Fecha:** 26 de noviembre de 2026 · **Rama:** `v0.6` (último commit `0d35fc4`; versión del juego 0.9) · **Motor:** Unity 6000.5.9f1
+> Cómo está construido por dentro: [TD_Game_ARQUITECTURA.md](TD_Game_ARQUITECTURA.md) · Reglas del proyecto: [CLAUDE.md](CLAUDE.md)
+> Las rutas empiezan en `Assets/TD_Game/`. «Jerarquía» se refiere a la escena `Scenes/Levels/MainMap_CSV.unity` salvo que se diga otra.
 
-## Índice
-1. [Abrir y probar el juego](#1-abrir-y-probar-el-juego)
-2. [El jugador](#2-el-jugador)
-3. [Los controles (Input Actions)](#3-los-controles-input-actions)
-4. [El escenario (Tilemaps y Tile Palette)](#4-el-escenario-tilemaps-y-tile-palette)
-5. [Los tiles y el arte placeholder](#5-los-tiles-y-el-arte-placeholder)
-6. [Sustituir las primitivas por el arte del equipo](#6-sustituir-las-primitivas-por-el-arte-del-equipo)
-7. [La cámara](#7-la-cámara)
-8. [El orden de dibujo (quién tapa a quién)](#8-el-orden-de-dibujo-quién-tapa-a-quién)
-9. [Crear cosas nuevas sin romper nada](#9-crear-cosas-nuevas-sin-romper-nada)
-10. [Problemas frecuentes](#10-problemas-frecuentes)
-11. [Combate, orbes y HUD](#11-combate-orbes-y-hud)
-
----
-
-## 1. Abrir y probar el juego
-
-1. En la ventana **Project**, abre `Assets/TD_Game/Scenes/Testing/TestLevel.unity` con doble clic.
-2. Pulsa **Play**.
-3. **Haz clic dentro de la ventana Game**: si no tiene el foco, Unity no recibe el teclado.
-4. Muévete con **WASD**, las **flechas**, el **stick izquierdo** o el **D-pad**. **Shift izquierdo / RT** para correr y **Espacio / A** para saltar.
-
-Qué deberías ver:
-- El jugador se mueve en **8 direcciones** a 4 tiles por segundo, y a 7 corriendo.
-- Al saltar, el sprite sube y la sombra se queda en el suelo. En el aire pasas por encima de los enemigos.
-- La cámara lo sigue con suavidad y **no muestra nada fuera del mapa**.
-- Al pasar junto a un pilar, el jugador queda delante o detrás según su posición.
-- Arriba a la izquierda está el panel con vida, estamina y Tonalli.
-- Si tocas un enemigo empieza el combate (ver [§11](#11-combate-orbes-y-hud)). Si **caes encima** de uno tras un salto, es una **emboscada**.
-- **Todavía atraviesa muros, agua y pilares**: las colisiones están pendientes.
-
-> Los cambios que hagas en el Inspector **durante Play Mode se pierden** al salir. Para probar valores, cámbialos en Play Mode y, cuando te gusten, apúntalos y ponlos fuera de Play Mode.
+## Tabla de contenidos
+1. [Referencia rápida](#1-referencia-rápida)
+2. [Abrir, jugar y probar](#2-abrir-jugar-y-probar)
+3. [Antes de editar: lo que NO se debe romper](#3-antes-de-editar-lo-que-no-se-debe-romper)
+4. [Jugador](#4-jugador)
+5. [Enemigos y jefe](#5-enemigos-y-jefe)
+6. [Habilidades](#6-habilidades)
+7. [Combate](#7-combate)
+8. [Orbes, cofres, tiendas y llave](#8-orbes-cofres-tiendas-y-llave)
+9. [Mapa (`MainMap_CSV`)](#9-mapa-mainmap_csv)
+10. [NPC, diálogos, puzles y misión](#10-npc-diálogos-puzles-y-misión)
+11. [Arte e importación](#11-arte-e-importación)
+12. [Cámara y orden de dibujo](#12-cámara-y-orden-de-dibujo)
+13. [HUD, colores y fuentes](#13-hud-colores-y-fuentes)
+14. [Menús y flujo inicial](#14-menús-y-flujo-inicial)
+15. [Historieta](#15-historieta)
+16. [Audio y música](#16-audio-y-música)
+17. [Controles e iconos de botones](#17-controles-e-iconos-de-botones)
+18. [Guardado, dificultad, textos, escenas y build](#18-guardado-dificultad-textos-escenas-y-build)
+19. [Cómo se conectan los sistemas (para no programadores)](#19-cómo-se-conectan-los-sistemas-para-no-programadores)
+20. [Recetas paso a paso](#20-recetas-paso-a-paso)
+21. [Solución de problemas](#21-solución-de-problemas)
 
 ---
 
-## 2. El jugador
+## 1. Referencia rápida
 
-Selecciona **`Player`** en la jerarquía de `TestLevel`.
+| Quiero cambiar… | Ve a… |
+|---|---|
+| Vida, estamina, daño base, crítico, combo, Tonalli, pociones del jugador | `ScriptableObjects/Characters/PlayerStats_Tlahuelli` |
+| Velocidad al caminar o correr | Jerarquía `Player` → `PlayerMovement` → **Move Speed**, **Sprint Multiplier** |
+| Altura y duración del salto | `Player` → `PlayerJump` → **Jump Height**, **Air Time** |
+| Daño de las caídas al agua o a los hoyos | `Player` → `PlayerHazards` → **Damage Fraction** |
+| Vida, ataques, IA u oro de un enemigo | `ScriptableObjects/Enemies/EnemyData_*` |
+| Dónde hay enemigos | lista `camps` en `Scripts/Editor/V09/V09WorldUpgrade.Content.cs` (y volver a ejecutar el upgrade) |
+| Coste o efecto de una habilidad | `ScriptableObjects/Abilities/Ability_*` |
+| Qué habilidad va en cada tecla | `Combat` → `PlayerTurn` → **Attack / Skill1 / Skill2 / Potion / Ultimate / Artifact** |
+| Ventana de esquiva, PERFECT y anti-spam | `Combat` → `EnemyTurn` → **Perfect Window Fraction**, **Early Press Lockout**, **Counter Window Scale** |
+| Ventana del crítico | `Ability_Attack` → **Wind Up Time**, **Critical Window** |
+| Cuántos enemigos se unen a una pelea | `Combat` → `CombatManager` → **Join Radius**, **Max Enemies** |
+| Zoom del mapa / del combate | `Main Camera` → Camera **Size** / `Combat` → `CombatArena` → **Combat Orthographic Size** |
+| Valor de los orbes | `Combat` → `OrbSpawner` → **Soul / Health / Concentration Per Orb** |
+| Precios de la tienda | `TalkArea` de cada comerciante → `MerchantShop` → **Potion Price**, **Artifact Price**, apuestas |
+| Skins y sus precios | `ScriptableObjects/Items/SkinCatalog` → **Skins** |
+| El mapa (terreno) | `Settings/Maps/mapa_juego_150x70.csv` + regenerar ([§9](#9-mapa-mainmap_csv)) |
+| Textos de los NPC | `V09_Villagers` → `NPC_*` → `DialogueNPC` → **First Talk**, **Later Talk** |
+| Consejos en pantalla | `GameFlowUI/TutorialHint` → `ContextTutorial` |
+| Viñetas de la historieta | escena `TD_Prologue` → `PrologueComic` → **Pages** |
+| Logo, clasificación y menú | escenas `TD_Boot` (`BootScreens`) y `TD_MainMenu` (`TitleMenu`) |
+| Música y efectos | `Audio/AudioLibrary` |
+| Teclas | `Settings/Input/PlayerControls.inputactions` |
+| Colores de toda la UI | `Scripts/UI/MexicaPalette.cs` |
 
-### Componentes y para qué sirve cada uno
+---
 
-| Componente | Función | Qué puedes cambiar |
+## 2. Abrir, jugar y probar
+
+**Abrir el proyecto**
+1. **Unity Hub → Add → Add project from disk** → la carpeta del repositorio. Usa **Unity 6000.5.9f1**.
+2. Espera a que importe y revisa que la **Console** no tenga errores rojos.
+
+**Jugar el flujo completo:** menú **Mictlan > Play From The Start** (abre `TD_Boot` y pulsa Play), o abre `Scenes/MainMenu/TD_Boot.unity` y pulsa **Play**.
+
+**Probar una escena suelta**
+
+| Escena | Qué pruebas |
+|---|---|
+| `Scenes/MainMenu/TD_Boot.unity` | logo → clasificación → descripción → menú |
+| `Scenes/MainMenu/TD_MainMenu.unity` | menú, opciones y créditos |
+| `Scenes/MainMenu/TD_Prologue.unity` | la historieta; al terminar carga el mapa |
+| `Scenes/Levels/MainMap_CSV.unity` | **el juego**: empieza en la `S` del CSV |
+| `Scenes/Testing/TestLevel.unity` | combate con 3 enemigos de prueba, sin mapa grande |
+
+**Prueba automática:** **TD_Game > v0.9 > Run Self Test (Play Mode)** juega solo (contador, mapa, salto, caídas, campamento, tienda, diálogo, misión, guardado). El informe y las capturas quedan en `Logs/SelfTest`.
+
+> Lo que cambies en el Inspector **durante Play Mode se pierde** al salir. Haz los cambios definitivos fuera de Play Mode y guarda la escena (**Ctrl+S**).
+
+---
+
+## 3. Antes de editar: lo que NO se debe romper
+
+| Regla | Por qué |
+|---|---|
+| **No edites a mano los objetos `V09_*`** de `MainMap_CSV` | **TD_Game > v0.9 > Upgrade MainMap_CSV** los borra y los rehace. Cambia el builder (`Scripts/Editor/V09/`) y vuelve a ejecutarlo |
+| **Tampoco muevas a mano los enemigos de `Enemies`** si vas a volver a ejecutar el upgrade | el upgrade los recrea desde la lista `camps` |
+| Regenerar el mapa desde el CSV **borra** los cambios manuales de `MainMap_CSV` | `CsvMapBuilder` copia `MainMap` y rehace todo ([§9](#9-mapa-mainmap_csv)) |
+| No borres ni renombres `MainMap.unity` | `CsvMapBuilder` lo usa como base |
+| Los nombres de escena van en `SceneIds` (`Scripts/Managers/SceneFader.cs`) y en los campos `gameScene` / `nextScene` | si renombras una escena, el menú o la historieta no la encuentran |
+| Todo el código nuevo va en `Assets/TD_Game/` con `namespace TD_Game` | convención del proyecto |
+| Colores nuevos, solo de `MexicaPalette`; teclas en la UI, solo con `InputPrompts` / `ButtonGlyph` | así cambian solos con el tema y con el dispositivo |
+| Si cambias el orden de `AttackEffect`, se desordenan los ataques guardados en los assets | añade valores nuevos **al final** |
+
+---
+
+## 4. Jugador
+
+Jerarquía: **`Player`** (capa `Player`), con los hijos `Visual` (sprite, antorcha y macuahuitl) y `Shadow`. El prefab `Prefabs/Characters/Player.prefab` **no** lo usa ninguna escena de la build: los cambios se hacen en el `Player` de cada escena.
+
+| Qué | Dónde | Campo | Efecto | Ojo con |
+|---|---|---|---|---|
+| Vida, estamina, daño | `ScriptableObjects/Characters/PlayerStats_Tlahuelli` | **Max Health**, **Max Stamina**, **Stamina Regen Fraction**, **Base Damage** | estadísticas base del combate | afecta a todas las escenas; el HUD lee estos valores |
+| Pociones | mismo asset | **Starting Potions**, **Max Potions**, **Potions On Victory**, **Min Potions On Retry** | cuántas tienes y cuántas recibes | la tienda vende pociones hasta el máximo |
+| Velocidad | `Player` → `PlayerMovement` | **Move Speed** (4), **Sprint Multiplier** (1.75), **Speed Change Rate** | tiles por segundo | la IA de los enemigos debe poder alcanzarte (`chaseSpeed`) |
+| 8 direcciones | `PlayerMovement` | **Allow Diagonals** | desmarcado = 4 direcciones | la diagonal ya está normalizada |
+| Salto | `Player` → `PlayerJump` | **Jump Height** (0.7), **Air Time** (0.55), **Cooldown**, **Ambush Window**, **Airborne Order** | altura, duración y emboscada | un salto más largo cruza más agua: los cruces de piedras se calcularon con 0.55 s |
+| Caídas | `Player` → `PlayerHazards` | **Damage Fraction** (0.08), **Edge Margin**, **Safe Distance**, **Blink Seconds** | castigo y dónde reaparece | la caída nunca mata |
+| Caminata | `Player` → `PlayerSpriteAnimator` | **Walk Down / Walk Up / Walk Side** (4 cuadros), **Frames Per Second** | animación al caminar | `MacuahuitlRig` convierte cada cuadro a la versión sin arma en combate |
+| Sprite de combate | `Player` → `MacuahuitlRig` | **Combat Pose**, **Combat Grip** | la pose de perfil en combate | requiere **Read/Write** activado en `tlahuelli.png` |
+| Macuahuitl (combate) | `MacuahuitlRig` | **Weapon Sprite** (vacío = generado), **Grip**, **Size To Body**, **Guard Angle**, **Trail Color** | arma que se ve en combate | las técnicas están en `Ability_Attack` → **Combo Swings** |
+| Macuahuitl (exploración) | `Player/Visual/Macuahuitl` → `MacuahuitlSwing` | — | arma que aparece al atacar | se apaga sola en combate |
+| Skins | `ScriptableObjects/Items/SkinCatalog` | **Skins**: **Id**, **Display Name**, **Price**, **Hue Shift**, **Saturation**, **Brightness** | ropa de otro color | el **Id** se guarda en la partida: no lo cambies a una skin ya vendida |
+| Habilidades de inicio | `Player` → `PlayerProgression` | **Unlocked Abilities** | habilidades ya desbloqueadas | para probar; en el juego normal se ganan venciendo enemigos |
+
+---
+
+## 5. Enemigos y jefe
+
+**Datos:** `ScriptableObjects/Enemies/`
+
+| Asset | Nombre en el juego | Prefab |
 |---|---|---|
-| **Rigidbody2D** | Cuerpo físico que se mueve | No hace falta tocarlo. Los ajustes clave (gravedad 0, rotación congelada) los fuerza `PlayerMovement` al iniciar |
-| **CapsuleCollider2D** | "Huella" del jugador en el suelo; con ella chocará contra muros desde el 12 nov | **Size** y **Offset**: hazla más ancha o estrecha para pasar por huecos. Está en los pies a propósito, para que la cabeza pueda solaparse con objetos que quedan "detrás" |
-| **PlayerInputReader** | Lee los controles | **Move / Jump / Sprint Action**: qué acciones de input usa |
-| **PlayerMovement** | Mueve al jugador | **Move Speed** (tiles por segundo; 1 tile = 64 px), **Allow Diagonals** (activado = 8 direcciones), **Sprint Multiplier** (1.75) y **Speed Change Rate** (qué tan rápido acelera al correr) |
-| **PlayerDirection** | Recuerda hacia dónde mira | **Initial Facing** y **Dead Zone** |
-| **PlayerJump** | Salto visual y emboscada | **Jump Height**, **Air Time**, **Cooldown** y **Ambush Window** |
-| **Health** | Vida | Se inicializa con `PlayerStats`; no hace falta tocarla |
-| **PlayerProgression** | Habilidades desbloqueadas, crecimiento y checkpoint | **Unlocked Abilities**: arrastra aquí una habilidad para tenerla desbloqueada al probar |
-| **PlayerCombatant** | Estamina, pociones, Tonalli y Macuahuitl | **Stats**: el asset `PlayerStats_Tlahuelli` |
-| Hijo **Visual** → **SpriteRenderer** | Lo que se ve | **Sprite** (la imagen), **Color** (tinte), **Order in Layer** |
-| Hijo **Shadow** → **SpriteRenderer** | Sombra del salto | **Color** (opacidad) y escala |
+| `EnemyData_Wolf` | Cuetlachtli | `Prefabs/Characters/Enemy_Wolf` |
+| `EnemyData_Witch` | Tlahuelpuchi | `Enemy_Witch` |
+| `EnemyData_Giant` | Quinametzin | `Enemy_Giant` |
+| `EnemyData_Cihuateotl` | brujas de la misión | (las 4 de la casa) |
+| `EnemyData_Quetzalcoatl` | jefe | `Boss_Quetzalcoatl` |
 
-### Recetas
+| Qué | Campo del `EnemyData` | Efecto |
+|---|---|---|
+| Nombre | **Display Name** | lo que se ve en el HUD |
+| IA | **Patrol Speed**, **Chase Speed**, **Detect Radius**, **Lose Radius**, **Leash Radius**, **Patrol Radius**, **Patrol Wait**, **Alert Allies Radius** | cómo patrulla, ve y persigue |
+| Combate | **Max Health**, **Attack Power**, **Damage Taken Multiplier** (<1 = piel dura), **Starts Battle First**, **Body Radius** | dureza y quién empieza |
+| Ataques | **Attacks** (lista de `EnemyAttack`) | ver la tabla siguiente |
+| Jefe | **Is Boss**, **Phase Two At Health**, **Phase Two Name**, **Phase Two Power Multiplier**, **Phase Two Attacks** | segunda fase; el jefe actúa 2 veces por ronda (3 en fase 2) |
+| Recompensas | **Souls / Health / Concentration On Defeat**, **Gold On Defeat**, **Bonus Max Health**, **Bonus Max Stamina**, **Unlocks On Defeat**, **Last Stand Ability** | orbes, oro, crecimiento y habilidades |
 
-- **Más rápido o más lento:** `Player` → `PlayerMovement` → **Move Speed**. Para el sprint, **Sprint Multiplier** (2 = el doble).
-- **Saltar más alto o más largo:** `PlayerJump` → **Jump Height** y **Air Time**.
-- **Volver a 4 direcciones:** desmarca **Allow Diagonals**. En 8 direcciones la diagonal no es más rápida, porque el código normaliza el vector.
-- **Cambiar de sitio dónde empieza el jugador:** mueve el objeto `Player` en la escena. Pon los pies en el centro de una celda para que quede alineado; por ejemplo, x = -11,5 e y = -0,5.
-- **Cambiar el color del placeholder:** `Player/Visual` → `SpriteRenderer` → **Color**.
-- **Ver el script:** doble clic en el nombre del componente. Están en `Assets/TD_Game/Scripts/Player/`.
+**Cada ataque (`EnemyAttack`):**
 
-### Cómo está escrito el código (si quieres editarlo)
-- **`PlayerInputReader.cs`** solo **lee** el input y lo deja en la propiedad `Move`. Si un día el input viene de otro sitio (un mando especial, una IA), solo se cambia este archivo.
-- **`PlayerMovement.cs`** solo **mueve**. Lee `input.Move`, decide la dirección (método `ToMoveDirection`) y fija `body.linearVelocity` en `FixedUpdate`.
-- Todo el código del juego nuevo va dentro de `namespace TD_Game { ... }`, para no chocar con las clases del juego anterior.
+| Campo | Qué hace |
+|---|---|
+| **Attack Name** | texto del banner |
+| **Damage Multiplier**, **Hits**, **Time Between Hits** | fuerza y número de golpes |
+| **Wind Up Time** | la carga: el golpe llega al final |
+| **Counter Window** | segundos de la ventana de esquiva (se multiplican por **Counter Window Scale** de `EnemyTurn`) |
+| **Counter** | `Dodge`, `Interrupt` (hechizos; mismo botón) o `Unavoidable` |
+| **Lunge At Target** | se lanza contra Tlahuelli o dispara un proyectil |
+| **Weight** | probabilidad relativa de elegir este ataque |
+| **Effect**, **Effect Amount**, **Effect Ignores Counter** | `DrainStamina`, `HealSelf`, `Weaken`, `EmpowerSelf`, `LifeSteal`, `Stun`, `Guard` |
+
+**Por enemigo en la escena** (`Enemies/Enemy_*` → `CombatEnemy`):
+- **Strength**: multiplica vida y ataque (1.35–2.4 según la distancia al inicio).
+- **Encounter**: id del campamento; los del mismo id pelean juntos.
+- **Optional**: enemigo de misión; no cuenta para la llave.
+
+**Sprites:** el `SpriteRenderer` del hijo `Visual` del prefab; la animación en reposo es `SpriteFlipbook`.
+
+**Jefe:** `BossZone/Boss_Quetzalcoatl`. Su arena es `BossZone/BossArena` (trigger; **Entrance Title**, **Gates** = `BossGate` y `BossGate_2`).
+
+**No romper:**
+- Si un enemigo pierde su `EnemyData` (**Data** = None), el combate falla.
+- `ObsidianKey` cuenta todos los enemigos **no opcionales** y no jefes: un enemigo inalcanzable impide conseguir la llave.
 
 ---
 
-## 3. Los controles (Input Actions)
+## 6. Habilidades
 
-Archivo: `Assets/TD_Game/Settings/Input/PlayerControls.inputactions`. Ábrelo con **doble clic** y se abre el *Input Actions Editor*.
+Assets en `ScriptableObjects/Abilities/`; código en `Scripts/Combat/Abilities/`.
 
-| Mapa | Acción | Tipo | Teclas / botones |
+| Asset | Tecla | Campos útiles |
+|---|---|---|
+| `Ability_Attack` | 1 / A | **Stamina Cost** 20, **Damage Multiplier**, **Wind Up Time** 0.55, **Critical Window** 0.2, **Perfect Fraction**, **Early Press Lockout**, **Combo Swings**, **Critical Swing** |
+| `Ability_MictlanFury` | 2 / X | **Stamina Cost** 30, **Once Per Battle**, **Heal Fraction** 0.4, **Damage Multiplier** 1.5, **Turns** 3 |
+| `Ability_SeismicJump` | 3 / Y | **Stamina Cost** 40, **Damage Multiplier** 1.2, coreografía (**Crouch Time**, **Jump Height**, **Rise Time**, **Hang Time**, **Slam Time**, **Spins**, **Wave Speed**, **Launch Height**) |
+| `Ability_Potion` | 4 / D-pad ↑ | **Stamina Cost** 15, **Heal Fraction** 0.35 |
+| `Ability_TonalliBurst` | 5 / LB | **Damage Multiplier** 2.5 (necesita Tonalli lleno) |
+| `Ability_SmokingMirror` | 6 / RT | **Stamina Cost** 25, **Damage Multiplier** 1.2, **Life Steal** 0.5 (se compra en la tienda) |
+
+Campos comunes: **Display Name**, **Description**, **Stamina Cost**, **Unlocked By Default**, **Once Per Battle**.
+Las ranuras se asignan en `Combat` → `PlayerTurn`.
+Fury y Seismic se ganan con **Unlocks On Defeat** de los enemigos.
+
+**No romper:** `SaveController` → **All Abilities** debe contener todas las habilidades, o no se podrán restaurar al cargar la partida.
+
+---
+
+## 7. Combate
+
+Todo en el objeto **`Combat`** de la jerarquía.
+
+| Qué | Componente → campo | Valor | Efecto |
 |---|---|---|---|
-| `Player` | `Move` | Value · Vector2 | WASD (compuesto), flechas (compuesto), stick izquierdo, D-pad |
-| `Player` | `Jump` | Button | Espacio · A |
-| `Player` | `Sprint` | Button (mantener) | Shift izquierdo · RT |
-| `Combat` | `Attack` | Button | 1 · A (y otra vez en **NOW!** para crítico) |
-| `Combat` | `Skill1` / `Skill2` | Button | 2 · X / 3 · Y (Mictlan Fury / Seismic Jump) |
-| `Combat` | `Potion` | Button | 4 · D-pad arriba |
-| `Combat` | `Ultimate` | Button | 5 · LB (Tonalli Burst) |
-| `Combat` | `EndTurn` | Button | Q · RB |
-| `Combat` | `TargetPrev` / `TargetNext` | Button | ← → · D-pad izquierda/derecha |
-| `Combat` | `Dodge` | Button | Espacio, D · B |
-| `Combat` | `Interrupt` | Button | 1 · A |
+| Unirse a la pelea | `CombatManager` → **Join Radius**, **Max Enemies** | 4 / 4 | quién entra en el combate además del campamento |
+| Pausa inicial | `CombatManager` → **Intro Time** | 1.2 s | banner «Battle!» |
+| Ventana de esquiva | `EnemyTurn` → **Counter Window Scale**, **Boss Window Scale** | 0.75 / 0.75 | más pequeño = más difícil |
+| Zona PERFECT | `EnemyTurn` → **Perfect Window Fraction** | 0.5 | parte final de la ventana |
+| Anti-spam | `EnemyTurn` → **Early Press Lockout** | 0.3 s (×1.5 por pulsación extra) | castigo por pulsar antes |
+| Contraataque normal | `EnemyTurn` → **Good Counter Fraction** | 0.6 | fuerza frente al PERFECT |
+| Fallos del enemigo | `EnemyTurn` → **Miss Chance** | 0.1 | golpes que fallan solos |
+| Paso de esquiva | `EnemyTurn` → **Dodge Step Distance** | 1 | cuánto retrocede Tlahuelli |
+| Fórmula de daño | `PlayerStats_Tlahuelli` → **Base Damage**, **Critical Multiplier**, **Combo Bonus Per Hit**, **Counter Attack Multiplier**, **Charge Damage Bonus**, **Ambush Multiplier** | 14 / 1.6 / 0.15 / 0.6 / 1 / 1.2 | ver [arquitectura §5.7](TD_Game_ARQUITECTURA.md#57-combate-por-turnos) |
+| Tonalli | `PlayerStats_Tlahuelli` → **Max Concentration**, **Concentration Per Perfect**, **Concentration Per Critical** | 100 / 15 / 8 | cuándo se llena el Burst |
+| Estamina por turno | `PlayerStats_Tlahuelli` → **Stamina Regen Fraction** | 0.6 | cuántas acciones por turno |
+| Colocación | `CombatArena` → **Battle Distance**, **Enemy Spacing**, **Clear Search Radius** | 5 / 1.6 / 6 | separación y búsqueda de un claro |
+| Orden de dibujo | `CombatArena` → **Fighter Order** | 510 | debe ser mayor que la oscuridad (500) |
+| Zoom | `CombatArena` → **Combat Orthographic Size**, **Zoom Time** | 4.219 / 0.4 | encuadre de la pelea |
+| Pausa sin estamina | `PlayerTurn` → **Out Of Stamina Pause** | 0.7 s | — |
 
-El mapa `Combat` solo está activo durante las peleas, así que puede repetir teclas del mapa `Player`.
-
-Esquemas de control: `Keyboard` y `Gamepad`.
-
-### Recetas
-
-- **Añadir otra tecla al movimiento** (por ejemplo IJKL):
-  1. Selecciona la acción `Move`, pulsa **+** y elige **Add Up/Down/Left/Right Composite**.
-  2. Asigna cada dirección con **Listen**.
-  3. Marca el esquema `Keyboard`.
-  4. Pulsa **Save Asset**, o activa **Auto-Save**.
-- **Quitar un control:** selecciona el binding y pulsa **Delete**. Luego **Save Asset**.
-- **Zona muerta del stick:** selecciona el binding `<Gamepad>/leftStick` → **Processors** → **+** → **Stick Deadzone**.
-- **Acciones nuevas** (por ejemplo `Interact`, prevista para el 18 nov): **+** en *Actions*. Para usarla en código hace falta un campo `InputActionReference` en un componente, igual que `moveAction` en `PlayerInputReader`.
-
-> Si renombras el mapa `Player` o la acción `Move`, revisa que `Player` → `PlayerInputReader` → **Move Action** siga asignado.
+**No romper:**
+- `PlayerTurn`, `EnemyTurn` y `CombatManager` deben apuntar a `CombatInput` y al asset `PlayerControls`.
+- Si `Fighter Order` baja de 500, Tlahuelli vuelve a quedar tapado por la oscuridad.
 
 ---
 
-## 4. El escenario (Tilemaps y Tile Palette)
+## 8. Orbes, cofres, tiendas y llave
 
-El mapa está en el objeto **`Grid`** y tiene tres capas, una por cada Tilemap hijo:
-
-| Capa | Para qué | Notas |
+| Qué | Dónde | Campos |
 |---|---|---|
-| `Ground` | suelo: hierba, tierra, agua | siempre detrás de todo. La cámara usa sus bordes como límite del mapa |
-| `Walls` | muros y roca | aquí irán las colisiones (12 nov) |
-| `Decoration` | objetos altos: pilares, árboles… | se ordenan con el jugador según su altura en pantalla |
+| Orbes | `Combat` → `OrbSpawner` | **Orb Prefab**, **Soul Per Orb** 4, **Health Per Orb** 5, **Concentration Per Orb** 5, **Max Orbs Per Type** 4, colores |
+| Aspecto e imán de un orbe | `Prefabs/Interactables/Orb.prefab` → `SoulOrb` | **Bob Height**, **Magnet Radius**, **Magnet Speed**, **Size**, sprites |
+| Cuántos orbes suelta un enemigo | `EnemyData` | **Souls / Health / Concentration On Defeat** |
+| Cofres | `Chests/Chest_*` y `V09_PyramidDecor/SummitOffering` → `LootChest` | **Gold**, **Potions**, **Heal**, **Title** |
+| Premio del puzle | `Puzzle (Four Fires)` → `BrazierPuzzle` | **Treasure Gold**, **Correct Order** |
+| Tiendas | `Merchant (Shop)/TalkArea` y `V09_Merchant (…)/TalkArea` → `MerchantShop` | **Merchant Name**, **Potion Price**, **Small Bet**, **Big Bet**, **Artifact Price**, **Artifact**, frases (**Greet / Buy / Win / Lose / Goodbye Lines**) |
+| Llave de obsidiana | `ObsidianKey` | aparece cuando no queda ningún enemigo normal vivo |
+| Puertas de la pirámide | `ObsidianDoor`, `ObsidianDoor_2` → `KeyDoor` | **Closed Sprite**, **Open Sprite**, **Slab Rise Time**, **Light Wave Length** |
 
-### Pintar o borrar
-
-1. Abre **Window > 2D > Tile Palette**.
-2. En el desplegable de paletas elige **`TD_Placeholder`**.
-3. En **Active Tilemap** (arriba de la paleta) elige la capa: `Ground`, `Walls` o `Decoration`.
-4. Elige un tile y una herramienta:
-   - **B**: pincel.
-   - **U**: rectángulo relleno.
-   - **G**: relleno (cubo).
-   - **D**: borrar.
-   - **I**: cuentagotas.
-5. Pinta en la vista **Scene**. Guarda la escena con **Ctrl+S**.
-
-### Recetas
-
-- **Agrandar el mapa:** pinta más suelo en `Ground`. La cámara recalcula los límites al iniciar la escena (`CameraFollow.RefreshBounds()`), así que no hay que configurar nada más.
-- **Crear una sala nueva:** suelo en `Ground`, borde en `Walls`, y deja huecos en el muro para las puertas.
-- **Objetos altos:** el pilar (`Deco_Pillar_Tall`) va **siempre** en `Decoration`. Ocupa una celda de base y sobresale una hacia arriba.
-- **Agua:** por ahora es suelo (`Ground`) y se puede pisar. El 12 nov se decidirá si bloquea el paso.
+**No romper:**
+- Las 4 tiendas comparten el mismo oro y las mismas skins.
+- Un cofre sin `Collider2D` con **Is Trigger** no se abre.
+- Los cofres **no se guardan** en la partida: al cargar se pueden volver a abrir.
 
 ---
 
-## 5. Los tiles y el arte placeholder
+## 9. Mapa (`MainMap_CSV`)
 
-```
-Art/Tilesets/Placeholder/Textures/   ← imágenes (primitivas blancas)
-Art/Tilesets/Placeholder/Tiles/      ← tiles = imagen + color
-Art/Tilesets/Palettes/               ← la paleta
-Art/Characters/Placeholder/          ← primitiva del jugador
-```
+**El archivo:** `Settings/Maps/mapa_juego_150x70.csv` tiene 70 filas × 150 columnas, una letra por celda separada por comas. La fila 1 es el norte. **1 celda = 2 × 2 tiles.**
 
-| Tile | Imagen | Color |
+| Letra | Significado |
+|---|---|
+| `.` | pasto |
+| `C` | camino de tierra |
+| `D` | arena del desierto |
+| `W` | agua (peligro: Tlahuelli cae) |
+| `V` | barranco (peligro) |
+| `T` | árbol (sólido) |
+| `P` | muro de la pirámide (sólido) |
+| `M` | muro de la pirámide; roca en la cueva SE (sólido) |
+| `I` | pasillo de la pirámide |
+| `S` | inicio de Tlahuelli (solo una) |
+| `K` | cofre |
+| `H` | casa de la espada |
+| `E` | marca del diseño; **ya no coloca enemigos** (ver abajo) |
+
+**Cómo regenerar el mapa** (borra los cambios hechos a mano en la escena):
+1. Edita el CSV y guárdalo con el mismo nombre.
+2. Borra `Scenes/Levels/MainMap_CSV.unity` (haz una copia antes si tiene cambios a mano).
+3. **TD_Game > Build CSV Map (MainMap_CSV)**: copia `MainMap`, pinta el CSV y coloca jugador, cofres, casa, jefe, puertas, tienda y puzle. La consola informa si se llega a todo desde la `S`.
+4. **TD_Game > v0.9 > Upgrade MainMap_CSV**: añade peligros, puentes, pirámide, enemigos, NPC, tiendas y casa de las brujas.
+5. Guarda la escena y prueba en Play Mode.
+
+**Qué controla cada cosa**
+
+| Quiero… | Cómo |
+|---|---|
+| Mover o añadir enemigos | edita la lista `camps` (celda del CSV + tipos) en `Scripts/Editor/V09/V09WorldUpgrade.Content.cs` y vuelve al paso 4 |
+| Un puente nuevo | el upgrade elige puentes y cruces de piedras solo; para uno fijo, `BridgeCells` en `Scripts/Editor/CsvMapPainter.cs` |
+| Pintar a mano | **Window > 2D > Tile Palette** sobre `Grid/Ground` (suelo), `Grid/Walls` (sólido), `Grid/Water` o `Grid/Pits` (peligro, capa `Hazard`). Se pierde si regeneras |
+| Que algo sea sólido | ponlo en `Walls`, o dale un `BoxCollider2D` no trigger |
+| Que algo se pueda saltar | capa `LowObstacle` + `BoxCollider2D` |
+| Un borde invisible | `MapBorder` (4 `BoxCollider2D` alrededor de 300×140) |
+| Nombres de región | `Territories/Zone_*` → `ZoneArea` → **Zone Name**, **Subtitle**, y el tamaño del `BoxCollider2D` |
+
+**No romper:**
+- La cámara y el minimapa usan los bordes de `Ground`.
+- El jefe solo debe ser alcanzable a través de una `KeyDoor`.
+- `PlayerHazards` lee `Water` y `Pits` por nombre.
+
+---
+
+## 10. NPC, diálogos, puzles y misión
+
+| Qué | Dónde | Campos |
 |---|---|---|
-| `Ground_Grass` | `Square_64` | verde |
-| `Ground_Dirt` | `Square_64` | marrón |
-| `Water` | `Square_64` | azul |
-| `Wall_Stone` | `SquareOutline_64` (con borde) | gris |
-| `Deco_Pillar_Tall` | `TallOutline_64x128` | beige |
+| Aldeanos | `V09_Villagers/NPC_*` → `DialogueNPC` | **Npc Name**, **Id** (se guarda), **First Talk**, **Later Talk** (las líneas con `> ` las dice Tlahuelli), **Portrait** |
+| Objetos que se leen | `InteractSpot` (glifos del santuario, pintura) | **Lines** |
+| Caja de diálogo | `V09_Dialogue` → `DialogueBox` | aspecto de la caja |
+| Puzle de los cuatro fuegos | `Puzzle (Four Fires)` → `BrazierPuzzle` | **Correct Order**, **Treasure Gold** |
+| Casa de la espada | `House of the Sword (H)` + `HouseHint` (`TutorialZone` → **Message**) | texto de la pista |
+| Misión de las brujas | `V09_WitchHouseInside` → `WitchHouseQuest` | **Witches**, **Speed Bonus** 1.3, textos (**While Guarded**, **After Witches**, **Story**, **After Reward**) |
+| Rompecabezas de la pintura | `V09_WitchHouseInside` → `PaintingPuzzle` | **Picture**, **Columns** 3, **Rows** 3, **Title**, **Caption** |
+| Puertas de casas | `Door (outside)` / `Door (inside)` → `HouseDoor` | destino al otro lado |
+| Marcas en el mapa (M) | `MapMarker` en cada objeto | icono y nombre en el mapa completo |
 
-### Recetas
-
-- **Cambiar el color de un tipo de tile en todo el mapa:** selecciona el `.asset` del tile en *Project* → **Color**. Todas las celdas pintadas con ese tile cambian a la vez.
-- **Crear un tile nuevo** (en Unity 6 se crean desde la Tile Palette; no hay opción en el menú *Create*):
-  1. Abre **Window > 2D > Tile Palette** y elige `TD_Placeholder`.
-  2. Arrastra un sprite desde *Project* (por ejemplo `Square_64`) a una celda libre de la paleta.
-  3. Unity pregunta dónde guardar el tile. Guárdalo en `Art/Tilesets/Placeholder/Tiles/` con un nombre descriptivo (por ejemplo `Ground_Sand`).
-  4. Selecciona el `.asset` creado y cambia su **Color**.
-- **Duplicar un tile existente** (otra forma rápida): selecciona un `.asset` de `Tiles/`, pulsa **Ctrl+D**, renómbralo, cámbiale el color y arrástralo a la paleta.
+**No romper:** el **Id** de un NPC y los ids de la misión (`witch_puzzle_solved`, `painal_freed`) se guardan; si los cambias, las partidas viejas no los reconocen.
 
 ---
 
-## 6. Sustituir las primitivas por el arte del equipo
+## 11. Arte e importación
 
-### Configuración de importación obligatoria (*Inspector* del PNG → **Apply**)
+El estilo del juego es **pixel art de 16 px por tile** (1 tile = 1 unidad de Unity). Configuración de importación de cada PNG (Inspector → **Apply**):
 
 | Ajuste | Tiles | Personajes y objetos |
 |---|---|---|
 | Texture Type | Sprite (2D and UI) | Sprite (2D and UI) |
-| Sprite Mode | Single (o Multiple si es un atlas) | Multiple (spritesheet) |
-| **Pixels Per Unit** | **64** | **64** |
-| Pivot | Center | **Bottom** (pies) |
-| Filter Mode | **Point (no filter)** | **Point (no filter)** |
-| Compression | **None** | **None** |
+| Sprite Mode | Single | Multiple si es una hoja de sprites |
+| **Pixels Per Unit** | **16** (el del resto del arte del mapa) | 16 (Tlahuelli y props) |
+| Pivot | Center | **Bottom** (los pies) |
+| **Filter Mode** | **Point (no filter)** | **Point (no filter)** |
+| **Compression** | **None** | **None** |
 | Generate Mip Maps | Off | Off |
-| Wrap Mode | Clamp | Clamp |
 
-Un **tile** mide 64×64 px. Los objetos más altos (64×128, 64×192…) llevan el pivote en el centro de su celda base. En un sprite de 64×128 eso es (0.5, 0.25).
-
-### Opción A: reemplazar el PNG (más rápido)
-Sobrescribe el archivo, por ejemplo `Square_64.png`, con el arte nuevo **con el mismo nombre**, y revisa la importación. Todos los tiles y el jugador que lo usan se actualizan solos.
-**Ojo:** `Square_64` lo usan hierba, tierra y agua a la vez, porque todos se tiñen. Con arte real, cada tile necesitará su propia imagen (opción B).
-
-### Opción B: reasignar en cada tile (recomendado con arte real)
-1. Importa el arte en una carpeta nueva, por ejemplo `Art/Tilesets/Forest/`, con la configuración de la tabla.
-2. Selecciona cada tile (`Ground_Grass.asset`…) → **Sprite** = el nuevo → **Color** = blanco, para no teñirlo.
-3. El mapa ya pintado cambia de aspecto sin repintar nada.
-
-### El jugador
-`Player/Visual` → `SpriteRenderer` → **Sprite**. Con spritesheet y animaciones, esto lo controlará el Animator a partir del 13 nov.
-
-> **Nunca pongas el arte nuevo en `Assets/Resources/`**: esa carpeta es del juego anterior y un script suyo cambia la importación de lo que entra ahí.
-
----
-
-## 7. La cámara
-
-Selecciona **`Main Camera`**.
-
-| Componente / campo | Función | Valor actual |
-|---|---|---|
-| Camera → **Size** | Mitad de la altura visible en tiles. Más grande = más zoom out | 4.21875 (15 × 8,4 tiles a 16:9) |
-| CameraFollow → **Target** | A quién sigue | `Player` |
-| CameraFollow → **Offset** | Desplazamiento respecto al objetivo | (0, 0,5): centra el cuerpo, no los pies |
-| CameraFollow → **Smooth Time** | Segundos en alcanzar al objetivo; 0 = sin suavizado | 0,15 |
-| CameraFollow → **Bounds Tilemap** | La cámara nunca enseña nada fuera de este Tilemap | `Ground` |
-| CameraFollow → **Snap To Pixel Grid** | Redondea la posición a píxeles para que el arte no tiemble | activado |
-| CameraFollow → **Pixels Per Unit** | Debe coincidir con el PPU del arte | 64 |
-
-### Recetas
-
-- **Ver más o menos mapa:** cambia **Size**. Para que el pixel art se vea nítido a 1080p usa valores que den una escala entera:
-
-  | Size | Tiles visibles a 16:9 | Escala a 1080p |
-  |---|---|---|
-  | 8.4375 | 30 × 16,9 | ×1 |
-  | **4.21875** | **15 × 8,4** | **×2** (actual) |
-  | 2.8125 | 10 × 5,6 | ×3 |
-
-  La fórmula es *Size = altura de pantalla ÷ (2 × 64 × escala)*.
-- **Cámara más rígida o más suelta:** **Smooth Time**. Un valor de 0,05 la hace casi pegada; 0,3 la hace más lenta.
-- **Ver los límites:** selecciona la cámara y aparece un **rectángulo cian** en la vista Scene.
-- **Cambiar de objetivo desde código:** `GetComponent<CameraFollow>().Target = otroTransform;`. La cámara salta al nuevo objetivo sin suavizado.
-
-> El encuadre actual solo es perfecto en 540p, 1080p y 4K a 16:9. Para el resto está pendiente decidir el paquete oficial **2D Pixel Perfect**.
-
----
-
-## 8. El orden de dibujo (quién tapa a quién)
-
-**Regla:** entre objetos con el mismo *Order in Layer*, **el que tiene los pies más abajo en pantalla se dibuja delante**.
-
-Lo hacen posible tres ajustes:
-1. **Edit > Project Settings > Graphics > Transparency Sort Mode** = *Custom Axis*, con eje (0, 1, 0).
-2. Las capas `Walls` y `Decoration` tienen el *Tilemap Renderer* en **Mode = Individual**.
-3. El `SpriteRenderer` del jugador tiene **Sprite Sort Point = Pivot**, y el pivote está en los pies.
-
-### Recetas
-
-- **Un objeto nuevo que se ordene con el jugador:** ponle *Order in Layer* = 0, *Sprite Sort Point* = Pivot y el pivote en su base.
-- **Algo que siempre quede detrás** (alfombras, charcos): ponlo en `Ground` o dale un orden negativo.
-- **Algo que siempre quede delante** (copas de árbol, techos): un orden positivo. Las *Sorting Layers* (`Overhead`…) llegan el 16 nov.
-
----
-
-## 9. Crear cosas nuevas sin romper nada
-
-| Regla | Por qué |
-|---|---|
-| Todo lo nuevo va dentro de `Assets/TD_Game/` | separa el juego nuevo del anterior |
-| Los scripts nuevos van dentro de `namespace TD_Game` | el juego anterior tiene clases con nombres genéricos (`Health`, `GameState`, `Audio`…) |
-| No mover ni borrar nada de `Assets/Resources/`, `Assets/Scenes/Boot.unity` ni `Assets/Resources/Enemies/Enemy_Quetzalcoatl.prefab` | el juego anterior se rompe, o regenera sus escenas automáticamente |
-| Nombres en inglés para clases, archivos y variables | convención de `CLAUDE.md` |
-| Valores ajustables como campos serializados (`[SerializeField]`) | se tunean desde el Inspector sin tocar código |
-| Después de cada cambio: revisar la **Console** (filtra por `TD_Game`) y probar en Play Mode | la consola muestra 23 advertencias antiguas del juego anterior que se ignoran a propósito |
-
-**Escenas de prueba nuevas:** duplica `TestLevel` (Ctrl+D en *Project*) y trabaja sobre la copia, para no estropear la de referencia.
-
----
-
-## 10. Problemas frecuentes
-
-| Problema | Causa | Solución |
-|---|---|---|
-| El jugador no se mueve | La ventana Game no tiene el foco | Haz clic dentro de la ventana Game |
-| Error *"Move action is not assigned"* | `PlayerInputReader` no tiene la acción | `Player` → **Move Action** → elige `Player/Move` |
-| El jugador atraviesa muros | Aún no hay colisiones | Pendiente (tarea de colisiones del calendario) |
-| No puedo atacar, curarme ni usar habilidades en combate | Falta estamina, la habilidad está bloqueada o no es tu turno | Mira la tarjeta: atenuada = falta estamina; LOCKED = bloqueada. En el turno enemigo todas se oscurecen |
-| Los orbes no se recogen | Todavía estás en combate | Se recogen al volver a la exploración, pasando encima |
-| Error *"Action 'Ultimate' not found"* (u otra acción) | El asset de input no tiene la acción | Haz **Pull** en GitHub Desktop: `PlayerControls.inputactions` debe tener los mapas `Player` y `Combat` completos |
-| El HUD no aparece o falta algo | Se borró `CombatHUD` o se rompió una referencia | Borra `CombatHUD` y usa **TD_Game > Build Combat HUD** |
-| El pixel art se ve borroso | Importación incorrecta | Filter **Point**, Compression **None**, PPU **64** |
-| Hay líneas entre tiles | Sprites con filtro o tamaño distinto de 64 px | Revisa la importación; los tiles deben medir exactamente 64×64 px |
-| La cámara enseña fuera del mapa | **Bounds Tilemap** vacío | Asigna `Grid/Ground` |
-| Cambié valores y se perdieron | Estaban hechos en Play Mode | Haz los cambios fuera de Play Mode |
-| Claude no puede conectar con Unity | El servidor MCP se detuvo | En Unity, *Window > MCP for Unity > **Start Server***; después, en Claude, `/mcp` → **UnityMCP** → **Reconnect** |
-
----
-
-## 11. Combate, orbes y HUD
-
-### Cómo se juega una pelea
-1. Toca a un enemigo para empezar. Si caes encima tras un salto, es una **emboscada**: STOMP y atacas primero.
-2. **Tu turno:** gastas **estamina** (barra dorada) en acciones, 1–5; cuando termines, pulsa **Q**.
-   - **Attack (1):** el personaje se carga. Si pulsas **1 otra vez justo antes del golpe** (cuando aparece la caja), haces un **crítico**.
-   - Los ataques seguidos en el mismo turno hacen **combo**: +15 % por golpe.
-   - ← → cambian de objetivo (la flecha ▼ marca a cuál atacas).
-3. **Turno enemigo:** el enemigo parpadea en rojo. **Una sola tecla: Espacio (B en el mando)**, justo antes del impacto. Sirve para **DODGE!** y para **INTERRUPT!** (hechizos).
-   - **A tiempo:** no recibes daño y **contraatacas solo**.
-   - **Al final de la ventana (PERFECT):** el contraataque pega más fuerte, recuperas estamina y ganas Tonalli.
-   - **Demasiado pronto:** sale **TOO EARLY** y la tecla se bloquea; cada pulsación de más la bloquea más tiempo (**LOCKED**). Machacar hace que el golpe te entre completo.
-   - **Sin pulsar o tarde:** daño completo.
-4. **Tonalli** (barra azul): cuando está llena, **5 = Tonalli Burst**, un golpe enorme a todos.
-5. **Al ganar:** los enemigos sueltan **orbes**. Ve **caminando (o saltando) encima** para recogerlos:
-   - **dorados:** carga del Macuahuitl, que aumenta tu daño;
-   - **verdes (jade):** vida. Ganar **no** te cura;
-   - **azules:** Tonalli.
-6. **Al perder:** vuelves al último checkpoint con la vida llena y los enemigos se reinician.
-
-### Dónde se ajusta cada cosa (sin tocar código)
+> El arte del equipo de v0.9 en `Art/Environment/Team` (rocas, árboles, niebla) se usa a **40 PPU**, tal como está dibujado (`PropArt.V09Team`). Al reemplazar un PNG, copia el PPU del archivo anterior: sus originales sin usar (`*_original.png`) están a 100.
 
 | Quiero cambiar… | Dónde |
 |---|---|
-| Vida, estamina, daño base, multiplicador de crítico, combo, contraataque, emboscada, Tonalli, pociones | `ScriptableObjects/Characters/PlayerStats_Tlahuelli` |
-| Coste, nombre y descripción de una habilidad, y si empieza desbloqueada | `ScriptableObjects/Abilities/Ability_*` |
-| Ventana del crítico (NOW!) | `Ability_Attack` → **Wind Up Time** y **Critical Window** |
-| Ritmo y altura del Seismic Jump (agacharse, subida, instante arriba, caída, vueltas, onda y cuánto lanza a los enemigos) | `Ability_SeismicJump` → *Choreography* y *Shockwave* |
-| Rebote del aplastamiento y respiración de un personaje | componente `ActorFx` del personaje (se añade solo en el primer combate) |
-| Técnicas del macuahuitl (ángulos, velocidad, efectos) y su orden en el combo | `Ability_Attack` → *Combo Swings* y *Critical Swing* |
-| Arte del macuahuitl, mano y pose de combate de Tlahuelli | `Player` → `MacuahuitlRig` (**Weapon Sprite**, **Grip**, **Combat Pose**, **Combat Grip**) |
-| Encuadre de la pelea respecto al menú | objeto `Combat` → `CombatArena` → **Camera Offset** |
-| Vida, ataques, ventanas de esquiva, efectos únicos y orbes de un enemigo | `ScriptableObjects/Enemies/EnemyData_*` |
-| Qué habilidad desbloquea un enemigo | `EnemyData` → **Unlocks On Defeat** y **Last Stand Ability** |
-| Valor de cada orbe y sus colores | objeto `Combat` → `OrbSpawner` |
-| Imán y flotación de los orbes | `Prefabs/Interactables/Orb.prefab` → `SoulOrb` |
-| Distancia de la arena, zoom de combate | objeto `Combat` → `CombatArena` |
-| Ventana PERFECT, bloqueo anti-spam y fuerza del contraataque normal de la esquiva | objeto `Combat` → `EnemyTurn` (**Perfect Window Fraction**, **Early Press Lockout**, **Good Counter Fraction**) |
-| Orden de dibujo de los luchadores en combate y cuánto se mueve la pelea para buscar un claro | objeto `Combat` → `CombatArena` (**Fighter Order**, **Clear Search Radius**) |
-| Mapa del CSV (escena `MainMap_CSV`) | editar `Settings/Maps/mapa_juego_150x70.csv`, borrar `MainMap_CSV.unity` y usar **TD_Game > Build CSV Map (MainMap_CSV)** |
-| Iconos de botones (Auto / teclado / Xbox / PlayStation) | Opciones del menú principal o de pausa → **Button icons** |
-| Tiempo que la ayuda de la historieta sigue visible, y cuánto hay que mantener Omitir | escena `TD_Prologue` → `PrologueComic` (**Hint Idle Seconds**, **Skip Hold Seconds**) |
-| Qué habilidad va en cada tecla 1–5 | objeto `Combat` → `PlayerTurn` → *Action slots* |
-| Paleta de colores de todo el juego (cambia un color y se cambia en todas partes al reconstruir el HUD) | `Scripts/UI/MexicaPalette.cs` |
-| Colores, tamaños y textos del HUD | objeto `CombatHUD` en la jerarquía (colores de cada fila: `CommandMenu/Action*` → `ActionButton`; orden de turnos: `TurnOrder`) |
+| Tiles del suelo, agua y templo | `Art/Tilesets/Mictlan/` (generados por `TerrainArt` y el upgrade). Reemplaza el PNG con el mismo nombre y tamaño |
+| Pasto y árboles de Vely | `Art/Tilesets/Vely/` |
+| Props (tienda, pirámide, braseros, NPC) | `Art/Props/` |
+| Personajes | `Art/Characters/` (Tlahuelli: hoja de 3 filas × 4 cuadros) |
+| Efectos (oscuridad, brillos, sangre) | `Art/Effects/` |
+| Marcos y grecas de la UI | `Art/UI/` |
 
-### Recetas
-- **Probar con todas las habilidades:** `Player` → `PlayerProgression` → **Unlocked Abilities**: añade `Ability_MictlanFury` y `Ability_SeismicJump`.
-- **Nuevo enemigo:**
-  1. Duplica un enemigo de prueba en la escena.
-  2. Crea un asset con clic derecho → *Create > TD_Game > Enemy Data*.
-  3. Asígnalo en su `CombatEnemy` → **Data**.
-- **Nueva habilidad:**
-  1. Crea una clase que herede de `CombatAbility` (como `FuryAbility.cs`) e implementa `Execute`.
-  2. Crea su asset con *Create > TD_Game > Abilities*.
-  3. Ponlo en una ranura de `PlayerTurn`.
-- **Efecto único de un ataque enemigo:** en `EnemyData` → *Attacks* → **Effect** (DrainStamina, HealSelf o Weaken) y **Effect Amount**.
+**No romper:**
+- Las herramientas **TD_Game > Generate Map Tiles / Generate Props And Comic Art / Generate Menu Frame And Darkness** **sobrescriben** los PNG generados: si reemplazaste uno a mano, no las vuelvas a ejecutar.
+- `tlahuelli.png` necesita **Read/Write** activado (lo usa `MacuahuitlRig`).
+
+---
+
+## 12. Cámara y orden de dibujo
+
+| Qué | Dónde | Valor |
+|---|---|---|
+| Zoom del mapa | `Main Camera` → Camera → **Size** | 6.75 |
+| Suavizado | `Main Camera` → `CameraFollow` → **Smooth Time** | 0.15 |
+| Límites | `CameraFollow` → **Bounds Tilemap** | `Ground` |
+| Píxeles nítidos | `CameraFollow` → **Snap To Pixel Grid**, **Pixels Per Unit** | activado |
+| Zoom en combate | `Combat` → `CombatArena` → **Combat Orthographic Size** | 4.219 |
+| Oscuridad | `Main Camera/Darkness` → SpriteRenderer | orden 500 |
+
+**Regla de profundidad:**
+- Con el mismo *Order in Layer*, lo que está **más abajo en pantalla se dibuja delante** (*Project Settings > Graphics > Transparency Sort Mode = Custom Axis (0, 1, 0)* y *Sprite Sort Point = Pivot*).
+- Hay una sola Sorting Layer (**Default**). La tabla completa de órdenes está en [arquitectura §8](TD_Game_ARQUITECTURA.md#8-orden-de-dibujo-y-pipeline-de-arte).
+
+| Para que algo… | Haz esto |
+|---|---|
+| se ordene con Tlahuelli | orden 0, pivote en la base, *Sort Point = Pivot* |
+| quede siempre en el suelo | orden negativo (charcos, sombras) |
+| brille sobre la noche | orden 501 o más |
+| no tape a los luchadores en combate | ya ocurre: van a 510 durante la pelea (`CombatArena.Raise`) |
+
+---
+
+## 13. HUD, colores y fuentes
+
+| Qué | Dónde |
+|---|---|
+| Panel de vida, estamina y Tonalli | `CombatHUD/PlayerStatus` (`PlayerStatusPanel`, barras `UIBar`) |
+| Menú de comandos | `CombatHUD/CombatGroup/CommandMenu` (`CombatActionMenu` + filas `ActionButton`) |
+| Barra DEFEND | `CombatHUD/CombatGroup/EnemyTurnBar` (su texto lo pone `CombatActionMenu` según el dispositivo) |
+| Orden de turnos | `CombatHUD/CombatGroup/TurnOrder` |
+| Barras de enemigos | `CombatHUD/CombatGroup/EnemyBars` |
+| Mensajes y números | `CombatHUD/Messages` (`CombatMessages`) |
+| Minimapa, oro, avisos, título de zona, caja de esquiva, «Enemies Left» | `MapUI` |
+| Consejos, Game Over, créditos | `GameFlowUI` |
+| **Colores** de toda la UI | `Scripts/UI/MexicaPalette.cs` (Obsidian, Bone, Ash, AgedGold, Ochre, Cinnabar, Tezontle, Blood, Jade, Turquoise…) |
+| **Fuente** | `Art/Fonts/PirataOne-Regular` (campo **Menu Font** de menús, pausa, mapa, puzle) |
+
+**Reconstruir el HUD de combate:** borra `CombatHUD` y usa **TD_Game > Build Combat HUD**. Los cambios que hiciste a mano en él se pierden.
+
+---
+
+## 14. Menús y flujo inicial
+
+| Qué | Dónde | Campos |
+|---|---|---|
+| Logo del estudio | escena `TD_Boot` → `BootScreens` | **Studio Logo**, **Studio Name**, **Logo Seconds** |
+| Pantalla de clasificación | `BootScreens` | **Rating Image**, **Rating Letter**, **Rating Label** |
+| Descripción del juego | `BootScreens` | **Description Title** y textos |
+| Menú principal | escena `TD_MainMenu` → `TitleMenu` | **Background**, **Game Logo**, **Title**, **Studio**, **Version**, **Game Scene**, **Prologue Scene**, **Menu Font** |
+| Créditos del menú | `Scripts/UI/TitleMenu.cs` (constante `TeamCredits`) | requiere editar código |
+| Créditos finales | `Scripts/UI/CreditsScreen.cs` (constante `EndCredits`) y `GameFlowUI/CreditsScreen` | requiere editar código |
+| Pausa | jerarquía `PauseScreen` → `PauseScreen` | **Main Menu Scene**, **Menu Font** |
+
+El orden del menú (Start Game, Continue, Options, Credits, Exit) y las opciones se construyen en código (`MenuWidgets`).
+
+---
+
+## 15. Historieta
+
+Escena `TD_Prologue` → objeto `PrologueComic`:
+
+| Campo | Efecto |
+|---|---|
+| **Pages** → **Panels** | cada viñeta: **Picture** (imagen de `Art/Comic`), **Crop** (parte de la imagen), **Tint**, **Caption** (texto) |
+| **Next Scene** | escena al terminar (`MainMap_CSV`) |
+| **Hint Idle Seconds** | segundos sin tocar nada hasta que la ayuda se oculta (3) |
+| **Skip Hold Seconds** | cuánto mantener ESC / B para omitir (1) |
+| **Panel Fade Seconds** | duración de la aparición de cada viñeta (0.5) |
+| **Menu Font** | fuente de los textos |
+
+Las teclas de Siguiente (Espacio, Enter, clic, A) y Omitir (ESC, B) están en el código de `Scripts/UI/PrologueComic.cs` (`NextPressed`, `SkipHeld`).
+
+---
+
+## 16. Audio y música
+
+| Qué | Dónde |
+|---|---|
+| Canciones (menú, exploración, batalla, jefe, game over) y efectos | `Audio/AudioLibrary` → **Menu**, **Explore**, **Battle**, **Boss**, **Game Over** y **Sfx** (cada efecto: **Name**, **Clip**, **Volume**, **Variants**) |
+| Archivos | `Audio/Music`, `Audio/SFX`, `Audio/Voice` (comerciante) |
+| Música de cada escena | objeto `GameAudio` → **Scene Music** |
+| Mezcla | `GameAudio` → **Cross Fade Seconds**, **Sfx Voices**, **Min Repeat Seconds**, **Voice Volume** |
+| Ambiente | `V09_Ambience` → `AmbientSoundscape` → **Forest**, **River**, **Desert Wind**, **Interior**, **Volume**, **Battle Volume** |
+| Volumen del jugador | menú Options y pausa (se guarda en `PlayerPrefs`) |
+
+**Cambiar un sonido:** reemplaza el clip en `AudioLibrary` (o el archivo con el mismo nombre). El código pide los efectos **por nombre** (`GameAudio.PlaySfx("dodge")`): no cambies el nombre de una entrada de **Sfx**.
+**TD_Game > Audio > Generate Sounds** vuelve a generar los sonidos sintetizados y **sobrescribe** esos archivos.
+
+---
+
+## 17. Controles e iconos de botones
+
+**Teclas:** abre `Settings/Input/PlayerControls.inputactions` (doble clic) → selecciona la acción → **+** para añadir un binding, o selecciónalo y **Delete** para quitarlo → **Save Asset**.
+
+| Mapa | Acciones |
+|---|---|
+| `Player` | `Move`, `Jump`, `Sprint` |
+| `Combat` | `Attack`, `Skill1`, `Skill2`, `Potion`, `Ultimate`, `Artifact`, `EndTurn`, `TargetPrev`, `TargetNext`, `Dodge`, `Interrupt` (sin uso) |
+
+Interactuar (E / Y), el mapa (M, Tab / View), la pausa (ESC / Start) y los menús se leen **en código** (ver [arquitectura §5.2](TD_Game_ARQUITECTURA.md#52-input-y-detección-de-dispositivo)).
+
+**Iconos de botones:**
+- **Nombre que muestra cada acción:** tabla `Actions` en `Scripts/UI/InputPrompts.cs`, con teclado y Xbox; PlayStation se deduce de Xbox (A → CROSS…). Si cambias una tecla en el `.inputactions`, cambia también aquí su nombre.
+- **Dibujo de los iconos:** `Scripts/UI/ButtonGlyphs.cs` (tecla, placa, botón redondo, ✕ ○ □ △, ratón), en pixel art generado en código.
+- **Modo:** el jugador lo elige en Options / pausa → **Button icons**: Auto, Keyboard, Xbox o PlayStation.
+- **En textos:** escribe `{Acción}`, por ejemplo «Press {Dodge}». `InputPrompts.Localize` lo cambia por `[SPACE]`, `[B]` o `[CIRCLE]`.
+
+**No romper:**
+- Si cambias el nombre de una acción del `.inputactions`, revisa las referencias en `Player` → `PlayerInputReader` y en `CombatInput`.
+- No escribas teclas fijas («Press E») en la UI.
+
+---
+
+## 18. Guardado, dificultad, textos, escenas y build
+
+**Guardado**
+- Archivo `td_game_save.json` en `Application.persistentDataPath` (en Windows, `%USERPROFILE%\AppData\LocalLow\Micta Forge\Mictlan`).
+- Se guarda tras cada victoria, al comprar y al terminar la misión de las brujas.
+- **Para empezar limpio:** New Game borra la partida; también puedes borrar el archivo a mano.
+- `SaveController` → **Always Load In Editor**: carga la partida al pulsar Play en el editor, para probar.
+
+**Dificultad**
+- No hay selector de dificultad.
+- **Por enemigo:** `CombatEnemy` → **Strength**.
+- **Por tipo de enemigo:** `EnemyData`.
+- **De la esquiva:** `EnemyTurn` → **Counter Window Scale**.
+
+**Textos**
+
+| Textos | Dónde |
+|---|---|
+| Consejos | `GameFlowUI/TutorialHint` → `ContextTutorial` (**Start Hint**, **Quick Time Dodge Hint**, **Exploration Tips**…). Usa `{Acción}` para los botones |
+| Pistas por zona | `TutorialZone` → **Message** |
+| NPC | `DialogueNPC` |
+| Tiendas | `MerchantShop` |
+| Fin del juego | `CreditsScreen.cs` |
+
+**Escena nueva**
+1. Duplica `MainMap_CSV` (Ctrl+D en *Project*).
+2. Añádela en **File > Build Profiles** (Scene List).
+3. Para que el juego la cargue, cambia `SceneIds.MainMap` en `Scripts/Managers/SceneFader.cs` y los campos **Game Scene** de `TitleMenu` y **Next Scene** de `PrologueComic`.
+
+**Build (.exe)**
+- **Mictlan > Build Game For Friends (.exe)** crea `Builds/Mictlan/Mictlan.exe`.
+- **Build Settings** incluye también `MainMap` y `TestLevel`, que el juego no carga; puedes desmarcarlas en *Build Profiles* para reducir el tamaño.
+
+---
+
+## 19. Cómo se conectan los sistemas (para no programadores)
+
+```mermaid
+flowchart TD
+    CSV["CSV del mapa"] -->|"Build CSV Map"| ESC["Escena MainMap_CSV<br/>suelo, muros, agua, cofres, jefe"]
+    V9["Upgrade v0.9"] --> ESC
+    ESC --> COL["Colisiones<br/>Walls sólido · Water/Pits caída"]
+    ESC --> ENE["Enemigos (campamentos)"]
+    ED["EnemyData (asset)"] --> ENE
+    ED --> COMB["Combate"]
+    PS["PlayerStats (asset)"] --> COMB
+    AB["Habilidades (assets)"] --> COMB
+    ENE -->|"te tocan"| COMB
+    COMB -->|"ganas"| ORB["Orbes, oro, llave, guardado"]
+    COMB -->|"pierdes"| DEF["Vuelves al inicio"]
+    ORB --> LLAVE["Llave → puertas → jefe"]
+```
+
+- **El CSV decide el terreno:** dónde hay suelo, agua, árboles y pirámide. Si cambias una `W` por un `.`, ahí deja de haber agua (y Tlahuelli ya no cae) después de regenerar.
+- **Los assets alimentan al mapa y al combate a la vez:** un `EnemyData` controla cómo patrulla un enemigo en el mapa **y** cómo pelea. `PlayerStats` controla la vida que ves en el HUD **y** el daño que haces.
+- **El combate no conoce la pantalla:** avisa por eventos y la UI, el sonido y la cámara reaccionan. Por eso puedes cambiar el HUD sin romper el combate.
+- **El semáforo `GameState`:** si algo pone el juego en `Cutscene` (diálogo, tienda, mapa) y no lo devuelve a `Exploration`, el jugador no se puede mover.
+
+---
+
+## 20. Recetas paso a paso
+
+**Hacer un enemigo más fuerte**
+1. Abre `ScriptableObjects/Enemies/EnemyData_Giant`.
+2. Sube **Max Health** o **Attack Power**.
+3. Prueba en Play Mode: afecta a **todos** los gigantes.
+
+**Crear un tipo de enemigo nuevo**
+1. Clic derecho en `ScriptableObjects/Enemies` → **Create > TD_Game > Enemy Data**. Rellena nombre, vida, IA y **Attacks**.
+2. Duplica un prefab de `Prefabs/Characters` (por ejemplo `Enemy_Witch`), asígnale el nuevo asset en `CombatEnemy` → **Data** y cambia el sprite de `Visual`.
+3. Colócalo en `Enemies` de la escena, o añádelo a la lista `camps` del upgrade de v0.9 (con su nombre de prefab).
+
+**Crear una habilidad nueva**
+1. Crea `Scripts/Combat/Abilities/MiHabilidad.cs` que herede de `CombatAbility`, con `[CreateAssetMenu]`, e implementa `Execute`.
+2. Crea su asset en `ScriptableObjects/Abilities`.
+3. Asígnalo a una ranura de `Combat` → `PlayerTurn`.
+4. Añádelo a `SaveController` → **All Abilities**.
+
+**Hacer la esquiva más fácil**
+1. `Combat` → `EnemyTurn` → **Counter Window Scale**: de 0.75 a 1.
+2. Si quieres castigar menos el spam, baja **Early Press Lockout** a 0.2.
+
+**Cambiar el texto de un aldeano**
+1. Selecciona `V09_Villagers/NPC_<nombre>`.
+2. Edita `DialogueNPC` → **First Talk** / **Later Talk**.
+3. **Ojo:** se pierde si vuelves a ejecutar el upgrade de v0.9. Para que dure, cambia el texto en `Scripts/Editor/V09/V09WorldUpgrade.Content.cs`.
+
+**Añadir una viñeta a la historieta**
+1. Importa la imagen en `Art/Comic` (Point, sin compresión).
+2. Escena `TD_Prologue` → `PrologueComic` → **Pages** → **+** en **Panels** → asigna **Picture** y **Caption**.
+
+**Cambiar un precio de la tienda**
+1. Selecciona el `TalkArea` de cada comerciante (`Merchant (Shop)` y `V09_Merchant (…)`).
+2. Cambia **Potion Price** o **Artifact Price** en los cuatro.
+
+---
+
+## 21. Solución de problemas
+
+| Problema | Causa | Solución |
+|---|---|---|
+| Errores rojos al abrir el proyecto | importación incompleta o versión de Unity distinta | usa Unity 6000.5.9f1; *Assets > Reimport All* |
+| Tlahuelli no se mueve | la ventana Game no tiene el foco, o el juego quedó en `Cutscene` | haz clic en la ventana Game; revisa que el diálogo, tienda o mapa se haya cerrado |
+| El mando no responde o no cambian los iconos | el mando no envía eventos al Input System, u **Options → Button icons** no está en Auto | prueba el mando en *Window > Analysis > Input Debugger*; pon **Auto** |
+| El pixel art se ve borroso | importación incorrecta | Filter **Point**, Compression **None**, el PPU correcto ([§11](#11-arte-e-importación)) |
+| Tlahuelli queda tapado en combate | **Fighter Order** de `CombatArena` menor de 500, o un objeto con orden mayor | deja **Fighter Order** en 510 |
+| Un campo dice **Missing** o **None** en el Inspector | se borró o renombró el asset referenciado | vuelve a asignarlo; si es del HUD, reconstrúyelo (**TD_Game > Build Combat HUD**) |
+| Desaparecieron cambios en `V09_*` o en los enemigos | se volvió a ejecutar **Upgrade MainMap_CSV** | haz esos cambios en el código del builder |
+| El mapa regenerado no tiene enemigos, NPC ni pirámide nueva | solo se ejecutó **Build CSV Map** | ejecuta también **TD_Game > v0.9 > Upgrade MainMap_CSV** |
+| **Build CSV Map** no hace nada | `MainMap_CSV` ya existe | bórrala primero (haz una copia si tiene cambios a mano) |
+| Continue está desactivado | no hay partida, o se terminó el juego (el final borra la partida) | empieza con New Game |
+| Los orbes no se recogen | sigues en combate | se recogen al volver a explorar |
+| No aparece la llave | queda algún enemigo normal vivo | mira «Enemies Left» abajo a la derecha y el mapa (M) |
+| Claude no conecta con Unity (MCP) | el puente MCP se detuvo | en Unity, *Window > MCP for Unity > Start Server*; luego, en Claude, reconectar el servidor MCP |
+| El Play Mode va a saltos cuando Unity no tiene el foco | Unity en segundo plano | dale el foco a Unity (en pruebas por MCP: `Application.runInBackground = true`) |
