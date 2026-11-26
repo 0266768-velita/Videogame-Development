@@ -12,7 +12,7 @@ namespace TD_Game.EditorTools
     /// </summary>
     public static class CsvMapPainter
     {
-        public enum Ground { Grass, Dirt, Sand, Water, Bridge, Tree, TempleWall, TempleFloor, Rock, Pit }
+        public enum Ground { Grass, Dirt, Sand, Water, Bridge, Tree, TempleWall, TempleFloor, Rock, Pit, Void }
 
         /// <summary>The CSV has no B: the dirt path of row 22 crosses the western river at columns 16-18.</summary>
         static readonly RectInt BridgeCells = new RectInt(15, 21, 3, 1);   // 0-based column, row
@@ -44,6 +44,8 @@ namespace TD_Game.EditorTools
                         'M' => cave ? Ground.Rock : Ground.TempleWall,
                         'I' => cave ? Ground.Dirt : Ground.TempleFloor,
                         'V' => Ground.Pit,
+                        'R' => Ground.Rock,   // a rock that blocks the way (the team marks borders with it)
+                        'X' => Ground.Void,   // out of the map: nothing is painted
                         _ => indoors ? Ground.TempleFloor : cave ? Ground.Dirt : Ground.Grass,
                     };
                 }
@@ -105,6 +107,7 @@ namespace TD_Game.EditorTools
                         case Ground.TempleFloor: ground.SetTile(tile, art.templeFloor); break;
                         case Ground.TempleWall: ground.SetTile(tile, art.templeFloor); walls.SetTile(tile, art.templeWall); break;
                         case Ground.Rock: ground.SetTile(tile, art.dirt); walls.SetTile(tile, art.rocks[(int)(n * 100) % art.rocks.Length]); break;
+                        case Ground.Void: break;   // out of the map
                         case Ground.Water:
                             ground.SetTile(tile, grass);
                             walls.SetTile(tile, art.water[Shore(At, x, y, g => g == Ground.Water || g == Ground.Bridge)]);

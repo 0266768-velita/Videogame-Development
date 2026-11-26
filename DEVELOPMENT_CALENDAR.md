@@ -1,6 +1,6 @@
 # Calendario de desarrollo — TD_Game (juego final)
 
-**Periodo:** 3 al 20 de noviembre de 2026 · **Actualizado:** 13 de noviembre
+**Periodo:** 3 al 20 de noviembre de 2026 (el trabajo siguió hasta el 26) · **Actualizado:** 26 de noviembre
 **Objetivo:** entregar el **20 de noviembre** el **juego final** (no un prototipo):
 - un **mapa principal bien elaborado** con **al menos 10 minutos de juego**, **3 zonas o más** y la **zona del jefe final**;
 - **combate por turnos** al estilo de Mictlán v5;
@@ -36,6 +36,23 @@
 | M6 | **Pantallas y UI** | Inicio (splash y menú principal), opciones, HUD de exploración y de combate, pausa, Game Over, pantalla final, tutoriales y transiciones |
 | M7 | **Guardado y audio** | Guardar y continuar; música y efectos |
 | M8 | **Entrega** | Build de Windows probada de principio a fin y documentación al día |
+
+## Estado al 26 de noviembre
+
+> Las casillas de las fases (abajo) se dejaron de marcar después del 13 nov: el trabajo siguió y quedó en `DEVELOPMENT_LOG.md` (sesiones 13–25). Esta tabla resume el estado real de cada meta según ese registro. Las casillas de abajo se conservan como historial del plan.
+
+| Meta | Estado | Dónde se hizo (registro) | Qué falta |
+|---|---|---|---|
+| M1 Jugador | ✅ Completado | Sesiones 4, 7, 8, 9, 15, 19 (8 direcciones, salto, sprint, animación de caminar, macuahuitl en combate) | Arte final en Aseprite: hoy se usa el pixel art de Mictlán v5 y arte generado en código |
+| M2 Combate por turnos | ✅ Completado | Sesiones 7, 8, 10, 18, 19, 21, 22 (turnos con estamina, críticos, combos, esquiva de una tecla, contraataque, Tonalli Burst) | Balance final en playtest |
+| M3 Progresión | ✅ Completado | Sesiones 7, 8, 13, 15, 24 (Mictlan Fury, Seismic Jump, Smoking Mirror, crecimiento, oro, skins) | — |
+| M4 Enemigos | ✅ Completado | Sesiones 13, 16, 17, 21, 24 (lobo, bruja y gigante con efectos únicos e IA; Quetzalcóatl con dos formas) | — |
+| M5 Mapa principal | ✅ Completado, en ajuste | Sesiones 22, 24, 24b, 25 (`MainMap_CSV` desde el CSV del equipo, v0.9, límites, interior de la pirámide aparte) | Medir en un playtest que dure 10 minutos o más |
+| M6 Pantallas y UI | ✅ Completado | Sesiones 10–15, 21, 23, 24 (boot, menú, historieta, HUD, pausa, Game Over, créditos, mapa completo, iconos por dispositivo) | — |
+| M7 Guardado y audio | ✅ Completado | Sesiones 13, 17, 24, 24b (guardado y continuar, música, efectos y voces) | — |
+| M8 Entrega | 🟡 En progreso | Sesiones 17, 21, 24b (.exe generado con **Mictlan > Build Game For Friends**) | Rehacer el .exe con los cambios del 26 nov y probarlo de principio a fin; documento de uso de IA (`AI_USAGE.md`) |
+
+**Fecha de entrega:** el plan original era el 20 nov. El desarrollo siguió hasta el 26 nov (versiones v0.6 → v0.9). La nueva fecha de entrega la confirma el equipo.
 
 ## Hitos
 
@@ -339,3 +356,12 @@ Todo validado en Unity; el detalle está en `DEVELOPMENT_LOG.md`, sesiones 1 a 4
 | 12 nov | Tareas de Toño (2.5–2.7, 3.1–3.3, 3.6–3.7, 3.10, 3.12) completadas y validadas en `TestLevel` con 3 enemigos de prueba y un HUD de depuración provisional; 3.11 sigue bloqueada por P0 | Sesión 7 del registro |
 | 13 nov | **Nuevo:** salto en exploración con emboscada, orbes de alma, jade y tonalli (God of War clásico), Tonalli y Tonalli Burst, críticos con timing, combos, contraataque PERFECT, impacto (temblor y hit stop) y HUD de combate en Canvas | Petición del equipo (Toño); sesión 8 del registro |
 | 13 nov | **Nuevo:** sprint en exploración; `TD_Game_ARQUITECTURA.md` y `TD_Game_GUIA.md` actualizados | Petición del equipo (Toño); sesión 9 del registro |
+| 13 nov | Paleta mexica seria, menú de combate estilo JRPG y estética más oscura | Sesiones 10–12 del registro |
+| 15–17 nov | Enemigos con IA, flujo completo (boot, menú, prólogo, mapa), oro y tiendas, minimapa, gore, guardado, audio y primer .exe; `MainMap` de Alex como mapa principal | Sesiones 13–17 (Alex) |
+| 17 nov | Animaciones procedurales del combate y macuahuitl en combate; la rama de trabajo pasa a `v0.6` | Sesiones 18–20 (Toño) |
+| 19 nov | QTE, mando, dificultad, interior del templo, cómic y outro | Sesión 21 (Alex) |
+| 24 nov | **Cambio:** el mapa principal pasa a ser `MainMap_CSV`, pintado desde el CSV del equipo; esquiva de una tecla e iconos por dispositivo | Sesiones 22–23 (Toño) |
+| 25 nov | **v0.9:** peligros con caída, puentes y piedras, pirámide nueva, NPC, 4 tiendas, skins, misión de las brujas y mapa completo | Sesiones 24 y 24b |
+| 26 nov | Se borra el juego anterior (Mictlán v5) del proyecto; documentación v0.6 reescrita | Commits `0d35fc4` y `6cd4291` |
+| 26 nov | **Revisión del mapa:** límites en la línea del equipo (sin cueva ni desierto del este), interior de la pirámide como sala aparte, casa de las brujas en la `H`, setos y rocas que marcan el recorrido, 36 enemigos y 3 tiendas; corregidos el minimapa al salir de una sala y los nombres del mapa completo | Sesión 25 |
+| 26 nov | **Nuevo:** `AI_USAGE.md`, registro detallado del uso de IA en el proyecto | Petición del equipo |

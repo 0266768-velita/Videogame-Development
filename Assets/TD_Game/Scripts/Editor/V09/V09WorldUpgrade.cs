@@ -19,7 +19,7 @@ namespace TD_Game.EditorTools
     /// </summary>
     public static partial class V09WorldUpgrade
     {
-        enum K { Grass, Dirt, Sand, Water, Bridge, BridgeV, Tree, TempleWall, TempleFloor, Rock, Pit, Plaza, PlazaEdge, Stone }
+        enum K { Grass, Dirt, Sand, Water, Bridge, BridgeV, Tree, TempleWall, TempleFloor, Rock, Pit, Plaza, PlazaEdge, Stone, Void }
 
         /// <summary>The pyramid site in CSV cells (columns 72-93, rows 7-20).</summary>
         static readonly RectInt PyramidCells = new RectInt(72, 7, 22, 14);
@@ -61,10 +61,12 @@ namespace TD_Game.EditorTools
             map = CsvMap.Load(CsvMapBuilder.CsvPath);
             W = map.Width; H = map.Height;
             BuildPlan();
+            CaptureInterior();          // the inside of the pyramid leaves the map (V09WorldUpgrade.Layout.cs)
             AddBridgesAndStones();
             Paint();
 
             foreach (var root in scene.GetRootGameObjects().Where(g => g.name.StartsWith("V09_")).ToList()) Object.DestroyImmediate(root);
+            ApplyLayoutToScene();       // map edges, the house of the sword goes away, the boss moves with the inside
             ReserveExisting();
             BuildPyramid();
             ReplaceBlocks();
@@ -74,9 +76,11 @@ namespace TD_Game.EditorTools
             PlaceMerchants(library);
             PlaceVillagers();
             BuildWitchHouse();
+            BuildPyramidInterior();
             SetupPlayer(catalog);
             SetupSystems(library);
             BuildUI();
+            RemoveOutsideMap();
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -137,6 +141,7 @@ namespace TD_Game.EditorTools
                         CsvMapPainter.Ground.TempleWall => K.TempleWall,
                         CsvMapPainter.Ground.TempleFloor => K.TempleFloor,
                         CsvMapPainter.Ground.Rock => K.Rock,
+                        CsvMapPainter.Ground.Void => K.Void,
                         _ => K.Pit,
                     };
                 }
@@ -346,6 +351,7 @@ namespace TD_Game.EditorTools
                         case K.TempleFloor: ground.SetTile(tile, art.templeFloor); break;
                         case K.TempleWall: ground.SetTile(tile, art.templeFloor); walls.SetTile(tile, art.templeWall); break;
                         case K.Rock: ground.SetTile(tile, art.dirt); walls.SetTile(tile, art.rocks[(int)(n * 100) % art.rocks.Length]); break;
+                        case K.Void: break;   // out of the map (X, or where the inside of the pyramid was)
                         case K.Water:
                             ground.SetTile(tile, grass);
                             water.SetTile(tile, art.water[Mask(x, y, IsWaterish)]);

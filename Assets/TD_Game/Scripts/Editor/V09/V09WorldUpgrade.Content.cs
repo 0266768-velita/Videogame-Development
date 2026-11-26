@@ -37,7 +37,7 @@ namespace TD_Game.EditorTools
                 (new Vector2Int(13, 51), new[] { Witch, Wolf }),
                 (new Vector2Int(28, 47), new[] { Witch, Witch }),
                 (new Vector2Int(40, 58), new[] { Wolf, Witch, Witch }),
-                (new Vector2Int(54, 50), new[] { Giant }),                       // the first giant fights alone
+                (new Vector2Int(54, 50), new[] { Witch }),                       // a lone witch in the inner valley (was a giant)
                 (new Vector2Int(75, 23), new[] { Giant, Wolf }),                 // guards of the pyramid
                 (new Vector2Int(90, 23), new[] { Witch, Giant }),
                 (new Vector2Int(90, 32), new[] { Witch, Wolf }),
@@ -45,8 +45,7 @@ namespace TD_Game.EditorTools
                 (new Vector2Int(100, 40), new[] { Giant }),
                 (new Vector2Int(106, 55), new[] { Giant, Witch }),
                 (new Vector2Int(120, 49), new[] { Wolf, Wolf, Wolf }),           // a pack
-                (new Vector2Int(138, 57), new[] { Giant, Witch, Wolf }),
-                (new Vector2Int(146, 52), new[] { Wolf }),                       // ambush in the east corridor
+                // (138, 57) and (146, 52) were in the east desert and the cave, which are no longer part of the map.
                 (new Vector2Int(80, 63), new[] { Witch, Wolf }),
             };
 
@@ -62,6 +61,9 @@ namespace TD_Game.EditorTools
                 float radius = who.Length == 1 ? 1f : 2.2f;
                 var spot = FindSpot(World(cell), radius, g => g == K.Grass || g == K.Sand || g == K.Dirt || g == K.PlazaEdge, 16f);
                 if (spot == null) { Debug.LogWarning("[TD_Game] No room for camp " + cell); continue; }
+                // A camp shut away by the borders of the map (trees, rocks) could never be reached: leave it out.
+                var spotCell = Cell(spot.Value);
+                if (!Inside(spotCell) || distance[spotCell.x, spotCell.y] < 0) { Debug.LogWarning("[TD_Game] Camp " + cell + " cannot be reached from S: not placed."); continue; }
                 occupied.Add((spot.Value, radius + 1.5f));
                 // Strength grows with the distance from the start; camps are a little weaker per enemy.
                 // (v0.9b: harder — every fight hits and lasts more, especially far from the start.)
@@ -137,7 +139,7 @@ namespace TD_Game.EditorTools
             {
                 (new Vector2Int(21, 55), "Valley of Tlazolteotl", g => g == K.Grass),
                 (new Vector2Int(96, 39), "Valley of Serpents", g => g == K.Sand),
-                (new Vector2Int(118, 34), "Before the Temple", g => g == K.Sand),
+                // (118, 34) "Before the Temple" was removed at the request of the team (26 nov).
             };
             Configure(original, "Merchant");
             foreach (var (cell, region, ground) in places)
@@ -352,7 +354,9 @@ namespace TD_Game.EditorTools
         static void BuildWitchHouse()
         {
             var root = Root("V09_WitchHouse");
-            var house = FindSpot(World(new Vector2Int(3, 56)), 3.2f, g => g == K.Grass, 12f) ?? World(new Vector2Int(3, 56));
+            // The witches live where the CSV puts the house H (the straw house of the valley, which this replaces).
+            var target = WitchHouseSpot();
+            var house = FindSpot(target, 3.2f, g => g == K.Grass || g == K.PlazaEdge, 12f) ?? target;
             occupied.Add((house, 4.5f));
 
             // Outside: the crooked hut, dead trees, crows, skulls and purple candles.
@@ -490,7 +494,8 @@ namespace TD_Game.EditorTools
 
         static Tilemap GroundTilemap() => Object.FindObjectsByType<Tilemap>().First(t => t.name == "Ground");
 
-        static void Door(Transform parent, string name, Vector2 position, Vector2 size, Vector2 destination, Tilemap bounds, bool inside, Transform mapPosition)
+        static void Door(Transform parent, string name, Vector2 position, Vector2 size, Vector2 destination, Tilemap bounds, bool inside, Transform mapPosition,
+            string id = "witch_house", string banner = "THE HOUSE OF THE FOUR LIGHTS\nSomething breathes in the dark...")
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -506,8 +511,8 @@ namespace TD_Game.EditorTools
             door.FindProperty("destinationBounds").objectReferenceValue = bounds;
             door.FindProperty("leadsInside").boolValue = inside;
             door.FindProperty("mapPosition").objectReferenceValue = mapPosition;
-            door.FindProperty("id").stringValue = "witch_house";
-            door.FindProperty("firstTimeBanner").stringValue = inside ? "THE HOUSE OF THE FOUR LIGHTS\nSomething breathes in the dark..." : "";
+            door.FindProperty("id").stringValue = id;
+            door.FindProperty("firstTimeBanner").stringValue = inside ? banner : "";
             door.ApplyModifiedPropertiesWithoutUndo();
         }
 

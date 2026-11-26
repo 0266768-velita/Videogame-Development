@@ -3,7 +3,7 @@
 > **Fecha:** 26 de noviembre de 2026 · **Rama:** `v0.6` (último commit `0d35fc4`) · **Versión del juego:** 0.9 · **Motor:** Unity 6000.5.9f1
 
 **Mictlán** es un juego 2D top-down de pixel art, con estética mexica oscura, de **Micta Forge**.
-- Tlahuelli recorre el inframundo mexica: bosques, valles, un desierto, una cueva y una pirámide.
+- Tlahuelli recorre el inframundo mexica: bosques, valles, un desierto y una pirámide.
 - Pelea por turnos **en el mismo mapa** contra lobos, brujas y gigantes, consigue la llave de obsidiana y se enfrenta a **Quetzalcóatl**.
 - El combate usa estamina y recursos con nombres nahuas (Teyolia, Ihiyotl, Tonalli), y se defiende con **un solo botón**, justo antes del golpe, al estilo de *Clair Obscur: Expedition 33*.
 
@@ -69,13 +69,13 @@ Verificados contra `Assets/TD_Game/Settings/Input/PlayerControls.inputactions` y
 ## Qué se puede jugar hoy
 
 1. **Inicio:** logo del estudio, clasificación «Rated M», menú (New Game, Continue, Options, Credits, Exit) e historieta del prólogo.
-2. **Mapa de 150 × 70 celdas** diseñado por el equipo (`Settings/Maps/mapa_juego_150x70.csv`), con 4 regiones:
+2. **Mapa diseñado por el equipo** (`Settings/Maps/mapa_juego_150x70.csv`; la parte jugable son 125 × 70 celdas = 250 × 140 tiles), con 4 regiones:
    - Territorios de Tláloc;
    - Valle de Tlazoltéotl;
    - Valle de las Serpientes;
    - Templo Celestial.
-   Hay ríos y barrancos en los que se puede caer, puentes, piedras para saltar, una cueva y la pirámide.
-3. **40 enemigos** en 20 campamentos (lobos, brujas y gigantes), más fuertes cuanto más lejos del inicio. Al tocarte, la pelea empieza allí mismo.
+   Hay ríos y barrancos en los que se puede caer, puentes, piedras para saltar y la pirámide. Setos de árboles y una franja de rocas marcan por dónde se puede ir.
+3. **36 enemigos** en 18 campamentos (lobos, brujas y gigantes), más fuertes cuanto más lejos del inicio. Al tocarte, la pelea empieza allí mismo.
 4. **Combate por turnos:**
    - varias acciones por turno con estamina;
    - combos y críticos con *timing*;
@@ -85,13 +85,13 @@ Verificados contra `Assets/TD_Game/Settings/Input/PlayerControls.inputactions` y
 5. **Al ganar:** orbes de alma (carga del Macuahuitl), jade (vida) y Tonalli, oro y guardado automático.
 6. **Al perder:** pantalla «YOU HAVE FALLEN» y vuelta al inicio del mapa.
 7. **Mundo:**
-   - 4 comerciantes (pociones, artefacto, skins y apuestas);
+   - 3 comerciantes (pociones, artefacto, skins y apuestas);
    - 9 aldeanos con diálogos;
-   - 5 cofres;
+   - 4 cofres en el mapa y la ofrenda de la cima de la pirámide;
    - el puzle de los cuatro fuegos;
    - la misión **El prisionero de las cuatro brujas** (pelea, rompecabezas de la pintura y recompensa);
    - mapa completo (M) y contador «Enemies Left».
-8. **Final:** al derrotar a todos los enemigos aparece la llave de obsidiana; abre la pirámide, las rejas se cierran y empieza el combate contra **Quetzalcóatl**, que cambia de forma a mitad de la pelea. Al vencerlo se ven los créditos.
+8. **Final:** al derrotar a todos los enemigos aparece la llave de obsidiana. Se entra a la pirámide por la boca de serpiente de la cima; en la antesala, la llave abre la puerta de obsidiana; tras el laberinto, las rejas se cierran y empieza el combate contra **Quetzalcóatl**, que cambia de forma a mitad de la pelea. Al vencerlo se ven los créditos.
 
 ## Estructura del proyecto
 
@@ -118,6 +118,7 @@ Todo el código usa el namespace `TD_Game`.
 | [CLAUDE.md](CLAUDE.md) | reglas del proyecto y decisiones técnicas |
 | [DEVELOPMENT_CALENDAR.md](DEVELOPMENT_CALENDAR.md) | calendario y tareas |
 | [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md) | registro de cambios por sesión |
+| [AI_USAGE.md](AI_USAGE.md) | uso de IA en el proyecto: herramientas, sesiones, verificación, errores y límites |
 
 ## Pendientes
 

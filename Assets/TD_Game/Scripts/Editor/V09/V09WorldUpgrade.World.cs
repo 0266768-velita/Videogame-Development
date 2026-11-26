@@ -184,20 +184,23 @@ namespace TD_Game.EditorTools
             // The summit: braziers on both sides of the shrine door, the readable glyphs and an offering chest.
             Brazier(decor, new Vector2(161.5f, shrineFront - 0.6f));
             Brazier(decor, new Vector2(170.5f, shrineFront - 0.6f));
+            // The shrine door (the serpent's mouth) is the way into the pyramid: BuildPyramidInterior puts a door there.
+            pyramidShrineDoor = new Vector2(166f, shrineFront - 0.3f);
+            pyramidSummitArrival = new Vector2(166f, summitFront + 1.1f);
             var glyphs = new GameObject("ShrineGlyphs");
             glyphs.transform.SetParent(decor, false);
-            glyphs.transform.position = new Vector2(166f, shrineFront - 0.45f);
+            glyphs.transform.position = new Vector2(163.4f, shrineFront - 0.45f);   // beside the door, not in front of it
             var trigger = glyphs.AddComponent<BoxCollider2D>();
             trigger.isTrigger = true;
-            trigger.size = new Vector2(3f, 1.1f);
+            trigger.size = new Vector2(1.6f, 1.1f);
             var spot = new SerializedObject(glyphs.AddComponent<InteractSpot>());
             spot.FindProperty("prompt").stringValue = "{Interact}  Read the glyphs of the shrine";
             spot.FindProperty("speaker").stringValue = "Glyphs of the shrine";
             SetStrings(spot.FindProperty("lines"),
-                "Here the Feathered Serpent came down to MictlÃ¡n to steal the bones of the dead and make the people of this age.",
-                "The serpent's door is sealed. The House of the Wind, where QuetzalcÃ³atl sleeps, lies to the east: a black temple with obsidian gates.",
-                "Only the obsidian key opens them. It is born when every servant of the gods has fallen.",
-                "> So the way forward is east... once the last of them is gone.");
+                "Here the Feathered Serpent came down to Mictlán to steal the bones of the dead and make the people of this age.",
+                "The serpent's mouth leads down into the House of the Wind, where Quetzalcóatl sleeps behind a gate of obsidian.",
+                "Only the obsidian key opens it. It is born when every servant of the gods has fallen.",
+                "> So I go in through the serpent's mouth... once the last of them is gone.");
             spot.ApplyModifiedPropertiesWithoutUndo();
 
             var chest = new GameObject("SummitOffering");
@@ -277,17 +280,19 @@ namespace TD_Game.EditorTools
             Landmark(root, "Sacred Ceiba", "ceiba", new Vector2Int(33, 29), new Vector2(1.8f, 0.8f), 3f, g => g == K.Grass);
             Landmark(root, "Skull Rock", "skull_rock", new Vector2Int(104, 44), new Vector2(4.2f, 1.4f), 3f, g => g == K.Sand);
             Landmark(root, "Head of the Fallen God", "fallen_god", new Vector2Int(124, 59), new Vector2(3.6f, 1.2f), 2.5f, g => g == K.Sand);
-            Landmark(root, "Statue of XÃ³lotl", "xolo_statue", new Vector2Int(110, 57), new Vector2(1.2f, 0.5f), 1.2f, g => g == K.Sand);
+            Landmark(root, "Statue of Xólotl", "xolo_statue", new Vector2Int(110, 57), new Vector2(1.2f, 0.5f), 1.2f, g => g == K.Sand);
 
             // Existing places worth finding on the map.
             var house = GameObject.Find("House of the Sword (H)");
             if (house != null) Marker(house, MapMarker.Kind.Landmark, "House of the Sword");
-            var cave = new GameObject("CaveMarker");
-            cave.transform.SetParent(root, false);
-            cave.transform.position = World(new Vector2Int(136, 42));
-            Marker(cave, MapMarker.Kind.Landmark, "Cave of Offerings");
+            // (The cave of offerings is no longer part of the map.)
+            // The obsidian gate is now inside the pyramid, in its own room: the map shows the pyramid instead, not the gate.
             foreach (var door in Object.FindObjectsByType<KeyDoor>())
-                Marker(door.gameObject, MapMarker.Kind.Door, "Obsidian Gate");
+            {
+                var oldMarker = door.GetComponent<MapMarker>();
+                if (door.transform.position.x >= 0f) Marker(door.gameObject, MapMarker.Kind.Door, "Obsidian Gate");
+                else if (oldMarker != null) Object.DestroyImmediate(oldMarker);
+            }
 
             // Stelae at the crossroads of the paths, so the forks can be told apart.
             var junctions = new List<Vector2>();

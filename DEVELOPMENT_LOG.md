@@ -5,6 +5,41 @@ Planificación: `DEVELOPMENT_CALENDAR.md` · Reglas y decisiones técnicas: `CLA
 
 ---
 
+## 2026-11-26 — Sesión 25: límites del mapa, pirámide aparte y casa de las brujas
+
+Cambios pedidos sobre una captura de `MainMap_CSV` (líneas verdes, rojas, rosas, blancas y grises).
+
+- **CSV** (`Settings/Maps/mapa_juego_150x70.csv`):
+  - líneas de árboles `T` donde estaban los trazos blancos (cierran los huecos de los setos; nunca tapan `C`, `W`, `S`, `K`, `H`);
+  - franja de rocas `R` (columnas 67–68, filas 45–70) donde estaba el trazo gris;
+  - `X` en la cueva y el desierto del este (columnas ≥125, filas ≥35) y al este de la pirámide.
+  - Letras nuevas `R` y `X` en `CsvMapPainter.Plan` (`Ground.Void`).
+- **Límites:** mapa jugable de 250 × 140 tiles (`CsvMap.PlayableColumns` = 125); `MapBorder` ajustado.
+- **Pirámide** (`Editor/V09/V09WorldUpgrade.Layout.cs`):
+  - el interior (CSV columnas 102–143, filas 1–34) sale del mapa a la sala `V09_PyramidInterior` (desplazamiento −464, −64), con su propio Grid;
+  - se entra por la boca de serpiente del santuario (cima) con `HouseDoor`, a una antesala nueva con la puerta de obsidiana (`ObsidianDoor_2`) y dos antorchas;
+  - la entrada del este se tapia; se borran `ObsidianDoor` y `BossGate` del este;
+  - el jefe, su arena, los braseros, el ídolo y la zona del templo se mueven con el interior;
+  - donde estaba el interior, el mapa muestra bosque;
+  - textos de los glifos de la cima actualizados (y corregidos los acentos mal codificados de ese archivo).
+- **Casa de las brujas:** va donde está la `H` del CSV; la casa de la espada ya no se crea.
+- **Enemigos:** 36 (se quitan los 2 campamentos de la zona eliminada). Un campamento que quede encerrado por los bordes ya no se coloca (aviso en consola).
+- **Validación:**
+  - Upgrade sin errores;
+  - recorrido con colisiones reales: los 36 enemigos, los 4 cofres, las tiendas, los NPC y las puertas se alcanzan desde la `S`, y las zonas cerradas (franja oeste, bolsa suroeste, franja sur) no;
+  - Play Mode: entrar por la cima, puerta sellada sin la llave, apertura con la llave, salida a la cima y puerta de la casa de las brujas.
+- **Incidente:** un script de prueba con un bucle infinito congeló Unity; se cerró a la fuerza sin perder nada.
+- **Segunda ronda:**
+  - **Mapa completo (M):** lo que está dentro de una sala se dibuja en la puerta que lleva a ella (`HouseDoor.OutsidePositionOf`, usado en `WorldMapScreen.ToMap`). Quetzalcóatl y «Celestial Temple» salen en la cima de la pirámide, y las brujas de la misión, en su casa.
+  - La zona «Valley of Serpents» se movía por error con el interior; ahora cubre el desierto (columnas 64–124, filas 35–70).
+  - **Bug del minimapa:** al salir de una casa no volvía a aparecer (`HouseDoor` lo buscaba sin incluir los objetos ocultos). Corregido.
+  - El gigante solitario del valle interior (campamento 54, 50) ahora es una bruja; se quita el mercader «Before the Temple».
+  - Probado en Play Mode (minimapa al salir de la pirámide, mapa completo).
+- **Documentación:**
+  - `TD_Game_ARQUITECTURA.md`, `TD_Game_GUIA.md`, `README.md`, `CLAUDE.md` y `DEVELOPMENT_CALENDAR.md` actualizados al mapa nuevo; el calendario recibe una tabla con el estado real de M1–M8 y los cambios del 13 al 26 nov;
+  - nuevo **`AI_USAGE.md`**: herramientas, reglas, registro por sesión con evidencia, verificación, errores de la IA, límites, privacidad y preguntas pendientes para el equipo.
+- Sin commits.
+
 ## 2026-11-25 — Sesión 24b: correcciones de v0.9 tras jugarla
 
 **Sonido**

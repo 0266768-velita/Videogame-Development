@@ -232,6 +232,7 @@ Mantener actualizados los siguientes documentos en la raíz del proyecto:
 - CLAUDE.md: instrucciones permanentes y decisiones técnicas.
 - DEVELOPMENT_CALENDAR.md: calendario y seguimiento del desarrollo.
 - DEVELOPMENT_LOG.md: registro breve de cambios, problemas y decisiones relevantes.
+- AI_USAGE.md: cómo se usó la IA en el proyecto (herramientas, tareas, supervisión, errores y límites). Al terminar una sesión con IA, añadir su fila.
 
 Si una decisión técnica cambia, actualizar CLAUDE.md para evitar contradicciones en futuras sesiones.
 
@@ -289,6 +290,7 @@ El repositorio contiene un juego **top-down 2D anterior** (documentado en `ARQUI
 | 2026-11-25 | **Canvas de pantallas completas:** el mapa, los diálogos y el rompecabezas crean su Canvas **en un objeto raíz**. Si quedan dentro de otro Canvas, heredan su escala y su orden de dibujo. |
 | 2026-11-26 | **Se borró el juego anterior (Mictlán v5)**: `Assets/Art`, `Prefabs`, `Resources`, `Scenes`, `Scripts`, la carpeta `Tools/` (Python) y `ARQUITECTURA.md`, además de sprites y sonidos de `TD_Game` que nada usaba. Lo reutilizable ya estaba copiado en `TD_Game`. Sigue en el historial de git (commit `4eb39fb` y anteriores). La sección 13 queda como contexto histórico. Para revisar qué no se usa: **TD_Game > Debug > Unused Assets Report**. |
 | 2026-11-25 | **Audio original generado en código** (`SfxSynth`). Las voces del comerciante salen del texto a voz de Windows (`Audio/VoiceRaw~`, ignorada por Unity) y se procesan en `Audio/Voice`. |
+| 2026-11-26 | **Límites del mapa y pirámide aparte** (revisión del equipo):<br>• el mapa jugable son las columnas 0–124 del CSV (250 × 140 tiles); la cueva y el desierto del este son `X` (fuera del mapa);<br>• letras nuevas del CSV: `R` (roca que no se cruza) y `X`; los bordes del recorrido se dibujan en el CSV con `T` y `R`;<br>• el interior de la pirámide se diseña en el CSV, pero el upgrade lo saca a una sala aparte (`V09_PyramidInterior`, `V09WorldUpgrade.Layout.cs`), como la casa de las brujas: se entra por la boca de serpiente de la cima y la única puerta de obsidiana está en la antesala;<br>• la casa de las brujas va donde está la `H` del CSV y la casa de la espada ya no se crea. |
 
 ### Convención de importación del arte de TD_Game
 
@@ -322,7 +324,11 @@ El arte va en `Assets/TD_Game/Art/` y nunca en `Assets/Resources/` (allí `MenuT
   - `ButtonGlyph.Create(parent, "Dodge", altura)` crea un icono que cambia solo; `GlyphText.Set(text, "{Interact}  Talk")` pone el icono delante de un aviso;
   - en frases, `InputPrompts.Localize("Press {Dodge}")` da «Press [SPACE]».
 - **Historieta** (`PrologueComic`): Siguiente = Espacio / Enter / clic / A; Omitir = mantener ESC / B. La ayuda de la esquina aparece con cualquier tecla y se oculta tras 3 s.
-- **Mapa del CSV:** `Scenes/Levels/MainMap_CSV.unity`, creado con **TD_Game > Build CSV Map (MainMap_CSV)** (`Editor/CsvMapBuilder.cs`, `CsvMap.cs`, `CsvMapPainter.cs`) desde `Settings/Maps/mapa_juego_150x70.csv`. Es una copia de `MainMap` con todos sus sistemas recolocados: jugador en `S`, enemigos en `E`, cofres `LootChest` en `K`, jefe en la pirámide (`M`/`I`) con una `KeyDoor` y una reja en cada entrada, casa de la espada en `H` con el santuario de Alex al lado. 1 celda = 2 × 2 tiles; arena `Sand_1/2`; el puente está en la fila 22, columnas 16–18. Para reconstruirlo, borrar la escena y volver a usar el menú.
+- **Mapa del CSV:** `Scenes/Levels/MainMap_CSV.unity`, creado en dos pasos desde `Settings/Maps/mapa_juego_150x70.csv`:
+  - **TD_Game > Build CSV Map (MainMap_CSV)** (`Editor/CsvMapBuilder.cs`, `CsvMap.cs`, `CsvMapPainter.cs`): copia `MainMap` y recoloca sus sistemas (jugador en `S`, cofres `LootChest` en `K`, jefe en la pirámide `M`/`I` con una `KeyDoor` y una reja en cada entrada, casa de la espada en `H` con el santuario de Alex al lado). No sobrescribe: para reconstruir hay que borrar la escena;
+  - **TD_Game > v0.9 > Upgrade MainMap_CSV** (`Editor/V09/`): repinta todo el terreno desde el CSV y aplica los límites (`V09WorldUpgrade.Layout.cs`): mapa jugable de las columnas 0–124 (250 × 140 tiles); el interior de la pirámide pasa a la sala `V09_PyramidInterior` con una sola puerta de obsidiana en la antesala; la casa de las brujas sustituye a la de la espada en la `H`; enemigos en la lista `camps` (36).
+  - 1 celda = 2 × 2 tiles; letras `R` (roca) y `X` (fuera del mapa); el puente fijo está en la fila 22, columnas 16–18.
+  - **Salas aparte** (casa de las brujas, interior de la pirámide): se entra con `HouseDoor`, que cambia los límites de la cámara y oculta el minimapa; el mapa completo (M) dibuja lo que hay dentro en la puerta exterior (`HouseDoor.OutsidePositionOf`).
 - **Escena de pruebas:** `Assets/TD_Game/Scenes/Testing/TestLevel.unity`.
   - `Grid` con tres Tilemaps:
     - `Ground`: orden -10, modo Chunk.

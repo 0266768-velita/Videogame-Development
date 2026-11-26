@@ -7,13 +7,17 @@ namespace TD_Game.EditorTools
     /// <summary>
     /// The design map of the team (Settings/Maps/mapa_juego_150x70.csv): one character per cell, row 1 = north.
     /// Legend: S start, C dirt path, . grass, T tree, W water, B bridge, H house, P pyramid (outside),
-    /// M wall / I corridor (inside the pyramid and the cave), D desert sand, V ravine, E enemy, K chest / key object.
+    /// M wall / I corridor (inside the pyramid), D desert sand, V ravine, E enemy, K chest / key object,
+    /// R rock (a border you cannot pass), X out of the map (nothing is painted).
     /// One CSV cell = 2 x 2 tiles of the Tilemap (1 tile = 1 unit), so the world is 300 x 140 tiles.
     /// Only reads and answers questions: CsvMapPainter paints it and CsvMapBuilder places things on it.
     /// </summary>
     public class CsvMap
     {
         public const int TilesPerCell = 2;
+
+        /// <summary>Columns of the playable map (the rest of the CSV is X or the inside of the pyramid, moved away by v0.9).</summary>
+        public const int PlayableColumns = 125;
 
         public readonly int Width, Height;   // in cells
         readonly char[,] cells;              // [column, row], row 0 = the first line of the CSV (north)

@@ -36,14 +36,38 @@ namespace TD_Game
 
         void Reset() => GetComponent<Collider2D>().isTrigger = true;
 
+        static readonly System.Collections.Generic.List<HouseDoor> outsideDoors = new System.Collections.Generic.List<HouseDoor>();
+
         void OnEnable()
         {
-            if (leadsInside) CombatManager.CombatLost += OnCombatLost;
+            if (!leadsInside) return;
+            CombatManager.CombatLost += OnCombatLost;
+            outsideDoors.Add(this);
         }
 
         void OnDisable()
         {
-            if (leadsInside) CombatManager.CombatLost -= OnCombatLost;
+            if (!leadsInside) return;
+            CombatManager.CombatLost -= OnCombatLost;
+            outsideDoors.Remove(this);
+        }
+
+        /// <summary>
+        /// Where a point inside a room (the witches' house, the inside of the pyramid) should be shown on the world map:
+        /// at the door outside that leads to it. Null for points of the map itself.
+        /// </summary>
+        public static Vector3? OutsidePositionOf(Vector3 world)
+        {
+            foreach (var door in outsideDoors)
+            {
+                var room = door.destinationBounds;
+                if (room == null) continue;
+                var cells = room.cellBounds;
+                Vector3 min = room.CellToWorld(cells.min), max = room.CellToWorld(cells.max);
+                if (world.x >= min.x && world.x <= max.x && world.y >= min.y && world.y <= max.y)
+                    return door.mapPosition != null ? door.mapPosition.position : door.transform.position;
+            }
+            return null;
         }
 
         void Start()
@@ -89,7 +113,8 @@ namespace TD_Game
             if (cam != null) cam.SetBounds(destinationBounds);
             var hazards = player.GetComponent<PlayerHazards>();
             if (hazards != null) hazards.ResetSafeSpot();
-            var minimap = FindAnyObjectByType<Minimap>();
+            // Include the hidden one: inside a house the minimap is hidden, and it must come back when leaving.
+            var minimap = FindAnyObjectByType<Minimap>(FindObjectsInactive.Include);
             if (minimap != null) minimap.gameObject.SetActive(!inside);
         }
 

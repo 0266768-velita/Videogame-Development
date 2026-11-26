@@ -156,6 +156,7 @@ namespace TD_Game
         Vector2 ToMap(Vector3 world)
         {
             Vector2 size = picture.rectTransform.rect.size;
+            world = HouseDoor.OutsidePositionOf(world) ?? world;   // inside a room: shown at its door outside
             float x = Mathf.InverseLerp(bounds.min.x, bounds.max.x, world.x);
             float y = Mathf.InverseLerp(bounds.min.y, bounds.max.y, world.y);
             return new Vector2((x - 0.5f) * size.x, (y - 0.5f) * size.y);
@@ -175,7 +176,9 @@ namespace TD_Game
                 var outline = label.gameObject.AddComponent<Outline>();
                 outline.effectColor = new Color(0f, 0f, 0f, 0.8f);
                 outline.effectDistance = new Vector2(2, -2);
-                MenuWidgets.Center(label.rectTransform, ToMap(zone.transform.position), new Vector2(600, 50));
+                // A region inside a room (the temple) is named above its door, so it does not cover the icons there.
+                bool inRoom = HouseDoor.OutsidePositionOf(zone.transform.position) != null;
+                MenuWidgets.Center(label.rectTransform, ToMap(zone.transform.position) + (inRoom ? new Vector2(0f, 60f) : Vector2.zero), new Vector2(600, 50));
                 markers.Add(label.gameObject);
             }
 

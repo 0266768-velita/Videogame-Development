@@ -405,7 +405,7 @@ namespace TD_Game.EditorTools
         /// <summary>Invisible walls around the map: the CSV edge is open land, nobody may walk off it.</summary>
         static void AddBorder()
         {
-            float w = map.Width * CsvMap.TilesPerCell, h = map.Height * CsvMap.TilesPerCell;
+            float w = CsvMap.PlayableColumns * CsvMap.TilesPerCell, h = map.Height * CsvMap.TilesPerCell;
             var border = new GameObject("MapBorder");
             foreach (var (offset, size) in new[]
                      {

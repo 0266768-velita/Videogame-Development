@@ -160,7 +160,7 @@ Jerarquía: **`Player`** (capa `Player`), con los hijos `Visual` (sprite, antorc
 
 **Sprites:** el `SpriteRenderer` del hijo `Visual` del prefab; la animación en reposo es `SpriteFlipbook`.
 
-**Jefe:** `BossZone/Boss_Quetzalcoatl`. Su arena es `BossZone/BossArena` (trigger; **Entrance Title**, **Gates** = `BossGate` y `BossGate_2`).
+**Jefe:** `BossZone/Boss_Quetzalcoatl`, dentro del interior de la pirámide (sala aparte, hacia x = −220). Su arena es `BossZone/BossArena` (trigger; **Entrance Title**, **Gates** = `BossGate_2`).
 
 **No romper:**
 - Si un enemigo pierde su `EnemyData` (**Data** = None), el combate falla.
@@ -228,10 +228,10 @@ Todo en el objeto **`Combat`** de la jerarquía.
 | Premio del puzle | `Puzzle (Four Fires)` → `BrazierPuzzle` | **Treasure Gold**, **Correct Order** |
 | Tiendas | `Merchant (Shop)/TalkArea` y `V09_Merchant (…)/TalkArea` → `MerchantShop` | **Merchant Name**, **Potion Price**, **Small Bet**, **Big Bet**, **Artifact Price**, **Artifact**, frases (**Greet / Buy / Win / Lose / Goodbye Lines**) |
 | Llave de obsidiana | `ObsidianKey` | aparece cuando no queda ningún enemigo normal vivo |
-| Puertas de la pirámide | `ObsidianDoor`, `ObsidianDoor_2` → `KeyDoor` | **Closed Sprite**, **Open Sprite**, **Slab Rise Time**, **Light Wave Length** |
+| Puerta de obsidiana (antesala de la pirámide) | `ObsidianDoor_2` → `KeyDoor` | **Closed Sprite**, **Open Sprite**, **Slab Rise Time**, **Light Wave Length** |
 
 **No romper:**
-- Las 4 tiendas comparten el mismo oro y las mismas skins.
+- Las 3 tiendas comparten el mismo oro y las mismas skins.
 - Un cofre sin `Collider2D` con **Is Trigger** no se abre.
 - Los cofres **no se guardan** en la partida: al cargar se pueden volver a abrir.
 
@@ -250,12 +250,14 @@ Todo en el objeto **`Combat`** de la jerarquía.
 | `V` | barranco (peligro) |
 | `T` | árbol (sólido) |
 | `P` | muro de la pirámide (sólido) |
-| `M` | muro de la pirámide; roca en la cueva SE (sólido) |
+| `M` | muro de la pirámide (sólido) |
 | `I` | pasillo de la pirámide |
 | `S` | inicio de Tlahuelli (solo una) |
 | `K` | cofre |
-| `H` | casa de la espada |
+| `H` | casa de las brujas (antes, casa de la espada) |
 | `E` | marca del diseño; **ya no coloca enemigos** (ver abajo) |
+| `R` | roca: borde que no se puede cruzar (sólido) |
+| `X` | fuera del mapa: no se pinta nada (la antigua cueva y el desierto al este) |
 
 **Cómo regenerar el mapa** (borra los cambios hechos a mano en la escena):
 1. Edita el CSV y guárdalo con el mismo nombre.
@@ -273,7 +275,10 @@ Todo en el objeto **`Combat`** de la jerarquía.
 | Pintar a mano | **Window > 2D > Tile Palette** sobre `Grid/Ground` (suelo), `Grid/Walls` (sólido), `Grid/Water` o `Grid/Pits` (peligro, capa `Hazard`). Se pierde si regeneras |
 | Que algo sea sólido | ponlo en `Walls`, o dale un `BoxCollider2D` no trigger |
 | Que algo se pueda saltar | capa `LowObstacle` + `BoxCollider2D` |
-| Un borde invisible | `MapBorder` (4 `BoxCollider2D` alrededor de 300×140) |
+| Un borde invisible | `MapBorder` (4 `BoxCollider2D` alrededor de 250×140: el mapa jugable son las columnas 0–124, `CsvMap.PlayableColumns`) |
+| Mover la casa de las brujas | mueve la `H` del CSV (la casa de las brujas ocupa su lugar; la casa de la espada ya no se crea) |
+| Cerrar el paso | pon `T` (árboles) o `R` (rocas) en el CSV; las líneas deben tocar agua, otro borde o el límite del mapa para no dejar huecos |
+| Interior de la pirámide | se diseña en el CSV (columnas 102–143, filas 1–34) y el upgrade lo saca del mapa a una sala aparte (`V09_PyramidInterior`, `V09WorldUpgrade.Layout.cs`). Se entra por la boca de serpiente de la cima; la puerta de obsidiana está en la antesala |
 | Nombres de región | `Territories/Zone_*` → `ZoneArea` → **Zone Name**, **Subtitle**, y el tamaño del `BoxCollider2D` |
 
 **No romper:**
@@ -291,7 +296,7 @@ Todo en el objeto **`Combat`** de la jerarquía.
 | Objetos que se leen | `InteractSpot` (glifos del santuario, pintura) | **Lines** |
 | Caja de diálogo | `V09_Dialogue` → `DialogueBox` | aspecto de la caja |
 | Puzle de los cuatro fuegos | `Puzzle (Four Fires)` → `BrazierPuzzle` | **Correct Order**, **Treasure Gold** |
-| Casa de la espada | `House of the Sword (H)` + `HouseHint` (`TutorialZone` → **Message**) | texto de la pista |
+| Entrada a la pirámide | `V09_PyramidInterior/Door (pyramid, outside)` (boca de serpiente de la cima) y `Door (pyramid, inside)` (salida de la antesala) → `HouseDoor` | destino, **First Time Banner** |
 | Misión de las brujas | `V09_WitchHouseInside` → `WitchHouseQuest` | **Witches**, **Speed Bonus** 1.3, textos (**While Guarded**, **After Witches**, **Story**, **After Reward**) |
 | Rompecabezas de la pintura | `V09_WitchHouseInside` → `PaintingPuzzle` | **Picture**, **Columns** 3, **Rows** 3, **Title**, **Caption** |
 | Puertas de casas | `Door (outside)` / `Door (inside)` → `HouseDoor` | destino al otro lado |
@@ -560,5 +565,8 @@ flowchart TD
 | Continue está desactivado | no hay partida, o se terminó el juego (el final borra la partida) | empieza con New Game |
 | Los orbes no se recogen | sigues en combate | se recogen al volver a explorar |
 | No aparece la llave | queda algún enemigo normal vivo | mira «Enemies Left» abajo a la derecha y el mapa (M) |
+| No encuentro la entrada de la pirámide | se entra por arriba | sube la escalinata hasta la boca de serpiente del santuario, en la cima |
+| El minimapa no vuelve al salir de una casa | versión anterior al 26 nov (`HouseDoor` no encontraba el minimapa oculto) | ya está corregido; si pasa, revisa que `MapUI/Minimap` exista en la escena |
+| Una barrera del CSV deja pasar | la línea de `T` o `R` no toca agua, otro borde o el límite del mapa | cierra el hueco en el CSV y vuelve a ejecutar el upgrade |
 | Claude no conecta con Unity (MCP) | el puente MCP se detuvo | en Unity, *Window > MCP for Unity > Start Server*; luego, en Claude, reconectar el servidor MCP |
 | El Play Mode va a saltos cuando Unity no tiene el foco | Unity en segundo plano | dale el foco a Unity (en pruebas por MCP: `Application.runInBackground = true`) |

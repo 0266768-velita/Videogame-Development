@@ -165,7 +165,7 @@ Jerarquía real (objetos raíz y componentes clave):
 Main Camera            Camera · AudioListener · CameraFollow
 └── Darkness           SpriteRenderer (orden 500, pegada a la cámara)
 Grid                   Grid
-├── Ground             Tilemap (300×140) · orden -10 · Chunk
+├── Ground             Tilemap (250×140: columnas 0–124 del CSV) · orden -10 · Chunk
 ├── Walls              Tilemap · TilemapCollider2D · orden 0 · Individual
 ├── Decoration         Tilemap (vacío) · orden 0
 ├── Water              Tilemap · TilemapCollider2D · capa Hazard · orden -9
@@ -177,24 +177,28 @@ Player                 Rigidbody2D · CapsuleCollider2D · PlayerInputReader · 
 └── Shadow             SpriteRenderer
 Combat                 CombatInput · CombatArena · PlayerTurn · EnemyTurn · CombatRewards · CombatManager · OrbSpawner
 SaveController · GameAudio (+GameplayAudio) · PauseScreen · EventSystem · ClickToTarget · GoreEffects
-Enemies                40 enemigos: 18 Wolf, 15 Witch, 7 Giant (Rigidbody2D · BoxCollider2D · Health · CombatEnemy · EnemyAI)
-BossZone               Boss_Quetzalcoatl · BossArena (trigger) · BossGate · BossGate_2
-ObsidianKey · ObsidianDoor · ObsidianDoor_2   (KeyDoor; una puerta por entrada de la pirámide)
-Chests                 Chest_1 … Chest_5 (LootChest)
-Merchant (Shop) + 3 × V09_Merchant (…)        MerchantShop en cada TalkArea
+Enemies                36 enemigos: 16 Wolf, 15 Witch, 5 Giant (Rigidbody2D · BoxCollider2D · Health · CombatEnemy · EnemyAI)
+BossZone               Boss_Quetzalcoatl · BossArena (trigger) · BossGate_2   (dentro del interior de la pirámide)
+ObsidianKey · ObsidianDoor_2   (KeyDoor: la única puerta de obsidiana, en la antesala del interior)
+Chests                 Chest_1 … Chest_4 (LootChest)
+Merchant (Shop) + 2 × V09_Merchant (…)        MerchantShop en cada TalkArea
 Puzzle (Four Fires)    BrazierPuzzle · 4 braseros (PuzzleBrazier) · Treasure (TreasureChest) · Stela
-House of the Sword (H) · Territories (4 ZoneArea) · TempleDecor_CSV · MapBorder (4 BoxCollider2D)
+Territories (4 ZoneArea) · TempleDecor_CSV · MapBorder (4 BoxCollider2D alrededor de 250×140)
 GameFlowUI             Canvas (orden 20): TutorialHint (ContextTutorial) · GameOverScreen (DefeatScreen) · CreditsScreen
 MapUI                  Canvas (orden 5) · InteractPrompt: Minimap · Gold · ShopPrompt · ZoneTitle · QuickTimePrompt · EnemiesLeft
 CombatHUD              Canvas (orden 10) · CombatHUD: PlayerStatus · CombatGroup (CombatVignette, EnemyBars,
                        TurnOrder, CommandMenu, EnemyTurnBar) · Messages
 V09_*                  contenido de v0.9: Ambience, Dialogue (DialogueBox), WorldMap (WorldMapScreen), Pyramid,
                        PyramidDecor, Landmarks, Nature, Obstacles, Mist, Villagers (NPC con DialogueNPC), WitchHouse,
-                       WitchHouseInside (PaintingPuzzle · WitchHouseQuest), WitchMist, Interiors (Grid: WitchFloor, WitchWalls)
+                       WitchHouseInside (PaintingPuzzle · WitchHouseQuest), WitchMist, Interiors (Grid: WitchFloor, WitchWalls),
+                       PyramidInterior (Grid: PyramidFloor, PyramidWalls · antorchas · Door (pyramid, outside / inside))
 ```
 
 - `Player` empieza en **(27, 127)**, la celda `S` del CSV.
-- La casa de las brujas es un **cuarto aparte** (`V09_Interiors`) al que se llega con `HouseDoor`. Dentro están las 4 brujas `Cihuateotl` de la misión (`Witches`).
+- La casa de las brujas es un **cuarto aparte** (`V09_Interiors`, hacia x = −110) al que se llega con `HouseDoor`. Está donde el CSV pone la `H`. Dentro están las 4 brujas `Cihuateotl` de la misión (`Witches`).
+- El interior de la pirámide también es un **cuarto aparte** (`V09_PyramidInterior`, hacia x = −260 … −176), al que se llega por la boca de serpiente de la cima (`HouseDoor` con id `pyramid`). Se entra a una antesala con la puerta de obsidiana; detrás están el laberinto y la cámara de Quetzalcóatl.
+- **Mapa completo (M) y salas:** lo que está dentro de una sala se dibuja en la puerta exterior que lleva a ella (`HouseDoor.OutsidePositionOf`, usado por `WorldMapScreen.ToMap`). Por eso Quetzalcóatl y «Celestial Temple» salen en la cima de la pirámide.
+- **Minimapa:** `HouseDoor` lo oculta al entrar a una sala y lo vuelve a mostrar al salir.
 
 ### `MainMap` y `TestLevel`
 - `MainMap`: el mapa anterior de Alex (88×40 tiles), con los mismos sistemas que `MainMap_CSV` pero sin v0.9. Es la base que copia `CsvMapBuilder`.
@@ -324,24 +328,29 @@ El mapa se construye **en el editor**, en dos pasos:
    - no sobrescribe: hay que borrar la escena para reconstruirla.
 2. **TD_Game > v0.9 > Upgrade MainMap_CSV** (`Editor/V09/V09WorldUpgrade*.cs`):
    - repinta el suelo y convierte agua y barrancos en peligros (Tilemaps `Water` y `Pits`, capa `Hazard`);
-   - añade 5 puentes y 4 cruces de piedras, troncos y obstáculos bajos (`LowObstacle`), la pirámide nueva, rocas, puntos de referencia, niebla, NPC, 3 tiendas más, la casa de las brujas y el mapa completo;
-   - **coloca los enemigos en 20 campamentos fijos** (40 enemigos, lista `camps` en `V09WorldUpgrade.Content.cs`). Las letras `E` del CSV ya no se usan para poner enemigos;
-   - todo cuelga de objetos `V09_*`, que se borran y se rehacen al volver a ejecutarlo.
+   - añade 5 puentes y 4 cruces de piedras, troncos y obstáculos bajos (`LowObstacle`), la pirámide nueva, rocas, puntos de referencia, niebla, NPC, 2 tiendas más, la casa de las brujas (en la `H`) y el mapa completo;
+   - **coloca los enemigos en 18 campamentos fijos** (36 enemigos, lista `camps` en `V09WorldUpgrade.Content.cs`). Las letras `E` del CSV ya no se usan para poner enemigos. Un campamento que no se pueda alcanzar desde `S` no se coloca (aviso en la consola);
+   - **aplica los límites del mapa** (`V09WorldUpgrade.Layout.cs`): el mapa jugable son las columnas 0–124 del CSV (`CsvMap.PlayableColumns`); el interior de la pirámide (columnas 102–143, filas 1–34) se pinta en la sala `V09_PyramidInterior` y en su lugar queda bosque; solo se conserva la puerta de obsidiana de la entrada sur (la del este se tapia); el jefe, su arena, sus braseros y la zona del templo se mueven con el interior; se borra la casa de la espada y todo lo que quede fuera del mapa;
+   - todo cuelga de objetos `V09_*`, que se borran y se rehacen al volver a ejecutarlo. Lo que mueve de la escena base (jefe, puerta, braseros) no se mueve dos veces.
 
 **Leyenda del CSV** (`CsvMapPainter.Plan`):
 
 | Letra | Se convierte en |
 |---|---|
-| `.` | pasto (suelo interior si está dentro de la pirámide; tierra en la cueva) |
+| `.` | pasto (suelo interior si está dentro de la pirámide) |
 | `C` | camino de tierra |
 | `D` | arena |
 | `W` | agua (puente en la fila 22, columnas 16–18) |
 | `V` | barranco |
 | `T` | árbol (pilar dentro de la pirámide) |
 | `P` | muro de la pirámide |
-| `M` | muro de la pirámide; roca en la cueva SE |
+| `M` | muro de la pirámide |
 | `I` | pasillo de la pirámide |
+| `R` | roca: borde que no se puede cruzar |
+| `X` | fuera del mapa: no se pinta nada (la antigua cueva y el desierto del este) |
 | `S`, `E`, `K`, `H` | toman el suelo más común de sus vecinos |
+
+Los bordes del recorrido (los setos que encierran los caminos y la franja de rocas entre el valle y el desierto) están dibujados en el CSV con `T` y `R`.
 
 **Colisiones:** sólidos con `TilemapCollider2D` en `Walls`; peligros en `Water` y `Pits` (el jugador los ignora y cae, los enemigos chocan); obstáculos bajos en `LowObstacle`; zonas interactivas como *triggers* (`OnTriggerEnter2D`).
 
