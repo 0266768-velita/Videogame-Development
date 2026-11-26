@@ -287,6 +287,7 @@ El repositorio contiene un juego **top-down 2D anterior** (documentado en `ARQUI
 | 2026-11-25 | **Grupos de enemigos:**<br>• `CombatEnemy.encounter` une un campamento (pelean juntos, máximo 4);<br>• `CombatEnemy.optional` = enemigo de misión: no cuenta para la llave ni para «Enemies Left». |
 | 2026-11-25 | **Interacciones con {Interact}:**<br>• todas usan `InteractPrompt` (un solo aviso compartido);<br>• diálogos: `DialogueBox.Play(lines)`;<br>• NPC: `DialogueNPC`;<br>• objetos: `InteractSpot`. |
 | 2026-11-25 | **Canvas de pantallas completas:** el mapa, los diálogos y el rompecabezas crean su Canvas **en un objeto raíz**. Si quedan dentro de otro Canvas, heredan su escala y su orden de dibujo. |
+| 2026-11-26 | **Se borró el juego anterior (Mictlán v5)**: `Assets/Art`, `Prefabs`, `Resources`, `Scenes`, `Scripts`, la carpeta `Tools/` (Python) y `ARQUITECTURA.md`, además de sprites y sonidos de `TD_Game` que nada usaba. Lo reutilizable ya estaba copiado en `TD_Game`. Sigue en el historial de git (commit `4eb39fb` y anteriores). La sección 13 queda como contexto histórico. Para revisar qué no se usa: **TD_Game > Debug > Unused Assets Report**. |
 | 2026-11-25 | **Audio original generado en código** (`SfxSynth`). Las voces del comerciante salen del texto a voz de Windows (`Audio/VoiceRaw~`, ignorada por Unity) y se procesan en `Audio/Voice`. |
 
 ### Convención de importación del arte de TD_Game
